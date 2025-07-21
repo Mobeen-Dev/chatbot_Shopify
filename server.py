@@ -27,6 +27,10 @@ class ChatRequest(BaseModel):
 # Response schema
 class ChatResponse(BaseModel):
     reply: str
+    
+@app.get("/")
+async def root():
+    return {"message": "Welcome to the Chatbot API!"}
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(chat_request: ChatRequest):
@@ -34,7 +38,7 @@ async def chat_endpoint(chat_request: ChatRequest):
 
     try:
         response = openai.chat.completions.create(
-            model="gpt-4",  # or "gpt-3.5-turbo"
+            model="gpt-4o",  # or "gpt-3.5-turbo"
             messages=[
                 {"role": "user", "content": user_message}
             ],

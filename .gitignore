@@ -4,3 +4,5 @@
 *.iml
 *.xml
 .idea/chatbot_Shopify.iml
+*.pyc
+__pycache__

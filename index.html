@@ -1,0 +1,226 @@
+<style>
+    /* Removed Google Fonts @import and Tailwind CSS CDN to prevent external requests.
+       The font will now fall back to system defaults or fonts defined by your WordPress theme. */
+
+    /* Base styles for the container */
+    .transaction-success-container {
+        background-color: #fff;
+        padding: 2rem; /* p-8 */
+        border-radius: 1rem; /* rounded-2xl */
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* simplified shadow-xl */
+        max-width: 42rem; /* max-w-2xl */
+        width: 100%;
+        text-align: center;
+        border: 1px solid #e5e7eb; /* border border-gray-200 */
+        font-family: sans-serif; /* Changed to generic sans-serif */
+        box-sizing: border-box; /* Ensure padding is included in width */
+    }
+
+    /* Responsive padding for medium screens and up */
+    @media (min-width: 768px) {
+        .transaction-success-container {
+            padding: 3rem; /* md:p-12 */
+        }
+    }
+
+    /* Icon container styling */
+    .icon-container {
+        margin-bottom: 1.5rem; /* mb-6 */
+        display: flex;
+        justify-content: center;
+    }
+
+    /* Icon SVG styling */
+    .success-icon {
+        width: 5rem; /* w-20 */
+        height: 5rem; /* h-20 */
+        color: #22c55e; /* text-green-500 */
+    }
+
+    /* Heading 1 styling */
+    .main-heading {
+        font-size: 2.25rem; /* text-4xl */
+        font-weight: 700; /* font-bold */
+        color: #1f2937; /* text-gray-800 */
+        margin-bottom: 1rem; /* mb-4 */
+        line-height: 1.25; /* leading-tight */
+    }
+
+    /* Responsive heading 1 for medium screens and up */
+    @media (min-width: 768px) {
+        .main-heading {
+            font-size: 3rem; /* md:text-5xl */
+        }
+    }
+
+    /* Paragraph styling */
+    .main-paragraph {
+        font-size: 1.125rem; /* text-lg */
+        color: #4b5563; /* text-gray-600 */
+        margin-bottom: 2rem; /* mb-8 */
+    }
+
+    /* Responsive paragraph for medium screens and up */
+    @media (min-width: 768px) {
+        .main-paragraph {
+            font-size: 1.25rem; /* md:text-xl */
+        }
+    }
+
+    /* Sub-heading styling */
+    .sub-heading {
+        font-size: 1.5rem; /* text-2xl */
+        font-weight: 600; /* font-semibold */
+        color: #374151; /* text-gray-700 */
+        margin-bottom: 1.5rem; /* mb-6 */
+    }
+
+    /* Responsive sub-heading for medium screens and up */
+    @media (min-width: 768px) {
+        .sub-heading {
+            font-size: 1.875rem; /* md:text-3xl */
+        }
+    }
+
+    /* List styling */
+    .next-steps-list {
+        text-align: left;
+        color: #374151; /* text-gray-700 */
+        margin-bottom: 2.5rem; /* mb-10 */
+    }
+
+    .next-steps-list li {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 1rem; /* space-y-4 */
+        font-size: 1rem; /* text-base */
+    }
+
+    .next-steps-list li:last-child {
+        margin-bottom: 0; /* Remove margin from last item */
+    }
+
+    /* Responsive list item font size for medium screens and up */
+    @media (min-width: 768px) {
+        .next-steps-list li {
+            font-size: 1.125rem; /* md:text-lg */
+        }
+    }
+
+    .list-number {
+        font-weight: 700; /* font-bold */
+        color: #2563eb; /* text-blue-600 */
+        margin-right: 0.75rem; /* mr-3 */
+        font-size: 1.25rem; /* text-xl */
+    }
+
+    /* Responsive list number font size for medium screens and up */
+    @media (min-width: 768px) {
+        .list-number {
+            font-size: 1.5rem; /* md:text-2xl */
+        }
+    }
+
+    .list-item-title {
+        font-weight: 500; /* font-medium */
+    }
+
+    .list-item-description {
+        color: #4b5563; /* text-gray-600 */
+    }
+
+    /* Button styling */
+    .cta-button {
+        display: inline-block;
+        background-color: #2563eb; /* bg-blue-600 */
+        color: #fff; /* text-white */
+        font-weight: 600; /* font-semibold */
+        padding: 0.75rem 2rem; /* py-3 px-8 */
+        border-radius: 0.75rem; /* rounded-xl */
+        font-size: 1.125rem; /* text-lg */
+        transition: all 0.3s ease-in-out; /* transition duration-300 ease-in-out */
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+        text-decoration: none; /* Remove underline from link */
+    }
+
+    .cta-button:hover {
+        background-color: #1d4ed8; /* hover:bg-blue-700 */
+        transform: scale(1.05); /* hover:scale-105 */
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* hover:shadow-xl */
+    }
+
+    .cta-button:focus {
+        outline: none; /* focus:outline-none */
+        box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.5); /* focus:ring-4 focus:ring-blue-300 */
+    }
+
+    /* Small text styling */
+    .support-text {
+        font-size: 0.875rem; /* text-sm */
+        color: #6b7280; /* text-gray-500 */
+        margin-top: 2rem; /* mt-8 */
+    }
+
+    .support-link {
+        color: #2563eb; /* text-blue-600 */
+        text-decoration: none;
+    }
+
+    .support-link:hover {
+        text-decoration: underline; /* hover:underline */
+    }
+</style>
+
+<!-- This is the main content div you can place within your <body> -->
+<div class="transaction-success-container">
+    <!-- Success Icon -->
+    <div class="icon-container">
+        <svg class="success-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+    </div>
+
+    <h1 class="main-heading">
+        Transaction Complete!
+    </h1>
+    <p class="main-paragraph">
+        Thank you for subscribing to **GSweep** for Gmail! Your payment was successful.
+    </p>
+
+    <h2 class="sub-heading">
+        What's Next? Get Started with GSweep
+    </h2>
+    <ol class="next-steps-list">
+        <li class="flex items-start">
+            <span class="list-number">1.</span>
+            <div>
+                <span class="list-item-title">Install the GSweep Add-on:</span>
+                <p class="list-item-description">If you haven't already, please install the GSweep add-on directly from the Google Workspace Marketplace.</p>
+            </div>
+        </li>
+        <li class="flex items-start">
+            <span class="list-number">2.</span>
+            <div>
+                <span class="list-item-title">Activate in Gmail:</span>
+                <p class="list-item-description">Open your Gmail, locate the GSweep icon on the right sidebar, and follow the simple activation steps. You might need to refresh your Gmail page.</p>
+            </div>
+        </li>
+        <li class="flex items-start">
+            <span class="list-number">3.</span>
+            <div>
+                <span class="list-item-title">Start Sweeping!</span>
+                <p class="list-item-description">Enjoy a cleaner, more organized inbox with GSweep's powerful features.</p>
+            </div>
+        </li>
+    </ol>
+
+    <!-- Call to Action Button -->
+    <a href="https://workspace.google.com/marketplace/app/gsweep/your-addon-id-here" target="_blank" rel="noopener noreferrer"
+       class="cta-button">
+        Go to Google Workspace Marketplace
+    </a>
+
+    <p class="support-text">
+        Having trouble? Please visit our <a href="#" class="support-link">support page</a> or contact us.
+    </p>
+</div>
