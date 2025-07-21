@@ -1,0 +1,6 @@
+# created by virtualenv automatically
+.venv
+.idea
+*.iml
+*.xml
+.idea/chatbot_Shopify.iml
