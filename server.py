@@ -35,6 +35,7 @@ async def root():
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(chat_request: ChatRequest):
     user_message = chat_request.message
+    print(f"User message: {user_message}")
 
     try:
         response = openai.chat.completions.create(

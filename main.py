@@ -1,16 +1,17 @@
-# This is a sample Python script.
+import os
+from openai import OpenAI
+from config import settings
 
-# Press Ctrl+F5 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+client = OpenAI(
+    # This is the default and can be omitted
+    # api_key=os.environ.get("OPENAI_API_KEY"),
+    api_key=settings.openai_api_key,
+)
 
+response = client.responses.create(
+    model="gpt-4o",
+    instructions="You are a coding assistant that talks like a pirate.",
+    input="How do I check if a Python object is an instance of a class?",
+)
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press F9 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+print(response.output_text)

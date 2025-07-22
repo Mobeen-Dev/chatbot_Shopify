@@ -1,8 +1,18 @@
-# created by virtualenv automatically
-.venv
-.idea
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+
+# IDEs
+.idea/
 *.iml
 *.xml
-.idea/chatbot_Shopify.iml
-*.pyc
-__pycache__
+
+# Env files and sensitive data
+creds/.env
+creds/*
+!.gitignore  # allow a .gitignore inside creds, if needed
+
