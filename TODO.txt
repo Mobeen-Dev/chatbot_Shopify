@@ -1,0 +1,11 @@
+Back-End:
+    Server Building
+    Ci/CD Pipeline
+    MCP Connection
+
+
+
+Front-End:
+    Develop a theme extension for Shopify Store as frontend agent for llm powered chat
+    Markdown renderer on frontend
+    Enable/Disable Remember Mode

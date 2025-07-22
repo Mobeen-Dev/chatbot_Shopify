@@ -4,7 +4,6 @@ from config import settings
 
 client = OpenAI(
     # This is the default and can be omitted
-    # api_key=os.environ.get("OPENAI_API_KEY"),
     api_key=settings.openai_api_key,
 )
 

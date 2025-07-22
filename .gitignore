@@ -13,6 +13,5 @@ venv/
 
 # Env files and sensitive data
 creds/.env
-creds/*
 !.gitignore  # allow a .gitignore inside creds, if needed
 
