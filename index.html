@@ -601,6 +601,36 @@
                 this.addSystemMessage(`Remember Mode ${mode}. ${this.rememberMode ? 'I will now remember our conversation context.' : 'Conversation context will not be saved.'}`);
             }
             
+            renderMarkdown(text) {
+                if (!text) return '';
+                
+                // Replace line breaks
+                let formatted = text.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+                
+                // Replace bold text: **text** or __text__
+                formatted = formatted.replace(/\*\*(.*?)\*\*|__(.*?)__/g, '<strong>$1$2</strong>');
+                
+                // Replace italic text: *text* or _text_
+                formatted = formatted.replace(/\*(.*?)\*|_(.*?)_/g, '<em>$1$2</em>');
+                
+                // Replace numbered lists: 1. text
+                formatted = formatted.replace(/^\d+\.\s+(.*?)(?:\n|$)/gm, '<li>$1</li>');
+                
+                // Replace bullet lists: - text or * text
+                formatted = formatted.replace(/^[\-\*]\s+(.*?)(?:\n|$)/gm, '<li>$1</li>');
+                
+                // Wrap adjacent list items in <ul> or <ol>
+                formatted = formatted.replace(/<li>.*?<\/li>(?:\s*<li>.*?<\/li>)+/g, match => {
+                    if (match.startsWith('<li>1.') || match.startsWith('<li>2.')) {
+                    return '<ol>' + match + '</ol>';
+                    } else {
+                    return '<ul>' + match + '</ul>';
+                    }
+                });
+                
+                return formatted;
+            }
+
             addSystemMessage(text) {
                 const messageDiv = document.createElement('div');
                 messageDiv.className = 'message ai';
@@ -836,6 +866,11 @@
                 const bubble = document.createElement('div');
                 bubble.className = 'message-bubble';
                 bubble.textContent = text;
+                if (sender === 'ai') {
+                    bubble.innerHTML = this.renderMarkdown(text);
+                } else {
+                    bubble.textContent = text;
+                }
                 
                 messageDiv.appendChild(avatar);
                 messageDiv.appendChild(bubble);

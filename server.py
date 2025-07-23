@@ -60,7 +60,7 @@ async def chat_endpoint(chat_request: ChatRequest):
 async def async_chat_endpoint(chat_request: ChatRequest):
     user_message = chat_request.message.strip()
     print(f"User message: {user_message}")
-    return ChatResponse(reply="reply")
+    return ChatResponse(reply="If you can only buy two types of apples for your fruit salad, I recommend:\n\n1. **Fuji or Gala (Red apple)** – for sweetness and juiciness.\n2. **Granny Smith (Green apple)** – for tartness and crisp texture.\n\nThis combination will give your fruit salad a nice balance of sweet and tart flavors with a good crunch. Would you like me to help you find these apples on Digilog?")
     if not user_message:
         raise HTTPException(status_code=400, detail="Message cannot be empty.")
 
