@@ -60,7 +60,7 @@ async def chat_endpoint(chat_request: ChatRequest):
 async def async_chat_endpoint(chat_request: ChatRequest):
     user_message = chat_request.message.strip()
     print(f"User message: {user_message}")
-
+    return ChatResponse(reply="reply")
     if not user_message:
         raise HTTPException(status_code=400, detail="Message cannot be empty.")
 
