@@ -6,6 +6,19 @@ Back-End:
 
 
 Front-End:
+    - Develop a theme extension for Shopify Store as frontend agent for llm powered chat
+
+Admin Panel Features:
+    - Enable/Disable Remember Mode
+    - Switch Languages
+    - custom MCP / Backend URL
+    - Temperature settings
+
+Future Goals:
+    Front-End for Analytics
+    Chat Record 
+    Limits Settings
+    
     Develop a theme extension for Shopify Store as frontend agent for llm powered chat
     
 
