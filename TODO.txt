@@ -7,7 +7,12 @@ Back-End:
 
 Front-End:
     Develop a theme extension for Shopify Store as frontend agent for llm powered chat
-    Markdown renderer on frontend
+    
+
+Optimization:
+    Efficient Remember Mode
+
 
 Completed :
-Enable/Disable Remember Mode
+    Enable/Disable Remember Mode
+    Markdown renderer on frontend
