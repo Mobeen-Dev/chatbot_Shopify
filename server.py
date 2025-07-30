@@ -25,7 +25,7 @@ app.add_middleware(
     allow_origins=["*"],  # Use specific origin in production (e.g., ["https://yourfrontend.com"])
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*"]
 )
 
 
@@ -60,7 +60,7 @@ async def chat_endpoint(chat_request: ChatRequest):
 async def async_chat_endpoint(chat_request: ChatRequest):
     user_message = chat_request.message.strip()
     print(f"User message: {user_message}")
-    return ChatResponse(reply="Hello! When it comes to apples, taste can vary depending on the variety rather than just the color. However, here are some general guidelines:\n\n- **Red apples:** Varieties like Fuji, Gala, and Red Delicious are sweet and juicy.\n- **Green apples:** Granny Smith apples are tart and crisp, great if you like a tangy flavor.\n- **Yellow apples:** Golden Delicious apples are sweet and mellow.\n\nIf you prefer sweet apples, you might enjoy red or yellow ones. If you like tart and crisp, green apples are a good choice.\n\nWould you like me to recommend some specific apple products available on Digilog?If you can only buy two types of apples for your fruit salad, I recommend:\n\n1. **Fuji or Gala (Red apple)** – for sweetness and juiciness.\n2. **Granny Smith (Green apple)** – for tartness and crisp texture.\n\nThis combination will give your fruit salad a nice balance of sweet and tart flavors with a good crunch. Would you like me to help you find these apples on Digilog?")
+    # return ChatResponse(reply="Hello! When it comes to apples, taste can vary depending on the variety rather than just the color. However, here are some general guidelines:\n\n- **Red apples:** Varieties like Fuji, Gala, and Red Delicious are sweet and juicy.\n- **Green apples:** Granny Smith apples are tart and crisp, great if you like a tangy flavor.\n- **Yellow apples:** Golden Delicious apples are sweet and mellow.\n\nIf you prefer sweet apples, you might enjoy red or yellow ones. If you like tart and crisp, green apples are a good choice.\n\nWould you like me to recommend some specific apple products available on Digilog?If you can only buy two types of apples for your fruit salad, I recommend:\n\n1. **Fuji or Gala (Red apple)** – for sweetness and juiciness.\n2. **Granny Smith (Green apple)** – for tartness and crisp texture.\n\nThis combination will give your fruit salad a nice balance of sweet and tart flavors with a good crunch. Would you like me to help you find these apples on Digilog?")
     if not user_message:
         raise HTTPException(status_code=400, detail="Message cannot be empty.")
 
@@ -74,6 +74,32 @@ async def async_chat_endpoint(chat_request: ChatRequest):
 
             response = await client.chat.completions.create(
                 model="gpt-4.1-mini",
+                tools=[
+                        {
+                            "type": "function",
+                            "function": {
+                                "name": "get_weather",
+                                "description": "Retrieves current weather for the given location.",
+                                "strict": True,
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": {
+                                        "location": {
+                                            "type": "string",
+                                            "description": "City and country e.g. Bogotá, Colombia"
+                                        },
+                                        "units": {
+                                            "type": ["string", "None"],
+                                            "enum": ["celsius", "fahrenheit"],
+                                            "description": "Units the temperature will be returned in."
+                                        }
+                                    },
+                                    "required": ["location", "units"],
+                                    "additionalProperties": False
+                                }
+                            }
+                        }
+                    ],
                 messages=messages,
                 max_tokens=650,
                 temperature=0.7,

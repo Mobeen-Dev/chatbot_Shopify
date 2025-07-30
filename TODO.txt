@@ -19,7 +19,10 @@ Future Goals:
     Chat Record 
     Limits Settings
     
-    Develop a theme extension for Shopify Store as frontend agent for llm powered chat
+Cost Saving Plans:
+    stateful - prompt engineering - summary of chat - only add summary in the next prompt (after 10-th message)
+    or 
+    Implement this also for each message when WebSearch is ON
     
 
 Optimization:
