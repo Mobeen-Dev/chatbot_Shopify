@@ -16,7 +16,7 @@ def resource_path(relative_path):
 
 
 class Settings(BaseSettings):
-    # === Shopify Master Store credentials ===
+    # === OpenAi credentials ===
     openai_api_key: str = Field(alias="OPENAI_API_KEY")
     
     # === Shopify Master Store credentials ===
@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     shopify_api_secret: str = Field(alias="SHOPIFY_API_SECRET")
     shopify_store_name: str = Field(alias="SHOPIFY_STORE_NAME")
     shopify_api_version: str = Field(alias="SHOPIFY_API_VERSION")
+    
+    # === Pinecone credentials ===
+    pinecone_api_key: str = Field(alias="PINECONE_API_KEY")
     
     # ── helper properties ────────────────────────────
     

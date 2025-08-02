@@ -13,5 +13,7 @@ venv/
 
 # Env files and sensitive data
 creds/.env
-!.gitignore  # allow a .gitignore inside creds, if needed
+ShopifyExtension/
 
+Data/
+chroma_store/

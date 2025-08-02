@@ -1,7 +1,36 @@
+Phase #1
+    Basic openAi api Calling + Prompt Engineering
+    Product Knowledge Aware
+    
+Phase #2
+    Session Based 
+        Short-Term Memory
+        Long-Term Memory
+    Recommend Products
+
+Phase #3
+    Retrieve Products | Orders Data
+    Handle Cart | Checkout
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Back-End:
     Server Building
     Ci/CD Pipeline
-    MCP Connection
+    MCP Connection 
 
 
 
