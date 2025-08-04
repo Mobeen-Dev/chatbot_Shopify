@@ -192,3 +192,4 @@ if __name__ == "__main__":
         print(f"Distance: {match['distance']:.4f}")
         print(f"Metadata: {match['metadata']}")
         print(f"Content:\n{match['content']}")
+        print("-" * 80)

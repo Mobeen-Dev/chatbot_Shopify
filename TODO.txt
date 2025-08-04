@@ -12,7 +12,10 @@ Phase #3
     Retrieve Products | Orders Data
     Handle Cart | Checkout
 
-
+After MVP-2
+    Refactor Api function 
+    Refactor App Endpoints
+    Refactor RAG Module
 
 
 
@@ -36,12 +39,14 @@ Back-End:
 
 Front-End:
     - Develop a theme extension for Shopify Store as frontend agent for llm powered chat
+    - Unselectable Text
 
 Admin Panel Features:
     - Enable/Disable Remember Mode
     - Switch Languages
     - custom MCP / Backend URL
     - Temperature settings
+    - Max Token per Message
 
 Future Goals:
     Front-End for Analytics
