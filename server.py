@@ -13,10 +13,16 @@ from config import settings
 from logger import get_logger
 from opneai_tools import tools_list
 from embed_and_save_vector import query_chroma
+from Shopify import Shopify
+
 
 # #####################################################################
 # ################## Helper Functions Start ###########################
 # #####################################################################
+
+# @ App level create a reference for Shopify API client
+store = Shopify(settings.store, "ShopifyClient")
+
 def get_products_data(query: str, top_k: int = 5) -> str:
     """
     Function for fetching product data based on a query.
@@ -24,6 +30,14 @@ def get_products_data(query: str, top_k: int = 5) -> str:
     """
     results = query_chroma(query=query, top_k=top_k)
     return json.dumps(results) 
+
+async def get_product_via_handle(handle: str) -> str:
+    """
+    Function to fetch complete product data using the product handle.
+    This is used to get the most up-to-date product information.
+    """
+    product = await store.get_product_by_handle(handle)
+    return str(product)
 # #####################################################################
 # ################## Helper Functions End #############################
 # #####################################################################
@@ -128,6 +142,19 @@ async def async_chat_endpoint(chat_request: ChatRequest):
 
                         # Call the actual function
                         tool_output = get_products_data(query, top_k)
+
+                        # Append tool response to messages
+                        chat_request.append_message(
+                            "tool",
+                            content=tool_output,
+                            tool_call_id =tool_call.id,
+                            function_name=function_name                            
+                        )
+                    elif function_name == "get_product_via_handle":
+                        handle = arguments["handle"]
+
+                        # Call the actual function
+                        tool_output = await get_product_via_handle(handle)
 
                         # Append tool response to messages
                         chat_request.append_message(

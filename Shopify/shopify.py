@@ -191,6 +191,22 @@ class Shopify:
     return id
     # self.logger.info(str(result))
   
+  async def get_product_by_handle(self, product_handle: str):
+    
+    query = self.full_product_query_by_identifier()
+    query_params = {
+      "identifier": {
+        "handle": f"{product_handle}"
+      }
+    }
+    result = await self.send_graphql_mutation(query, query_params, "product")
+    product = result.get("data", {}).get("product",{})
+    id = product.get("id", None)
+    
+    return product
+    # self.logger.info(str(result))
+  
+  
   async def delete_product_by_id(self, product_graphql_id: str):
    
     mutation = self.product_delete_mutation()
@@ -660,6 +676,111 @@ class Shopify:
     }
     """
   
+  @staticmethod
+  def full_product_query_by_identifier():
+    return """
+      query ($identifier: ProductIdentifierInput!) {
+        product: productByIdentifier(identifier: $identifier) {
+          id
+          title
+          handle
+          description
+          descriptionHtml
+          vendor
+          productType
+          status
+          createdAt
+          updatedAt
+          tags
+          options {
+            name
+            values
+          }
+          priceRange {
+            minVariantPrice {
+              amount
+              currencyCode
+            }
+            maxVariantPrice {
+              amount
+              currencyCode
+            }
+          }
+          compareAtPriceRange {
+            minVariantCompareAtPrice {
+              amount
+              currencyCode
+            }
+            maxVariantCompareAtPrice {
+              amount
+              currencyCode
+            }
+          }
+          totalInventory
+          variants(first: 249) {
+            edges {
+              node {
+                id
+                title
+                sku
+                taxable
+                price
+                compareAtPrice
+                inventoryQuantity
+                availableForSale
+                barcode
+                createdAt
+                updatedAt
+                inventoryPolicy
+                inventoryItem {
+                  id
+                  tracked
+                  measurement {
+                    weight {
+                      value
+                      unit
+                    }
+                  }
+                  unitCost {
+                    amount
+                    currencyCode
+                  }
+                  countryCodeOfOrigin
+                  harmonizedSystemCode
+                  requiresShipping
+                }
+                image {
+                  width
+                  height
+                  id
+                  altText
+                  url
+                  width
+                  height
+                }
+              }
+            }
+          }
+          media(first: 1) {
+            edges {
+              node {
+                ... on MediaImage {
+                  image {
+                    id
+                    altText
+                    url
+                    width
+                    height
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      """
+  
+
 
   def parse_into_query_params(self, product: dict, child_p_id: str = ''):
     # product = await fetch_product(product_gid)

@@ -1,1 +1,1 @@
-from .shopify import Shopify
+from .shopify import Shopify  # noqa: F401
