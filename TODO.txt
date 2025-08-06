@@ -11,6 +11,7 @@ Phase #2
 Phase #3
     Retrieve Products | Orders Data
     Handle Cart | Checkout
+    Redirect to Different Pages
 
 After MVP-2
     Refactor Api function 

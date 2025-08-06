@@ -3,3 +3,30 @@
 2025-08-04 14:19:28,506 ERROR [FastAPI] OpenAI API error: Error code: 400 - {'error': {'message': "Invalid value for 'content': expected a string, got null.", 'type': 'invalid_request_error', 'param': 'messages.[1].content', 'code': None}}
 2025-08-04 14:22:23,368 ERROR [FastAPI] OpenAI API error: Error code: 400 - {'error': {'message': "Invalid parameter: messages with role 'tool' must be a response to a preceeding message with 'tool_calls'.", 'type': 'invalid_request_error', 'param': 'messages.[2].role', 'code': None}}
 2025-08-04 17:02:46,929 ERROR [FastAPI] OpenAI API error: Error code: 400 - {'error': {'message': "Invalid value for 'content': expected a string, got null.", 'type': 'invalid_request_error', 'param': 'messages.[1].content', 'code': None}}
+2025-08-04 19:53:37,099 ERROR [FastAPI] OpenAI API error: Error code: 400 - {'error': {'message': "An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. The following tool_call_ids did not have response messages: call_QgLAaBAcuSDwT9asSL4SNnG8", 'type': 'invalid_request_error', 'param': 'messages.[2].role', 'code': None}}
+2025-08-04 19:59:54,713 ERROR [FastAPI] OpenAI API error: Error code: 400 - {'error': {'message': "An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. The following tool_call_ids did not have response messages: call_dpBxSy01DEoeZi1By1o0ngJf", 'type': 'invalid_request_error', 'param': 'messages.[2].role', 'code': None}}
+2025-08-04 20:01:07,100 ERROR [FastAPI] OpenAI API error: Error code: 400 - {'error': {'message': "An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. The following tool_call_ids did not have response messages: call_NKE9p9Nj5DxFfKZ5GpRSKSDb", 'type': 'invalid_request_error', 'param': 'messages.[2].role', 'code': None}}
+2025-08-04 20:05:19,515 ERROR [FastAPI] Unexpected server error
+Traceback (most recent call last):
+  File "C:\DRIVE_D\PythonProject\chatbot_Shopify\server.py", line 160, in async_chat_endpoint
+    chat_request.append_message(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        "tool",
+        ^^^^^^^
+    ...<2 lines>...
+        function_name=function_name
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\DRIVE_D\PythonProject\chatbot_Shopify\models.py", line 104, in append_message
+    tool_msg = ChatMessage(
+        role=role,
+    ...<3 lines>...
+        content=content
+    )
+  File "C:\DRIVE_D\PythonProject\chatbot_Shopify\.venv\Lib\site-packages\pydantic\main.py", line 253, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for ChatMessage
+content
+  Input should be a valid string [type=string_type, input_value={'id': 'gid://shopify/Pro...24, 'height': 1024}}}]}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
