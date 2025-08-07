@@ -8,7 +8,7 @@ import asyncio
 # @ App level create a reference for Shopify API client
 store = Shopify(settings.store, "ShopifyClient")
 
-print(asyncio.run(store.get_product_by_handle("14-watt-quarter-1-resistor-pakistan")))
+print(asyncio.run(store.get_product_by_handle("arduino-uno-r4-wifi-in-pakistan")))
 
 required_field = """
 

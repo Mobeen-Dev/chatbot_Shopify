@@ -1,11 +1,12 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List, Literal, cast
+from typing import Optional, List, Literal, Dict, Any, cast 
 from openai.types.chat import ChatCompletionMessageParam
 from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMessageToolCall
-Role = Literal["system", "user", "assistant", "tool"]
+Role = Literal["system", "user", "assistant", "tool", "function", "developer"]
 
 class ChatMessage(BaseModel):
-    role: Role
+    # role: Role
+    role: str
     content: Optional[str] = None
     name: Optional[str] = None
     tool_call_id: Optional[str] = None
@@ -72,12 +73,13 @@ class ChatRequest(BaseModel):
         
         for msg in history:
             messages.append(self.format_chat_message(msg))
-        try:
-            if len(history) > 2 and history[-1].role == "tool":
-                messages.append({"role": "system", "content": self.vector_review_prompt})
-        except IndexError:
-            # If history is empty, we don't need to append the vector review prompt
-            pass
+        # try:
+        #     print("vector_review_prompt :","len(history) > 2",len(history) > 1, "history[-1].role", history[-1].role if history else None)
+        #     if len(history) > 1 and history[-1].role == "tool":
+        #         messages.append({"role": "system", "content": self.vector_review_prompt})
+        # except IndexError:
+        #     # If history is empty, we don't need to append the vector review prompt
+        #     pass
         
         messages.append( {"role": "user", "content": self.message.strip()})   
         
@@ -103,8 +105,7 @@ class ChatRequest(BaseModel):
         elif tool_call_id and function_name :
             tool_msg = ChatMessage(
                 role=role,
-                tool_call_id=tool_call_id,
-                
+                tool_call_id=tool_call_id,                
                 name=function_name,
                 content=content
             )
@@ -118,5 +119,5 @@ class ChatRequest(BaseModel):
 
 # Response schema
 class ChatResponse(BaseModel):
-    reply: str
-    history: List[ChatMessage] = Field(default_factory=list)
+    reply: str | List[Dict[str, Any]]
+    history: List[ChatCompletionMessageParam] = Field(default_factory=list)

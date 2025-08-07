@@ -467,7 +467,7 @@
                     maxRetries: 3,               // Maximum number of retry attempts
                     retryDelay: 1000,            // Base delay between retries (ms)
                     debounceDelay: 300,          // Debounce delay for input (ms)
-                    apiEndpoint: 'https://your-api-endpoint.com/chat',   // AI service endpoint URL
+                    apiEndpoint: '{{  block.settings.server_url }}',
                     maxConcurrentRequests: 2     // Limit concurrent API requests
                 };
                 
@@ -550,9 +550,8 @@
                 this.addMessage("Hi there! I'm your product assistant. Ask me about our products, and I'll show you some options.", 'bot');
             }
             
-            /**
-             * Add options to chat header
-             */
+            // Add options to chat header
+            
             addHeaderOptions() {
                 return; // Skip already added
                 const headerElement = document.getElementById('chat-header');
@@ -576,9 +575,9 @@
                 headerElement.insertBefore(memoryToggle, resetButton);
             }
             
-            /**
-             * Toggle chat window visibility
-             */
+            
+            // Toggle chat window visibility
+            
             toggleChatWindow() {
                 this.chatWindow.classList.toggle('open');
                 
@@ -592,17 +591,16 @@
                 }
             }
             
-            /**
-             * Minimize chat window
-             */
+            // Minimize chat window
+            
             minimizeChatWindow() {
                 this.chatWindow.classList.remove('open');
                 this.chatToggle.querySelector('.chat-icon').textContent = 'chat';
             }
             
-            /**
-             * Send user message to AI and process response
-             */
+            
+            // Send user message to AI and process response
+            
             async sendMessage() {
                 const message = this.chatInput.value.trim();
                 if (!message || this.isAITyping) return;
@@ -648,9 +646,9 @@
                 }
             }
             
-            /**
-             * Make API request to the backend
-             */
+            
+            // Make API request to the backend
+            
             async makeRequest(data, retryCount = 0) {
                 try {
                     console.log(`Sending request with data: ${JSON.stringify(data)}`);
@@ -705,9 +703,9 @@
                 }
             }
             
-            /**
-             * Get AI response - with caching
-             */
+            
+            // Get AI response - with caching
+            
             async getAIResponse(message) {
                 // Check cache first for performance
                 const cacheKey = this.rememberMode ? 
@@ -744,10 +742,10 @@
                 return response;
             }
             
-            /**
-             * Simulate API response for demo purposes
-             * In production, this would be replaced with actual API calls
-             */
+            
+            // Simulate API response for demo purposes
+            // In production, this would be replaced with actual API calls
+            
             async simulateAPIResponse(message) {
                 const lowerMessage = message.toLowerCase();
                 await this.delay(1000 + Math.random() * 2000); // Simulate network delay
@@ -814,9 +812,8 @@
                 return "I can help you find microcontrollers and development boards. Try asking about Arduino, Raspberry Pi, or ESP32!";
             }
             
-            /**
-             * Check if error is retryable
-             */
+            
+            // Check if error is retryable            
             isRetryableError(error) {
                 const retryableErrors = [
                     'NetworkError',
@@ -828,9 +825,8 @@
                 );
             }
             
-            /**
-             * Handle errors with user-friendly messages
-             */
+            
+            // Handle errors with user-friendly messages
             handleError(error) {
                 console.error('ChatBot error:', error);
                 
@@ -848,28 +844,22 @@
                 }, 5000);
             }
             
-            /**
-             * Get or create session ID
-             */
+            // Get or create session ID            
             getSessionId() {
                 // Using a basic session ID generation method to avoid localStorage
                 return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             }
             
-            /**
-             * Toggle remember mode
-             */
+            // Toggle remember mode
             toggleRememberMode() {
                 this.rememberMode = !this.rememberMode;
-                
+                return;
                 // Show feedback
                 const mode = this.rememberMode ? 'enabled' : 'disabled';
                 this.addSystemMessage(`Memory Mode ${mode}. ${this.rememberMode ? 'I will now remember our conversation context.' : 'Conversation context will not be saved.'}`);
             }
             
-            /**
-             * Reset conversation
-             */
+            // Reset conversation
             resetConversation() {
                 // Clear conversation history
                 this.conversationHistory = [];
@@ -895,9 +885,7 @@
                 this.addMessage("Hi there! I'm your product assistant. Ask me about our products, and I'll show you some options.", 'bot');
             }
             
-            /**
-             * Cleanup resources
-             */
+            // Cleanup resources
             cleanup() {
                 if (this.abortController) {
                     this.abortController.abort();
@@ -905,9 +893,7 @@
                 this.responseCache.clear();
             }
             
-            /**
-             * Add message to chat
-             */
+            // Add message to chat
             addMessage(text, sender) {
                 const messageDiv = document.createElement('div');
                 messageDiv.classList.add('message');
@@ -918,9 +904,7 @@
                 this.scrollToBottom();
             }
             
-            /**
-             * Add system message to chat (for notifications)
-             */
+            // Add system message to chat (for notifications)
             addSystemMessage(text) {
                 const messageDiv = document.createElement('div');
                 messageDiv.classList.add('message', 'system-message');
@@ -942,9 +926,7 @@
                 }, 5000);
             }
             
-            /**
-             * Add products from response
-             */
+            // Add products from response
             addProductsFromResponse(products) {
                 // Add intro message
                 this.addMessage("Here are some products you might be interested in:", 'bot');
@@ -957,9 +939,7 @@
                 });
             }
             
-            /**
-             * Add product to chat
-             */
+            // Add product to chat
             addProduct(product) {
                 const productDiv = document.createElement('div');
                 productDiv.classList.add('message', 'bot-message');
@@ -983,9 +963,7 @@
                 this.scrollToBottom();
             }
             
-            /**
-             * Show typing indicator
-             */
+            // Show typing indicator
             showTypingIndicator() {
                 this.isAITyping = true;
                 const typingDiv = document.createElement('div');
@@ -1002,9 +980,7 @@
                 this.scrollToBottom();
             }
             
-            /**
-             * Hide typing indicator
-             */
+            // Hide typing indicator
             hideTypingIndicator() {
                 this.isAITyping = false;
                 const typingIndicator = document.getElementById('typing-indicator');
@@ -1013,9 +989,7 @@
                 }
             }
             
-            /**
-             * Set input disabled state
-             */
+            // Set input disabled state
             setInputDisabled(disabled) {
                 this.chatInput.disabled = disabled;
                 this.sendButton.disabled = disabled;
@@ -1025,16 +999,12 @@
                 }
             }
             
-            /**
-             * Scroll chat to bottom
-             */
+            // Scroll chat to bottom
             scrollToBottom() {
                 this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
             }
             
-            /**
-             * Utility function for delays
-             */
+            // Utility function for delays
             delay(ms) {
                 return new Promise(resolve => setTimeout(resolve, ms));
             }

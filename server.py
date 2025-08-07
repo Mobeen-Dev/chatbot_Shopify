@@ -14,6 +14,7 @@ from logger import get_logger
 from opneai_tools import tools_list
 from embed_and_save_vector import query_chroma
 from Shopify import Shopify
+import markdown
 
 
 # #####################################################################
@@ -175,9 +176,12 @@ async def async_chat_endpoint(chat_request: ChatRequest):
             )
 
             
-
+            logger.info(f"OpenAI response: {response}")
+            logger.info(f"\n\n History choices: {messages}")
             reply = str(response.choices[0].message.content).strip()
-            return ChatResponse(reply=reply)
+            reply_html = markdown.markdown(reply, extensions=['extra', 'codehilite'])
+            print(f"Final reply HTML: {reply_html}")
+            return ChatResponse(reply=reply_html, history=messages)
 
     except OpenAIError as e:
         logger.error(f"OpenAI API error: {e}")
@@ -191,7 +195,7 @@ async def async_chat_endpoint(chat_request: ChatRequest):
             status_code=status.HTTP_504_GATEWAY_TIMEOUT,
             detail="Language model response timed out.",
         )
-    except Exception as e:
+    except Exception as e:  # noqa: F841
         logger.exception("Unexpected server error")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
