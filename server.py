@@ -15,6 +15,10 @@ from opneai_tools import tools_list
 from embed_and_save_vector import query_chroma
 from Shopify import Shopify
 import markdown
+import redis.asyncio as redis
+from session_manager import SessionManager
+from typing import cast, List
+from openai.types.chat import ChatCompletionToolMessageParam
 
 
 # #####################################################################
@@ -23,6 +27,8 @@ import markdown
 
 # @ App level create a reference for Shopify API client
 store = Shopify(settings.store, "ShopifyClient")
+redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+session_manager = SessionManager(redis_client, session_ttl=3600)
 
 def get_products_data(query: str, top_k: int = 5) -> str:
     """
@@ -39,6 +45,8 @@ async def get_product_via_handle(handle: str) -> str:
     """
     product = await store.get_product_by_handle(handle)
     return str(product)
+
+
 # #####################################################################
 # ################## Helper Functions End #############################
 # #####################################################################
@@ -90,18 +98,29 @@ async def chat_endpoint(chat_request: ChatRequest):
 @app.post("/async-chat", response_model=ChatResponse)
 async def async_chat_endpoint(chat_request: ChatRequest):
     user_message = chat_request.message.strip()
-    print(f"User message: {user_message}")
+    session_id = chat_request.session_id
+    print(f"\n\nUser message: {user_message} \n  Session ID: {session_id}\n\n")
     # return ChatResponse(reply="Hello! When it comes to apples, taste can vary depending on the variety rather than just the color. However, here are some general guidelines:\n\n- **Red apples:** Varieties like Fuji, Gala, and Red Delicious are sweet and juicy.\n- **Green apples:** Granny Smith apples are tart and crisp, great if you like a tangy flavor.\n- **Yellow apples:** Golden Delicious apples are sweet and mellow.\n\nIf you prefer sweet apples, you might enjoy red or yellow ones. If you like tart and crisp, green apples are a good choice.\n\nWould you like me to recommend some specific apple products available on Digilog?If you can only buy two types of apples for your fruit salad, I recommend:\n\n1. **Fuji or Gala (Red apple)** – for sweetness and juiciness.\n2. **Granny Smith (Green apple)** – for tartness and crisp texture.\n\nThis combination will give your fruit salad a nice balance of sweet and tart flavors with a good crunch. Would you like me to help you find these apples on Digilog?")
     if not user_message:
         raise HTTPException(status_code=400, detail="Message cannot be empty.")
-
+    if not session_id:
+        session_id = await session_manager.create_session({"data":None}) # Created User Chat History Data
+    else:
+        # Retrieve existing session data
+        session_data = await session_manager.get_session(session_id)
+        # chat_request.history = chat_request.extract_chat_history(session_data)
+        chat_request.load_history(session_data)
+        if not True:
+            raise HTTPException(status_code=404, detail="Session not found.")
+        print(f"Session data retrieved chat_request.n_history: \n{chat_request.n_history}\n\n\n\n\n\n\n")
     try:
+        response = None
         async with AsyncOpenAI(
             api_key=settings.openai_api_key,
-            http_client=DefaultAioHttpClient(timeout=30),
+            http_client=DefaultAioHttpClient(timeout=60),
         ) as client:
 
-            messages = chat_request.openai_messages
+            messages = chat_request.n_openai_msgs
 
             response = await client.chat.completions.create(
                 model="gpt-4.1-mini",
@@ -113,25 +132,23 @@ async def async_chat_endpoint(chat_request: ChatRequest):
             )
             
             assistant_message = response.choices[0].message
-            print('\n\n\n\n')
-            print('-' * 80)
-            print(f"Assistant: {assistant_message}")
-            print('-' * 80)
+            
+            # logger.info(f"OpenAI response before calling a function: {response}")
+            # print('\n\n\n\n')
+            # print('-' * 80)
+            # print(f"Assistant: {assistant_message}")
+            # print('-' * 80)
             if assistant_message.tool_calls:
+                chat_request.append_message(assistant_message.model_dump())
                 
-                chat_request.append_message(
-                                role=assistant_message.role,
-                                content=None,# By Default
-                                tool_calls=assistant_message.tool_calls
-                            )
+                print(f"\n\n Chat_request Object after appending function call request: {chat_request.n_history}")
+            # print('\n\n\n\n')
+            # print('-' * 80)
+            # print(f"After 102: {chat_request.n_history}")
+            # print('-' * 80)
+            # print('\n\n\n\n')
                 
-            print('\n\n\n\n')
-            print('-' * 80)
-            print(f"After 102: {chat_request.openai_messages}")
-            print('-' * 80)
-            print('\n\n\n\n')
-                
-            # Check if assistant called a tool
+            # Response if assistant called a tool
             if assistant_message.tool_calls:
                 for tool_call in assistant_message.tool_calls:
                     function_name = tool_call.function.name
@@ -139,49 +156,52 @@ async def async_chat_endpoint(chat_request: ChatRequest):
 
                     if function_name == "get_products_data":
                         query = arguments["query"]
-                        top_k = arguments.get("top_k_result", 5)
+                        top_k = arguments.get("top_k_result", 7)
 
                         # Call the actual function
                         tool_output = get_products_data(query, top_k)
 
                         # Append tool response to messages
-                        chat_request.append_message(
-                            "tool",
-                            content=tool_output,
-                            tool_call_id =tool_call.id,
-                            function_name=function_name                            
-                        )
+                        chat_request.append_tool_response(tool_output, tool_call.id)
+                        
                     elif function_name == "get_product_via_handle":
                         handle = arguments["handle"]
+                        
 
                         # Call the actual function
                         tool_output = await get_product_via_handle(handle)
 
                         # Append tool response to messages
-                        chat_request.append_message(
-                            "tool",
-                            content=tool_output,
-                            tool_call_id =tool_call.id,
-                            function_name=function_name                            
-                        )
-            messages = chat_request.openai_messages
-            
-            response = await client.chat.completions.create(
-                model="gpt-4.1-mini",
-                tools=tools_list,
-                messages=messages,
-                tool_choice="auto",
-                # max_tokens=650,
-                # temperature=0.7,
-            )
-
-            
-            logger.info(f"OpenAI response: {response}")
-            logger.info(f"\n\n History choices: {messages}")
+                        chat_request.append_tool_response(tool_output, tool_call.id)
+                        
+                messages = chat_request.n_openai_msgs
+                response = await client.chat.completions.create(
+                    model="gpt-4.1-mini",
+                    tools=tools_list,
+                    messages=messages,
+                    tool_choice="auto",
+                    # max_tokens=650,
+                    # temperature=0.7,
+                )
+            chat_request.append_message({"role": "user", "content": user_message, "name": "Customer"})
+            chat_request.append_message(response.choices[0].message.model_dump())
+            logger.info(f"\n\n\n\n\nOpenAI response: {response}\n\n\n\n\n\n")
+            # logger.info(f"\n\n History choices: {messages}")
             reply = str(response.choices[0].message.content).strip()
             reply_html = markdown.markdown(reply, extensions=['extra', 'codehilite'])
-            print(f"Final reply HTML: {reply_html}")
-            return ChatResponse(reply=reply_html, history=messages)
+            # print(f"\nFinal reply HTML: {reply_html}")
+
+            messages = chat_request.n_history
+            # print(f"\n\nWhat we need to Store: \n{messages}")
+            # Update session with new chat history
+            # latest_chat = chat_request.Serialize_chat_history(messages)
+            latest_chat = chat_request.n_Serialize_chat_history(messages)
+            await session_manager.update_session(session_id, latest_chat)
+            
+            return ChatResponse(
+                reply=reply_html,
+                session_id=session_id
+            )
 
     except OpenAIError as e:
         logger.error(f"OpenAI API error: {e}")

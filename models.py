@@ -1,10 +1,10 @@
 import json 
 from pydantic import BaseModel, Field
-from typing import Optional, List, Literal, Dict, Any, cast 
-from openai.types.chat import ChatCompletionMessageToolCall, ChatCompletionMessageParam
+from typing import Optional, List, Literal, Dict, Any, cast, Mapping
+from openai.types.chat import ChatCompletionMessageToolCall, ChatCompletionMessageParam, ChatCompletionToolMessageParam,  ChatCompletionMessage
 
 Role = Literal["system", "user", "assistant", "tool", "function", "developer"]
-class Chatmsg(BaseModel):
+class ChatMessage(BaseModel):
     # role: Role
     role: str
     content: Optional[str] = None
@@ -16,7 +16,7 @@ class Chatmsg(BaseModel):
 class ChatRequest(BaseModel):
     session_id: Optional[str] = None                            # Session ID for tracking conversation
     message: str                                                # Client Asked Question
-    history: List[Chatmsg] = Field(default_factory=list)    # Chat History From Redis
+    history: List[ChatMessage] = Field(default_factory=list)    # Chat History From Redis
     n_history: List[ChatCompletionMessageParam] = Field(default_factory=list)    # Chat History From Redis
 
     def n_Serialize_chat_history(self, chat_history: List[ChatCompletionMessageParam]) -> str:
@@ -28,7 +28,6 @@ class ChatRequest(BaseModel):
                 dict_msg = {
                     "role": "developer",
                     "content": msg["content"],
-                    "name": msg.get("name", ''),
                 }
                 list_of_dicts.append(dict_msg)
                 
@@ -36,7 +35,6 @@ class ChatRequest(BaseModel):
                 dict_msg = {
                     "role": "system",
                     "content": msg["content"],
-                    "name": msg.get("name", ''),
                 }
                 list_of_dicts.append(dict_msg)
                 
@@ -44,7 +42,7 @@ class ChatRequest(BaseModel):
                 dict_msg = {
                     "role": "user",
                     "content": msg["content"],
-                    "name": msg.get("name", ''),
+                    "name": msg.get("name", 'Customer'),
                 }
                 list_of_dicts.append(dict_msg)
                 
@@ -117,7 +115,6 @@ class ChatRequest(BaseModel):
                 chat_list.append({
                     "role": "system",
                     "content": msg["content"],
-                    "name": msg.get("name"),
                 })
 
             elif role == "user":
@@ -175,7 +172,7 @@ class ChatRequest(BaseModel):
             "arguments": function["arguments"]
         }
 
-    def serialize_tool_call(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
+    def serialize_tool_call(self, tool_call: Mapping[str, Any]) -> Dict[str, Any]:
         return {
             "id": tool_call["id"],
             "type": tool_call["type"],
@@ -192,6 +189,14 @@ class ChatRequest(BaseModel):
             }
         }
 
+    def load_history(self, session_data: str) -> None:
+        self.n_history = cast(
+            List[ChatCompletionMessageParam], 
+            self.n_Deserialize_chat_history(session_data)
+        )
+        
+        
+        
     def append_msg(self,
         role: Role, 
         content: Optional[str] = None,
@@ -202,7 +207,7 @@ class ChatRequest(BaseModel):
         """Append a tool msg to the History Queue."""
         
         if tool_calls :
-            tool_msg = Chatmsg(
+            tool_msg = ChatMessage(
                 role=role,
                 tool_calls=tool_calls,
                 content=content
@@ -210,7 +215,7 @@ class ChatRequest(BaseModel):
             self.history.append(tool_msg)
             
         elif tool_call_id and function_name :
-            tool_msg = Chatmsg(
+            tool_msg = ChatMessage(
                 role=role,
                 tool_call_id=tool_call_id,                
                 name=function_name,
@@ -218,7 +223,7 @@ class ChatRequest(BaseModel):
             )
             self.history.append(tool_msg)
         else:
-            msg = Chatmsg(
+            msg = ChatMessage(
                 role=role,
                 content=content
             )
@@ -227,7 +232,7 @@ class ChatRequest(BaseModel):
         return
 
     @staticmethod
-    def format_chat_msg(msg: Chatmsg): # -> ChatCompletionmsgParam
+    def format_chat_msg(msg: ChatMessage): # -> ChatCompletionmsgParam
         base = {
             "role": msg.role,
             "content": msg.content,
@@ -267,12 +272,48 @@ class ChatRequest(BaseModel):
         messages.append( {"role": "user", "content": self.message.strip()})   
         return cast(List[ChatCompletionMessageParam], messages)
     
+    def append_tool_response(self, content:str, tool_call_id:str):
+        tool_msg: ChatCompletionToolMessageParam = {
+            "role": "tool",
+            "content": content,
+            "tool_call_id": tool_call_id
+        }
+        self.n_history.append(tool_msg)
+        
+    def append_message(self, data: dict[str, Any]):
+        msg_dict = cast(ChatCompletionMessageParam, data)
+        self.n_history.append(msg_dict)
+        
+    @property
+    def n_openai_msgs(self) -> List[ChatCompletionMessageParam]:
+        """Return full OpenAI-compatible msg list including history and user input."""
+        
+        if len(self.n_history) == 0:
+            chat = cast(ChatCompletionMessageParam, {"role": "system", "content": self.system_prompt})
+            self.n_history.append(chat)
+            
+        # for msg in history:
+        #     messages.append(self.format_chat_msg(msg))
+        # try:
+        #     print("vector_review_prompt :","len(history) > 2",len(history) > 1, "history[-1].role", history[-1].role if history else None)
+        #     if len(history) > 1 and history[-1].role == "tool":
+        #         msgs.append({"role": "system", "content": self.vector_review_prompt})
+        # except IndexError:
+        #     # If history is empty, we don't need to append the vector review prompt
+        #     pass
+    
+        chat = cast(ChatCompletionMessageParam, {"role": "user", "content": self.message.strip()})
+        
+        copy_history = self.n_history.copy()
+        copy_history.append(chat)
+        return copy_history
+    
     @staticmethod
-    def extract_chat_history(json_string) -> List[Chatmsg]:
+    def extract_chat_history(json_string) -> List[ChatMessage]:
         """Converts a JSON string back into a list of Chatmsg objects."""
         # list_of_dicts = json.loads(json_string)
         list_of_dicts = json_string.get("data", [])  # Handle both format
-        return [Chatmsg(**d) for d in list_of_dicts]
+        return [ChatMessage(**d) for d in list_of_dicts]
     
     @staticmethod
     def Serialize_chat_history(chat_history: List[ChatCompletionMessageParam]) -> str:
