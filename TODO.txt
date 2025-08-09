@@ -23,7 +23,7 @@ After MVP-2
 Centeralized All the Object in FastApi 
 
 
-Server.py 156 function selection and respone appending in a clean seperate function
+Server.py ln 156 function selection and respone appending in a clean seperate function
 
 
 
@@ -48,6 +48,7 @@ Admin Panel Features:
     - custom MCP / Backend URL
     - Temperature settings
     - Max Token per Message
+    - Special Tone for Some Occusion
 
 Future Goals:
     Front-End for Analytics

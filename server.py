@@ -18,7 +18,7 @@ import markdown
 import redis.asyncio as redis
 from session_manager import SessionManager
 from typing import cast, List
-from openai.types.chat import ChatCompletionToolMessageParam
+from openai.types.chat import ChatCompletionToolMessageParam, ChatCompletion
 
 
 # #####################################################################
@@ -122,67 +122,8 @@ async def async_chat_endpoint(chat_request: ChatRequest):
 
             messages = chat_request.n_openai_msgs
 
-            response = await client.chat.completions.create(
-                model="gpt-4.1-mini",
-                tools=tools_list,
-                messages=messages,
-                tool_choice="auto",
-                # max_tokens=650,
-                # temperature=0.7,
-            )
-            
-            assistant_message = response.choices[0].message
-            
-            # logger.info(f"OpenAI response before calling a function: {response}")
-            # print('\n\n\n\n')
-            # print('-' * 80)
-            # print(f"Assistant: {assistant_message}")
-            # print('-' * 80)
-            if assistant_message.tool_calls:
-                chat_request.append_message(assistant_message.model_dump())
-                
-                print(f"\n\n Chat_request Object after appending function call request: {chat_request.n_history}")
-            # print('\n\n\n\n')
-            # print('-' * 80)
-            # print(f"After 102: {chat_request.n_history}")
-            # print('-' * 80)
-            # print('\n\n\n\n')
-                
-            # Response if assistant called a tool
-            if assistant_message.tool_calls:
-                for tool_call in assistant_message.tool_calls:
-                    function_name = tool_call.function.name
-                    arguments = json.loads(tool_call.function.arguments)
+            response = await process_with_tools(client, chat_request, tools_list)            
 
-                    if function_name == "get_products_data":
-                        query = arguments["query"]
-                        top_k = arguments.get("top_k_result", 7)
-
-                        # Call the actual function
-                        tool_output = get_products_data(query, top_k)
-
-                        # Append tool response to messages
-                        chat_request.append_tool_response(tool_output, tool_call.id)
-                        
-                    elif function_name == "get_product_via_handle":
-                        handle = arguments["handle"]
-                        
-
-                        # Call the actual function
-                        tool_output = await get_product_via_handle(handle)
-
-                        # Append tool response to messages
-                        chat_request.append_tool_response(tool_output, tool_call.id)
-                        
-                messages = chat_request.n_openai_msgs
-                response = await client.chat.completions.create(
-                    model="gpt-4.1-mini",
-                    tools=tools_list,
-                    messages=messages,
-                    tool_choice="auto",
-                    # max_tokens=650,
-                    # temperature=0.7,
-                )
             chat_request.append_message({"role": "user", "content": user_message, "name": "Customer"})
             chat_request.append_message(response.choices[0].message.model_dump())
             logger.info(f"\n\n\n\n\nOpenAI response: {response}\n\n\n\n\n\n")
@@ -221,6 +162,51 @@ async def async_chat_endpoint(chat_request: ChatRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error.",
         )
+
+async def process_with_tools(client, chat_request, tools_list) -> ChatCompletion:
+    """Handle recursive tool calls until no more tool calls are in the model's response."""
+    while True:
+        response = await client.chat.completions.create(
+            model="gpt-4.1-mini",
+            tools=tools_list,
+            messages=chat_request.n_openai_msgs,
+            tool_choice="auto",
+        )
+
+        assistant_message = response.choices[0].message
+        chat_request.append_message(assistant_message.model_dump())
+
+        if not assistant_message.tool_calls:
+            # No more tools, final AI reply
+            return response
+
+        for tool_call in assistant_message.tool_calls:
+            function_name = tool_call.function.name
+            arguments = json.loads(tool_call.function.arguments)
+
+            if function_name == "get_products_data":
+                query = arguments["query"]
+                top_k = arguments.get("top_k_result", 7)
+
+                # Call the actual function
+                tool_output = get_products_data(query, top_k)
+
+                # Append tool response to messages
+                chat_request.append_tool_response(tool_output, tool_call.id)
+                
+            elif function_name == "get_product_via_handle":
+                handle = arguments["handle"]
+                
+
+                # Call the actual function
+                tool_output = await get_product_via_handle(handle)
+
+                # Append tool response to messages
+                chat_request.append_tool_response(tool_output, tool_call.id)
+                
+            chat_request.append_vectorDb_prompt()
+
+
 
 if __name__ == "__main__":
     uvicorn.run("server:app", host="127.0.0.1", port=8000, reload=True)

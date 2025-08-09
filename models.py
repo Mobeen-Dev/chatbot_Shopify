@@ -1,7 +1,7 @@
 import json 
 from pydantic import BaseModel, Field
 from typing import Optional, List, Literal, Dict, Any, cast, Mapping
-from openai.types.chat import ChatCompletionMessageToolCall, ChatCompletionMessageParam, ChatCompletionToolMessageParam,  ChatCompletionMessage
+from openai.types.chat import ChatCompletionMessageToolCall, ChatCompletionMessageParam, ChatCompletionToolMessageParam,  ChatCompletionMessage, ChatCompletionSystemMessageParam
 
 Role = Literal["system", "user", "assistant", "tool", "function", "developer"]
 class ChatMessage(BaseModel):
@@ -18,6 +18,7 @@ class ChatRequest(BaseModel):
     message: str                                                # Client Asked Question
     history: List[ChatMessage] = Field(default_factory=list)    # Chat History From Redis
     n_history: List[ChatCompletionMessageParam] = Field(default_factory=list)    # Chat History From Redis
+    is_vector_review_prompt_added : bool = False
 
     def n_Serialize_chat_history(self, chat_history: List[ChatCompletionMessageParam]) -> str:
         """Converts a list of Chatmsg objects to a JSON string."""
@@ -279,6 +280,19 @@ class ChatRequest(BaseModel):
             "tool_call_id": tool_call_id
         }
         self.n_history.append(tool_msg)
+    
+    def append_vectorDb_prompt(self):
+        if self.is_vector_review_prompt_added:
+            return
+        
+        tool_prompt: ChatCompletionSystemMessageParam = {
+            "role": "system",
+            "content": self.vector_review_prompt
+        }
+        
+        self.n_history.append(tool_prompt)
+        self.is_vector_review_prompt_added = True
+        
         
     def append_message(self, data: dict[str, Any]):
         msg_dict = cast(ChatCompletionMessageParam, data)
