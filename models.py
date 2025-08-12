@@ -19,6 +19,7 @@ class ChatRequest(BaseModel):
     history: List[ChatMessage] = Field(default_factory=list)    # Chat History From Redis
     n_history: List[ChatCompletionMessageParam] = Field(default_factory=list)    # Chat History From Redis
     is_vector_review_prompt_added : bool = False
+    is_structural_output_prompt_added : bool = False
 
     def n_Serialize_chat_history(self, chat_history: List[ChatCompletionMessageParam]) -> str:
         """Converts a list of Chatmsg objects to a JSON string."""
@@ -33,6 +34,8 @@ class ChatRequest(BaseModel):
                 list_of_dicts.append(dict_msg)
                 
             elif msg["role"] == "system":
+                if msg["content"] != self.system_prompt:
+                    continue  # Skip system prompts that are not the initial one
                 dict_msg = {
                     "role": "system",
                     "content": msg["content"],
@@ -96,6 +99,11 @@ class ChatRequest(BaseModel):
         
         
         return json.dumps({"data":list_of_dicts})
+    
+    @staticmethod
+    def serialize_tool_response(content: str):
+        # Serializes a tool response only remain metadata.
+        return "wow"
     
     def n_Deserialize_chat_history(self, json_str: str) -> List[Dict[str, Any]]:
         """Converts a JSON string from Redis back into a list of ChatCompletionMessageParam-like dicts."""
@@ -293,6 +301,17 @@ class ChatRequest(BaseModel):
         self.n_history.append(tool_prompt)
         self.is_vector_review_prompt_added = True
         
+    def append_stuctural_output_prompt(self):
+        if self.is_structural_output_prompt_added:
+            return
+        
+        tool_prompt: ChatCompletionSystemMessageParam = {
+            "role": "system",
+            "content": self.stuctural_output_prompt
+        }
+        
+        self.n_history.append(tool_prompt)
+        self.is_structural_output_prompt_added = True
         
     def append_message(self, data: dict[str, Any]):
         msg_dict = cast(ChatCompletionMessageParam, data)
@@ -349,12 +368,12 @@ class ChatRequest(BaseModel):
 
     @property
     def system_prompt(self) -> str:
-        return (
-            "You are a helpful assistant developed by Digilog (https://digilog.pk/). "
-            "You can read and recommend products from the Digilog Shopify store. Respond only in text. "
-            "Do not access or process personal data or company private details. "
-            "If asked for such data, respond with 'Not eligible.'"
-        )
+        return """
+            > You are a helpful assistant created by Digilog ([https://digilog.pk/](https://digilog.pk/)).
+            > Your role is to read and recommend products from the Digilog Shopify store, providing responses in text only.
+            > You must not access, request, or process any personal data or confidential company information.
+            > If such information is requested, reply strictly with: **"Not eligible."**
+        """
         
     @property
     def vector_review_prompt(self) -> str:
@@ -371,6 +390,49 @@ class ChatRequest(BaseModel):
             5. Use get_product_via_handle function on all relevant products to fetch their all data.
 
             Only recommend or describe products that you're confident are genuinely aligned with the user's goal.
+        """
+    
+    
+    @property
+    def stuctural_output_prompt(self) -> str:
+        return """
+            > You must provide product details **only** in the following JSON structure.
+            > **Every field is mandatory.**
+            > **No extra fields, no changes to key names, no formatting outside JSON.**
+            > If a value is unknown, you must use an empty string (`""`) — do not omit the field.
+            > If this exact format is not followed, the system will reject the input and terminate processing.
+
+            ```json
+            {
+            "link": "https://digilog.pk/products/product-page",
+            "imageurl": "https://digilog.pk/cdn/shop/files/product-image.wenbp?v=1234567890&width=1400",
+            "title": "Exact Product Title Here",
+            "price": "PKR 99.99",
+            "description": "Clear, concise product description here."
+            }
+            ```
+
+            **Rules**:
+
+            1. `"link"` → Direct URL to the product page (must be a valid HTTPS link).
+            2. `"imageurl"` → Direct URL to the product image (must be a valid HTTPS link).
+            3. `"title"` → Exact name of the product, no extra words.
+            4. `"price"` → Must include currency symbol and numeric value (e.g., `"$19.99"`).
+            5. `"description"` → Short, clear, factual description.
+            6. **No additional fields** — only the above 5.
+            7. **No line breaks inside values** — all values must be single-line strings.
+
+            **Example of VALID input**:
+
+            ```json
+            {
+            "link": "https://digilog.pk/products/solar-wifi-device-solar-wifi-dongle-in-pakistan",
+            "imageurl": "https://digilog.pk/cdn/shop/files/Untitled_design_144dd069-c4ec-4b66-a8f8-0db6cdf38d2e.webp?v=1741255473&width=1400",
+            "title": "Inverterzone Solar Wifi Device Solar wifi Dongle In Pakistan",
+            "price": "PKR 7,500",
+            "description": "The Inverterzone Solar WiFi Dongle is the ultimate solution for solar-powered homes, enabling real-time monitoring, efficient load consumption management, and scheduling of energy usage to maximize solar efficiency"
+            }
+            ```
         """
 
 # Response schema

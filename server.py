@@ -53,7 +53,6 @@ async def get_product_via_handle(handle: str) -> str:
 # #####################################################################
 
 client = OpenAI(
-    # This is the default and can be omitted
     api_key=settings.openai_api_key,
 )
 logger = get_logger("FastAPI")
@@ -201,7 +200,6 @@ async def process_with_tools(client, chat_request, tools_list) -> ChatCompletion
             elif function_name == "get_product_via_handle":
                 handle = arguments["handle"]
                 
-
                 # Call the actual function
                 tool_output = await get_product_via_handle(handle)
 
@@ -209,6 +207,7 @@ async def process_with_tools(client, chat_request, tools_list) -> ChatCompletion
                 chat_request.append_tool_response(tool_output, tool_call.id)
                 
         chat_request.append_vectorDb_prompt()
+        chat_request.append_stuctural_output_prompt()
 
 
 
