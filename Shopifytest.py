@@ -4,50 +4,42 @@ import asyncio
 # #####################################################################
 # ################## Helper Functions Start ###########################
 # #####################################################################
-
+from config import NO_IMAGE_URL
 # @ App level create a reference for Shopify API client
 store = Shopify(settings.store, "ShopifyClient")
+def format_product(product: dict) -> dict:
+    """
+    Function to format the product data into a specific structure.
+    """
+    status = product.get("status")
+    print(f"Product Status: {status}")
+    if status == "ACTIVE":
+      edges = (product.get("media") or {}).get("edges") or []
+      first_edge = edges[0] if edges else {}
+      node = first_edge.get("node") or {}
+      image = node.get("image") or {}
+      image_url = image.get("url") or NO_IMAGE_URL
 
-print(asyncio.run(store.get_product_by_handle("arduino-uno-r4-wifi-in-pakistan")))
-
-required_field = """
-
-title
-handle
-description
-vendor
-productType
-status
-'priceRange':
-  {
-    'minVariantPrice':
-    {
-      'amount': '750000.0',
-      'currencyCode': 'PKR'
-    },
-    'maxVariantPrice':
-    {
-      'amount': '750000.0',
-      'currencyCode': 'PKR'
+      return {
+        "title": product.get("title", ""),
+        "handle": product.get("handle", ""),
+        "description": product.get("description", ""),
+        "vendor": product.get("vendor", ""),
+        "productType": product.get("productType", ""),
+        
+        "priceRange": {
+            "CurrencyCode": product.get("priceRange", {}).get("maxVariantPrice", {}).get("currencyCode", ""),
+            "max_price": product.get("priceRange", {}).get("maxVariantPrice", {}).get("amount", 0)[:-2],
+            "min_price": product.get("priceRange", {}).get("minVariantPrice", {}).get("amount", 0)[:-2],
+        },
+        "totalInventory": product.get("totalInventory", 0),
+        "image_url": image_url,
+        "variants_options": product.get("options", []),
     }
-  },
-'totalInventory': 38,
-'media':
-  {
-    'edges': [
-    {
-      'node':
-      {
-        'image':
-        {
-          'id': 'gid://shopify/ImageSource/40274466832662',
-          'altText': 'Inverterzone Solar Wifi Device Solar wifi Dongle In Pakistan - Solar inverter',
-          'url': 'https://cdn.shopify.com/s/files/1/0744/0764/1366/files/inverterzone-solar-wifi-device-dongle-pakistan-inverter-956.webp?v=1741256410',
-          'width': 1024,
-          'height': 1024
-        }
+    else:
+      return {
+        "Note": "This product is not active or available for sale at the moment."
       }
-    }]
-    
 
-"""
+print(format_product(asyncio.run(store.get_product_by_handle("line-following-robot-2wd-with-l298"))))
+

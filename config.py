@@ -60,5 +60,3 @@ NO_IMAGE_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_ima
 
 
 
-
-

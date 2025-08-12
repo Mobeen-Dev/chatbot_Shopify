@@ -44,6 +44,7 @@ async def get_product_via_handle(handle: str) -> str:
     This is used to get the most up-to-date product information.
     """
     product = await store.get_product_by_handle(handle)
+    product = store.format_product(product)
     return str(product)
 
 
@@ -172,13 +173,16 @@ async def process_with_tools(client, chat_request, tools_list) -> ChatCompletion
             messages=chat_request.n_openai_msgs,
             tool_choice="auto",
         )
-
+        
         assistant_message = response.choices[0].message
-        chat_request.append_message(assistant_message.model_dump())
-
+        
         if not assistant_message.tool_calls:
             # No more tools, final AI reply
             return response
+        
+        chat_request.append_message(assistant_message.model_dump())
+
+
 
         for tool_call in assistant_message.tool_calls:
             function_name = tool_call.function.name
@@ -204,7 +208,7 @@ async def process_with_tools(client, chat_request, tools_list) -> ChatCompletion
                 # Append tool response to messages
                 chat_request.append_tool_response(tool_output, tool_call.id)
                 
-            chat_request.append_vectorDb_prompt()
+        chat_request.append_vectorDb_prompt()
 
 
 

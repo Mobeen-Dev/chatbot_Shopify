@@ -3,7 +3,7 @@ import re
 import aiohttp
 import asyncio
 from logger import get_logger
-
+from config import NO_IMAGE_URL
 
 
 class Shopify:
@@ -780,6 +780,39 @@ class Shopify:
       }
       """
   
+  def format_product(self, product: dict) -> dict:
+      """
+      Function to format the product data into a specific structure.
+      """
+      status = product.get("status")
+      print(f"Product Status: {status}")
+      if status == "ACTIVE":
+        edges = (product.get("media") or {}).get("edges") or []
+        first_edge = edges[0] if edges else {}
+        node = first_edge.get("node") or {}
+        image = node.get("image") or {}
+        image_url = image.get("url") or NO_IMAGE_URL
+
+        return {
+          "title": product.get("title", ""),
+          "handle": product.get("handle", ""),
+          "description": product.get("description", ""),
+          "vendor": product.get("vendor", ""),
+          "productType": product.get("productType", ""),
+          
+          "priceRange": {
+              "CurrencyCode": product.get("priceRange", {}).get("maxVariantPrice", {}).get("currencyCode", ""),
+              "max_price": product.get("priceRange", {}).get("maxVariantPrice", {}).get("amount", 0),
+              "min_price": product.get("priceRange", {}).get("minVariantPrice", {}).get("amount", 0),
+          },
+          "totalInventory": product.get("totalInventory", 0),
+          "image_url": image_url,
+          "variants_options": product.get("options", []),
+      }
+      else:
+        return {
+          "Note": "This product is not active or available for sale at the moment."
+        }
 
 
   def parse_into_query_params(self, product: dict, child_p_id: str = ''):
