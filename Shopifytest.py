@@ -28,9 +28,9 @@ def format_product(product: dict) -> dict:
         "productType": product.get("productType", ""),
         
         "priceRange": {
-            "CurrencyCode": product.get("priceRange", {}).get("maxVariantPrice", {}).get("currencyCode", ""),
-            "max_price": product.get("priceRange", {}).get("maxVariantPrice", {}).get("amount", 0)[:-2],
-            "min_price": product.get("priceRange", {}).get("minVariantPrice", {}).get("amount", 0)[:-2],
+            "CurrencyCode": product.get("priceRangeV2", {}).get("maxVariantPrice", {}).get("currencyCode", ""),
+            "max_price": product.get("priceRangeV2", {}).get("maxVariantPrice", {}).get("amount", 0),
+            "min_price": product.get("priceRangeV2", {}).get("minVariantPrice", {}).get("amount", 0),
         },
         "totalInventory": product.get("totalInventory", 0),
         "image_url": image_url,

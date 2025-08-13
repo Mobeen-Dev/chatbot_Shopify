@@ -323,10 +323,10 @@ class ChatRequest(BaseModel):
         _CURRENCY_CODE = r"[A-Z]{2,5}"
 
         _price_leading = re.compile(
-            rf"^(?:{_CURRENCY_CODE}|[{_CURRENCY_SYMBOLS}])\s*\d{{1,3}}(?:,\d{{3}})*(?:\.\d+)?$"
+            rf"^(?:{_CURRENCY_CODE}|[{_CURRENCY_SYMBOLS}])\s*\d+(?:,\d{{3}})*(?:\.\d+)?$"
         )
         _price_trailing = re.compile(
-            rf"^\d{{1,3}}(?:,\d{{3}})*(?:\.\d+)?\s*(?:{_CURRENCY_CODE}|[{_CURRENCY_SYMBOLS}])$"
+            rf"^\d+(?:,\d{{3}})*(?:\.\d+)?\s*(?:{_CURRENCY_CODE}|[{_CURRENCY_SYMBOLS}])$"
         )
 
         def _valid_price(s: str) -> bool:
@@ -346,7 +346,7 @@ class ChatRequest(BaseModel):
             if not (obj["link"].startswith("https://") and obj["imageurl"].startswith("https://")):
                 return False
             # price format (accepts code/symbol before or after)
-            if not _valid_price(obj["price"]):
+            if obj["price"].strip() and not _valid_price(obj["price"]):
                 return False
             return True
 
@@ -431,7 +431,8 @@ class ChatRequest(BaseModel):
         cleaned_text = _remove_spans(intermediate, spans2).strip()
 
         if len(cleaned_text) < 100:
-            cleaned_text += ("\nCheckout the products Below." if cleaned_text else "Checkout the products Below.")
+            cleaned_text = re.sub(r"\[\s*\]", "",cleaned_text)
+            #  += ("\nCheckout the products Below." if cleaned_text else "Checkout the products Below.")
 
         return results, cleaned_text
 

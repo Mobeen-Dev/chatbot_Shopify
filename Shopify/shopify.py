@@ -696,7 +696,7 @@ class Shopify:
             name
             values
           }
-          priceRange {
+          priceRangeV2 {
             minVariantPrice {
               amount
               currencyCode
@@ -801,9 +801,9 @@ class Shopify:
           "productType": product.get("productType", ""),
           
           "priceRange": {
-              "CurrencyCode": product.get("priceRange", {}).get("maxVariantPrice", {}).get("currencyCode", ""),
-              "max_price": product.get("priceRange", {}).get("maxVariantPrice", {}).get("amount", 0)[:-2], # removing .00 so that only actual price came
-              "min_price": product.get("priceRange", {}).get("minVariantPrice", {}).get("amount", 0)[:-2],
+              "CurrencyCode": product.get("priceRangeV2", {}).get("maxVariantPrice", {}).get("currencyCode", ""),
+              "max_price": product.get("priceRangeV2", {}).get("maxVariantPrice", {}).get("amount", 0), # removing .00 so that only actual price came
+              "min_price": product.get("priceRangeV2", {}).get("minVariantPrice", {}).get("amount", 0),
           },
           "totalInventory": product.get("totalInventory", 0),
           "image_url": image_url,
