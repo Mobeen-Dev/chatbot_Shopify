@@ -129,6 +129,7 @@ async def async_chat_endpoint(chat_request: ChatRequest):
             logger.info(f"\n\n\n\n\nOpenAI response: {response}\n\n\n\n\n\n")
             # logger.info(f"\n\n History choices: {messages}")
             reply = str(response.choices[0].message.content).strip()
+            products, reply = chat_request.extract_product_json_list(reply)
             reply_html = markdown.markdown(reply, extensions=['extra', 'codehilite'])
             # print(f"\nFinal reply HTML: {reply_html}")
 
@@ -140,7 +141,8 @@ async def async_chat_endpoint(chat_request: ChatRequest):
             await session_manager.update_session(session_id, latest_chat)
             
             return ChatResponse(
-                reply=reply_html,
+                reply=reply,
+                products=products,
                 session_id=session_id
             )
 
@@ -165,6 +167,9 @@ async def async_chat_endpoint(chat_request: ChatRequest):
 
 async def process_with_tools(client, chat_request, tools_list) -> ChatCompletion:
     """Handle recursive tool calls until no more tool calls are in the model's response."""
+    vector_db_flag = False
+    shopify_flag = False
+    
     while True:
         response = await client.chat.completions.create(
             model="gpt-4.1-mini",
@@ -197,6 +202,8 @@ async def process_with_tools(client, chat_request, tools_list) -> ChatCompletion
                 # Append tool response to messages
                 chat_request.append_tool_response(tool_output, tool_call.id)
                 
+                vector_db_flag = True
+                
             elif function_name == "get_product_via_handle":
                 handle = arguments["handle"]
                 
@@ -206,8 +213,12 @@ async def process_with_tools(client, chat_request, tools_list) -> ChatCompletion
                 # Append tool response to messages
                 chat_request.append_tool_response(tool_output, tool_call.id)
                 
-        chat_request.append_vectorDb_prompt()
-        chat_request.append_stuctural_output_prompt()
+                shopify_flag = True
+        
+        if vector_db_flag:
+            chat_request.append_vectorDb_prompt()
+        if shopify_flag:
+            chat_request.append_stuctural_output_prompt()
 
 
 
