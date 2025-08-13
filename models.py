@@ -1,7 +1,8 @@
 import json 
 from pydantic import BaseModel, Field
-from typing import Optional, List, Literal, Dict, Any, cast, Mapping
+from typing import Optional, List, Literal, Dict, Any, cast, Mapping, Tuple
 from openai.types.chat import ChatCompletionMessageToolCall, ChatCompletionMessageParam, ChatCompletionToolMessageParam,  ChatCompletionMessage, ChatCompletionSystemMessageParam
+import re
 
 Role = Literal["system", "user", "assistant", "tool", "function", "developer"]
 class ChatMessage(BaseModel):
@@ -79,6 +80,7 @@ class ChatRequest(BaseModel):
                 list_of_dicts.append(dict_msg)
                 
             elif msg["role"] == "tool":
+                msg = self.serialize_tool_response(msg)
                 dict_msg = {
                     "role": "tool",
                     "content": msg["content"],
@@ -101,9 +103,9 @@ class ChatRequest(BaseModel):
         return json.dumps({"data":list_of_dicts})
     
     @staticmethod
-    def serialize_tool_response(content: str):
-        # Serializes a tool response only remain metadata.
-        return "wow"
+    def serialize_tool_response(msg: ChatCompletionToolMessageParam) -> ChatCompletionToolMessageParam:
+        msg["content"] = "Only metadata and score are retained; the content is omitted for model efficiency. If you need the content, retrieve it using the tool with metadata.handle."
+        return msg
     
     def n_Deserialize_chat_history(self, json_str: str) -> List[Dict[str, Any]]:
         """Converts a JSON string from Redis back into a list of ChatCompletionMessageParam-like dicts."""
@@ -203,9 +205,7 @@ class ChatRequest(BaseModel):
             List[ChatCompletionMessageParam], 
             self.n_Deserialize_chat_history(session_data)
         )
-        
-        
-        
+    
     def append_msg(self,
         role: Role, 
         content: Optional[str] = None,
@@ -316,7 +316,125 @@ class ChatRequest(BaseModel):
     def append_message(self, data: dict[str, Any]):
         msg_dict = cast(ChatCompletionMessageParam, data)
         self.n_history.append(msg_dict)
-        
+    
+    @staticmethod
+    def extract_product_json_list(text: str) -> Tuple[List[dict[str, Any]], str]:
+        _CURRENCY_SYMBOLS = "€£$₹"
+        _CURRENCY_CODE = r"[A-Z]{2,5}"
+
+        _price_leading = re.compile(
+            rf"^(?:{_CURRENCY_CODE}|[{_CURRENCY_SYMBOLS}])\s*\d{{1,3}}(?:,\d{{3}})*(?:\.\d+)?$"
+        )
+        _price_trailing = re.compile(
+            rf"^\d{{1,3}}(?:,\d{{3}})*(?:\.\d+)?\s*(?:{_CURRENCY_CODE}|[{_CURRENCY_SYMBOLS}])$"
+        )
+
+        def _valid_price(s: str) -> bool:
+            s = s.strip()
+            return bool(_price_leading.match(s) or _price_trailing.match(s))
+
+        def _valid_product(obj: Any) -> bool:
+            if not isinstance(obj, dict):
+                return False
+            required = {"link", "imageurl", "title", "price", "description"}
+            if set(obj.keys()) != required:
+                return False
+            # All single-line strings
+            if not all(isinstance(v, str) and "\n" not in v for v in obj.values()):
+                return False
+            # https links
+            if not (obj["link"].startswith("https://") and obj["imageurl"].startswith("https://")):
+                return False
+            # price format (accepts code/symbol before or after)
+            if not _valid_price(obj["price"]):
+                return False
+            return True
+
+        # ---------- Text utilities ----------
+
+        def _remove_spans(s: str, spans: List[Tuple[int, int]]) -> str:
+            """Remove [start, end) spans from s in one pass."""
+            if not spans:
+                return s
+            spans = sorted(spans)
+            out, prev = [], 0
+            for a, b in spans:
+                out.append(s[prev:a])
+                prev = b
+            out.append(s[prev:])
+            return "".join(out)
+
+        def _find_json_objects(text: str) -> List[Tuple[int, int, str]]:
+            """
+            Return list of (start, end, json_str) for JSON objects found via brace scanning.
+            Ignores braces inside quoted strings and handles escapes.
+            """
+            results: List[Tuple[int, int, str]] = []
+            stack = 0
+            in_str = False
+            esc = False
+            start = -1
+
+            for i, ch in enumerate(text):
+                if in_str:
+                    if esc:
+                        esc = False
+                    elif ch == "\\":
+                        esc = True
+                    elif ch == '"':
+                        in_str = False
+                else:
+                    if ch == '"':
+                        in_str = True
+                    elif ch == "{":
+                        if stack == 0:
+                            start = i
+                        stack += 1
+                    elif ch == "}":
+                        if stack > 0:
+                            stack -= 1
+                            if stack == 0 and start != -1:
+                                end = i + 1
+                                results.append((start, end, text[start:end]))
+                                start = -1
+            return results
+
+        results: List[dict[str, Any]] = []
+        remove_spans: List[Tuple[int, int]] = []
+
+        # 1) First handle fenced ```json blocks
+        fenced = re.compile(r"```json\s*(\{.*?\})\s*```", re.DOTALL)
+        for m in fenced.finditer(text):
+            raw = m.group(1)
+            try:
+                obj = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+            if _valid_product(obj):
+                results.append(obj)
+                remove_spans.append((m.start(), m.end()))
+
+        # Remove fenced now so indices for the next pass are clean
+        intermediate = _remove_spans(text, remove_spans)
+
+        # 2) Find unfenced JSON objects via brace scanning
+        spans2: List[Tuple[int, int]] = []
+        for s, e, raw in _find_json_objects(intermediate):
+            try:
+                obj = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+            if _valid_product(obj):
+                results.append(obj)
+                spans2.append((s, e))
+
+        cleaned_text = _remove_spans(intermediate, spans2).strip()
+
+        if len(cleaned_text) < 100:
+            cleaned_text += ("\nCheckout the products Below." if cleaned_text else "Checkout the products Below.")
+
+        return results, cleaned_text
+
     @property
     def n_openai_msgs(self) -> List[ChatCompletionMessageParam]:
         """Return full OpenAI-compatible msg list including history and user input."""
@@ -407,7 +525,7 @@ class ChatRequest(BaseModel):
             "link": "https://digilog.pk/products/product-page",
             "imageurl": "https://digilog.pk/cdn/shop/files/product-image.wenbp?v=1234567890&width=1400",
             "title": "Exact Product Title Here",
-            "price": "PKR 99.99",
+            "price": "99.99 CurrencyCode",
             "description": "Clear, concise product description here."
             }
             ```
@@ -429,7 +547,7 @@ class ChatRequest(BaseModel):
             "link": "https://digilog.pk/products/solar-wifi-device-solar-wifi-dongle-in-pakistan",
             "imageurl": "https://digilog.pk/cdn/shop/files/Untitled_design_144dd069-c4ec-4b66-a8f8-0db6cdf38d2e.webp?v=1741255473&width=1400",
             "title": "Inverterzone Solar Wifi Device Solar wifi Dongle In Pakistan",
-            "price": "PKR 7,500",
+            "price": "7,500 PKR",
             "description": "The Inverterzone Solar WiFi Dongle is the ultimate solution for solar-powered homes, enabling real-time monitoring, efficient load consumption management, and scheduling of energy usage to maximize solar efficiency"
             }
             ```
@@ -439,4 +557,5 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     reply: str | List[Dict[str, Any]]
     history: list = Field(default_factory=list)
+    products: List[Dict[str, Any]] = []
     session_id: Optional[str] = None
