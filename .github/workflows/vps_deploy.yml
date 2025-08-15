@@ -1,0 +1,95 @@
+name: 🚀 Deploy ChatBot
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch: # Manual trigger button in GitHub UI
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, Linux, X64]
+    
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+      
+    # - name: 🛑 Stop Current Services
+    #   run: |
+    #     echo "Stopping project-specific services..."
+    #     docker stop broker-rabbitmq fastapi_server 2>/dev/null || echo "Containers not running"
+    #     docker rm broker-rabbitmq fastapi_server 2>/dev/null || echo "Containers not found"
+        
+    # - name: 🧹 Clean Up Old Images (Optional)
+    #   run: |
+    #     echo "Cleaning up old images..."
+    #     docker system prune -f || true
+        
+    # - name: 🏗️ Build and Start Services
+    #   run: |
+    #     echo "Building and starting services..."
+    #     docker-compose up -d --build
+        
+    # - name: ⏱️ Wait for Services to Start
+    #   run: |
+    #     echo "Waiting for services to initialize..."
+    #     sleep 60
+        
+    # - name: 🐰 Check RabbitMQ Health
+    #   run: |
+    #     echo "Checking RabbitMQ health..."
+    #     for i in {1..12}; do
+    #       if docker exec broker-rabbitmq rabbitmq-diagnostics status 2>/dev/null; then
+    #         echo "✅ RabbitMQ is healthy!"
+    #         break
+    #       fi
+    #       echo "Attempt $i/12: RabbitMQ not ready, waiting 10s..."
+    #       sleep 10
+    #       if [ $i -eq 12 ]; then
+    #         echo "❌ RabbitMQ health check failed!"
+    #         exit 1
+    #       fi
+    #     done
+        
+    # - name: 🏥 Check FastAPI Health
+    #   run: |
+    #     echo "Checking FastAPI health..."
+    #     for i in {1..10}; do
+    #       if curl -f http://localhost:8000/health 2>/dev/null; then
+    #         echo "✅ FastAPI is healthy!"
+    #         break
+    #       fi
+    #       echo "Attempt $i/10: FastAPI not ready, waiting 10s..."
+    #       sleep 10
+    #       if [ $i -eq 10 ]; then
+    #         echo "❌ FastAPI health check failed!"
+    #         exit 1
+    #       fi
+    #     done
+        
+    # - name: ✅ Deployment Success
+    #   run: |
+    #     echo "🎉 Deployment completed successfully!"
+    #     echo "FastAPI: http://localhost:8000"
+    #     echo "RabbitMQ Management: http://localhost:15672"
+    #     docker-compose ps
+        
+    # - name: 🚨 Rollback on Failure
+    #   if: failure()
+    #   run: |
+    #     echo "💥 Deployment failed! Attempting rollback..."
+    #     docker-compose down
+        
+    #     # Try to start previous working version
+    #     if docker image ls server:backup >/dev/null 2>&1; then
+    #       echo "Found backup image, attempting rollback..."
+    #       docker tag server:backup server:latest
+    #       docker-compose up -d
+    #       sleep 30
+    #       if curl -f http://localhost:8000/health 2>/dev/null; then
+    #         echo "✅ Rollback successful!"
+    #       else
+    #         echo "❌ Rollback failed!"
+    #       fi
+    #     else
+    #       echo "No backup image available"
+    #     fi
