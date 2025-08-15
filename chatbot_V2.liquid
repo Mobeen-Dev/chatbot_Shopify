@@ -1,10 +1,10 @@
 <style>
     /* Scoped styles that won't affect the rest of the website */
     #chat-container {
-        --chat-primary: #006874;
-        --chat-primary-container: #a2eeff;
+        --chat-primary: #3b4847c7;
+        --chat-primary-container: #314341b7;
         --chat-on-primary: #ffffff;
-        --chat-on-primary-container: #001f24;
+        --chat-on-primary-container: #eeeeeeff;
         --chat-secondary: #4a6267;
         --chat-surface: #fafdfd;
         --chat-surface-variant: #dbe4e6;
@@ -61,7 +61,7 @@
     }
 
     #chat-container #chat-toggle:hover {
-        background-color: #00565e;
+        background-color: #293131;
         box-shadow: var(--chat-elevation-3);
     }
 
@@ -233,7 +233,6 @@
         line-height: 1.4;
         color: var(--chat-on-surface);
     }
-
     #chat-container #chat-input:focus {
         border-color: var(--chat-primary);
     }
@@ -254,7 +253,7 @@
     }
 
     #chat-container #send-button:hover {
-        background-color: #00565e;
+        background-color: #293131;
     }
 
     /* Typing indicator - Material 3 style */
@@ -1059,7 +1058,7 @@
             
             // Add message to chat
             addMessage(text, sender) {
-                if text.trim() === '') return;
+                if (text.trim() === '') return;
                 const messageDiv = document.createElement('div');
                 messageDiv.classList.add('message');
                 messageDiv.classList.add(sender + '-message');
