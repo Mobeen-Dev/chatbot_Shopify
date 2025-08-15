@@ -432,9 +432,10 @@ class ChatRequest(BaseModel):
 
         if len(cleaned_text) < 100:
             cleaned_text = re.sub(r"\[\s*\]", "",cleaned_text)
+            cleaned_text = re.sub(r"\[\s*(?:,\s*)*\]", "", cleaned_text)
             #  += ("\nCheckout the products Below." if cleaned_text else "Checkout the products Below.")
 
-        return results, cleaned_text
+        return results, cleaned_text.strip()
 
     @property
     def n_openai_msgs(self) -> List[ChatCompletionMessageParam]:

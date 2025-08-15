@@ -200,10 +200,14 @@ class Shopify:
       }
     }
     result = await self.send_graphql_mutation(query, query_params, "product")
+    print(f"get_product_by_handle :: {result}")
     product = result.get("data", {}).get("product",{})
-    id = product.get("id", None)
-    
-    return product
+    if product:
+      id = product.get("id", None)
+      
+      return product
+    else:
+      return {"error": "Product not found."}
     # self.logger.info(str(result))
   
   

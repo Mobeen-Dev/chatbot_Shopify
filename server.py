@@ -44,6 +44,8 @@ async def get_product_via_handle(handle: str) -> str:
     This is used to get the most up-to-date product information.
     """
     product = await store.get_product_by_handle(handle)
+    if not product:
+        return json.dumps({"error": "Product not found."})
     product = store.format_product(product)
     return str(product)
 

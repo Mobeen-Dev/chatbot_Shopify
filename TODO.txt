@@ -25,8 +25,11 @@ Centeralized All the Object in FastApi
 
 Server.py ln 156 function selection and respone appending in a clean seperate function
 
+handle detail of product 
+no product if quantity is zero
 
-
+Rewrite Hybrid Approach for Serialization of Chat
+Try-Caatch for code
 
 
 
