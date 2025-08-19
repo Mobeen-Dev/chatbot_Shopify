@@ -1,10 +1,9 @@
-import redis.asyncio as redis
+import json
 import uuid
 import asyncio
-import json
-from datetime import timedelta
-from models import ChatMessage, ChatCompletionMessageParam, ChatCompletionMessageToolCall
-from typing import List, Optional, cast
+from typing import List
+import redis.asyncio as redis
+from models import ChatMessage
 
 
 class SessionManager:
