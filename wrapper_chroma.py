@@ -122,57 +122,48 @@ def _save_batch_to_chroma(chunks: List[Document], collection, embedding_fn, star
     except Exception as e:
         print(f"Chroma save failed for batch starting at {start_index}: {e}")
 
-def query_chroma(
-    query: str,
-    persist_directory: str = "chroma_store",
-    collection_name: str = "product_chunks",
-    top_k: int = 5,
-    model: str = "text-embedding-3-small"
-):
-    # Connect to Chroma
-    client = chromadb.PersistentClient(path=persist_directory)
-    collection = client.get_collection(name=collection_name)
+class ChromaRetriever:
+    def __init__(self, persist_directory: str = "chroma_store", collection_name: str = "product_chunks", model: str = "text-embedding-3-small"):
+        
+        self.model = model
+        
+        # Connect to Chroma
+        self.client = chromadb.PersistentClient(path=persist_directory)
+        self.collection = self.client.get_collection(name=collection_name)
+        
+    def query_chroma(
+        self,
+        query: str,       
+        top_k: int = 5,
+    ):
 
-    # Embed user query
-    response = openai.embeddings.create(
-        input=[query],
-        model=model
-    )
+        # Embed user query
+        try:
+            response = openai.embeddings.create(input=[query], model=self.model)
+        except Exception as e:
+            raise RuntimeError(f"Embedding API failed: {e}")
 
-    if not response or not response.data:
-        raise ValueError("Failed to embed query.")
+        if not response or not response.data:
+            raise ValueError("Failed to embed query.")
 
-    query_embedding = response.data[0].embedding
+        query_embedding = response.data[0].embedding
 
-    # Query vector DB
-    results = collection.query(
-        query_embeddings=[query_embedding],
-        n_results=top_k,
-        include=["documents", "metadatas", "distances"]
-    )
+        # Query vector DB
+        results = self.collection.query(
+            query_embeddings=[query_embedding],
+            n_results=top_k,
+            include=["documents", "metadatas", "distances"]
+        )
 
-    documents = results.get("documents")
-    metadatas = results.get("metadatas")
-    distances = results.get("distances")
+        docs, metas, dists = results.get("documents"), results.get("metadatas"), results.get("distances")
 
-    # Validate results to avoid NoneType access
-    if not documents or not metadatas or not distances:
-        print("No results returned from Chroma.")
-        return []
+        if not docs or not metas or not dists or not docs[0]:
+            return []
 
-    if not documents[0] or not metadatas[0] or not distances[0]:
-        print("Empty lists in Chroma results.")
-        return []
-
-    matched_chunks = []
-    for doc, metadata, dist in zip(documents[0], metadatas[0], distances[0]):
-        matched_chunks.append({
-            "content": doc,
-            "metadata": metadata,
-            "distance": dist
-        })
-
-    return matched_chunks
+        return [
+            {"content": doc, "metadata": meta, "distance": dist}
+            for doc, meta, dist in zip(docs[0], metas[0], dists[0])
+        ]
 
 # Code to Build the vector store
 # Uncomment the following lines to run the embedding and saving process
@@ -184,8 +175,9 @@ def query_chroma(
 #     )
     
 if __name__ == "__main__":
+    store = ChromaRetriever()
     user_query = "Do you have MICRO CONTROLLER like arduino?"
-    matches = query_chroma(query=user_query, top_k=5)
+    matches = store.query_chroma(query=user_query, top_k=5)
 
     for i, match in enumerate(matches):
         print(f"\nMatch {i + 1}:")

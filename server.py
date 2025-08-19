@@ -12,7 +12,7 @@ from openai import OpenAI
 from config import settings
 from logger import get_logger
 from opneai_tools import tools_list
-from embed_and_save_vector import query_chroma
+from wrapper_chroma import ChromaRetriever
 from Shopify import Shopify
 import markdown
 import redis.asyncio as redis
@@ -25,17 +25,18 @@ from openai.types.chat import ChatCompletionToolMessageParam, ChatCompletion
 # ################## Helper Functions Start ###########################
 # #####################################################################
 
-# @ App level create a reference for Shopify API client
+# @ App level create a reference for 3rd Party Services
 store = Shopify(settings.store, "ShopifyClient")
 redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 session_manager = SessionManager(redis_client, session_ttl=3600)
+vector_store = ChromaRetriever(model="text-embedding-3-small")
 
 def get_products_data(query: str, top_k: int = 5) -> str:
     """
     Function for fetching product data based on a query.
     This interact with a Comapany Vector database.
     """
-    results = query_chroma(query=query, top_k=top_k)
+    results = vector_store.query_chroma(query=query, top_k=top_k)
     return json.dumps(results) 
 
 async def get_product_via_handle(handle: str) -> str:
