@@ -36,7 +36,7 @@ def get_products_data(query: str, top_k: int = 5) -> str:
     Function for fetching product data based on a query.
     This interact with a Comapany Vector database.
     """
-    results = vector_store.query_chroma(query=query, top_k=top_k)
+    results = vector_store.query_chroma(query=query, top_k=top_k+3)
     return json.dumps(results) 
 
 async def get_product_via_handle(handle: str) -> str:
@@ -142,7 +142,7 @@ async def async_chat_endpoint(chat_request: ChatRequest):
             # latest_chat = chat_request.Serialize_chat_history(messages)
             latest_chat = chat_request.n_Serialize_chat_history(messages)
             await session_manager.update_session(session_id, latest_chat)
-            
+            print(f"\n\nFinal Data: {reply}\n\n")
             return ChatResponse(
                 reply=reply,
                 products=products,

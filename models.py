@@ -36,7 +36,7 @@ class ChatRequest(BaseModel):
                 
             elif msg["role"] == "system":
                 if msg["content"] != self.system_prompt:
-                    continue  # Skip system prompts that are not the initial one
+                    continue  # Skip system prompts Except initial one
                 dict_msg = {
                     "role": "system",
                     "content": msg["content"],
@@ -104,9 +104,10 @@ class ChatRequest(BaseModel):
     
     @staticmethod
     def serialize_tool_response(msg: ChatCompletionToolMessageParam) -> ChatCompletionToolMessageParam:
-        msg["content"] = "Only metadata and score are retained; the content is omitted for model efficiency. If you need the content, retrieve it using the tool with metadata.handle."
+        content = str(msg["content"]) or "No content provided"
+        msg["content"] = f"{content[:100]}....{content[-100:]}" if len(content) > 200 else content
         return msg
-    
+
     def n_Deserialize_chat_history(self, json_str: str) -> List[Dict[str, Any]]:
         """Converts a JSON string from Redis back into a list of ChatCompletionMessageParam-like dicts."""
         obj = json.loads(json_str)
@@ -260,27 +261,6 @@ class ChatRequest(BaseModel):
         # return cast(ChatCompletionmsgParam, base)
         return base
     
-    @property
-    def openai_msgs(self) -> List[ChatCompletionMessageParam]:
-        """Return full OpenAI-compatible msg list including history and user input."""
-        history = self.history or []
-        # print(history)
-        messages = []
-        if not self.history:
-            messages.append({"role": "system", "content": self.system_prompt})
-        for msg in history:
-            messages.append(self.format_chat_msg(msg))
-        # try:
-        #     print("vector_review_prompt :","len(history) > 2",len(history) > 1, "history[-1].role", history[-1].role if history else None)
-        #     if len(history) > 1 and history[-1].role == "tool":
-        #         msgs.append({"role": "system", "content": self.vector_review_prompt})
-        # except IndexError:
-        #     # If history is empty, we don't need to append the vector review prompt
-        #     pass
-        
-        messages.append( {"role": "user", "content": self.message.strip()})   
-        return cast(List[ChatCompletionMessageParam], messages)
-    
     def append_tool_response(self, content:str, tool_call_id:str):
         tool_msg: ChatCompletionToolMessageParam = {
             "role": "tool",
@@ -430,10 +410,11 @@ class ChatRequest(BaseModel):
 
         cleaned_text = _remove_spans(intermediate, spans2).strip()
 
-        if len(cleaned_text) < 100:
-            cleaned_text = re.sub(r"\[\s*\]", "",cleaned_text)
-            cleaned_text = re.sub(r"\[\s*(?:,\s*)*\]", "", cleaned_text)
-            #  += ("\nCheckout the products Below." if cleaned_text else "Checkout the products Below.")
+        # if len(cleaned_text) < 100:
+        cleaned_text = re.sub(r"\[\s*\]", "",cleaned_text)
+        cleaned_text = re.sub(r"\[\s*(?:,\s*)*\]", "", cleaned_text)
+        cleaned_text =  re.sub(r"```(?:json)?\s*```", "", cleaned_text, flags=re.MULTILINE)
+        #  += ("\nCheckout the products Below." if cleaned_text else "Checkout the products Below.")
 
         return results, cleaned_text.strip()
 
@@ -468,29 +449,12 @@ class ChatRequest(BaseModel):
         list_of_dicts = json_string.get("data", [])  # Handle both format
         return [ChatMessage(**d) for d in list_of_dicts]
     
-    @staticmethod
-    def Serialize_chat_history(chat_history: List[ChatCompletionMessageParam]) -> str:
-        """Converts a list of Chatmsg objects to a JSON string."""
-        # Use Pydantic's model_dump to convert each object to a dictionary
-        list_of_dicts = []
-        
-        for msg in chat_history:
-            if msg["role"] == "tool" or msg["role"] == "function" or msg["role"] == "developer":
-                continue
-                # Convert tool_calls to a list of dictionaries
-            elif msg["role"] == "assistant":
-                if msg["content"] is None: # type: ignore
-                    continue
-            else:
-                list_of_dicts.append(dict(msg))
-        # Then use json.dumps to get the final JSON string
-        return json.dumps({"data":list_of_dicts})
 
     @property
     def system_prompt(self) -> str:
         return """
             > You are a helpful assistant created by Digilog ([https://digilog.pk/](https://digilog.pk/)).
-            > Your role is to read and recommend products from the Digilog Shopify store, providing responses in text only.
+            > Your role is to read and recommend products from the Digilog Store, providing responses in text only.
             > You must not access, request, or process any personal data or confidential company information.
             > If such information is requested, reply strictly with: **"Not eligible."**
         """
@@ -528,7 +492,7 @@ class ChatRequest(BaseModel):
             "imageurl": "https://digilog.pk/cdn/shop/files/product-image.wenbp?v=1234567890&width=1400",
             "title": "Exact Product Title Here",
             "price": "99.99 CurrencyCode",
-            "description": "Clear, concise product description here."
+            "description": "Rewrite the product description in a concise, buyer-focused style. Avoid long sentences. Present information as short bullet points that highlight only the most important specifications and benefits a buyer would consider before making a purchase. The tone should be clear, persuasive, and designed to elevate the product's value. Focus on properties that drive buying decisions (e.g., performance, durability, compatibility, size, unique advantages, price/value)."
             }
             ```
 
@@ -537,8 +501,8 @@ class ChatRequest(BaseModel):
             1. `"link"` → Direct URL to the product page (must be a valid HTTPS link).
             2. `"imageurl"` → Direct URL to the product image (must be a valid HTTPS link).
             3. `"title"` → Exact name of the product, no extra words.
-            4. `"price"` → Must include currency symbol and numeric value (e.g., `"$19.99"`).
-            5. `"description"` → Short, clear, factual description.
+            4. `"price"` → Must include currency symbol and numeric value (e.g., `"19.99 PKR"`).
+            5. "description" → Brief, precise, fact-focused summary.
             6. **No additional fields** — only the above 5.
             7. **No line breaks inside values** — all values must be single-line strings.
 

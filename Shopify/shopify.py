@@ -789,8 +789,13 @@ class Shopify:
       Function to format the product data into a specific structure.
       """
       status = product.get("status")
+      inventory = product.get("totalInventory", 0),
+      if inventory == 0:
+        return {
+          "Note": "This product is OUT OF STOCK or not available for sale at the moment."
+        }
       print(f"Product Status: {status}")
-      if status == "ACTIVE":
+      if status == "ACTIVE" :
         edges = (product.get("media") or {}).get("edges") or []
         first_edge = edges[0] if edges else {}
         node = first_edge.get("node") or {}
@@ -815,7 +820,7 @@ class Shopify:
       }
       else:
         return {
-          "Note": "This product is not active or available for sale at the moment."
+          "Note": "This product is not active or not available for sale at the moment."
         }
 
 
