@@ -66,8 +66,8 @@ graph TD
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/shopify-chatbot.git
-   cd shopify-chatbot
+   git clone https://github.com/Mobeen-Dev/chatbot_Shopify.git
+   cd chatbot_Shopify
    ```
 
 2. **Set up environment variables**
@@ -84,7 +84,7 @@ graph TD
 4. **Install Shopify theme extension**
    ```bash
    # Follow Shopify CLI installation guide
-   shopify theme dev
+   shopify app dev
    ```
 
 ### Configuration
@@ -128,9 +128,7 @@ shopify-chatbot/
 │   ├── assets/                # CSS, JS, images
 │   ├── sections/              # Shopify theme sections
 │   └── templates/             # Liquid templates
-├── tests/
-│   ├── hybrid_retrieval/      # Search system tests
-│   └── StressTester.py        # Performance testing
+|
 ├── docker-compose.yaml        # Container orchestration
 ├── Dockerfile                 # Application container
 ├── requirements.txt           # Python dependencies
@@ -144,40 +142,16 @@ shopify-chatbot/
 
 #### Chat Interaction
 ```http
-POST /api/chat
+POST /api/aync-chat
 Content-Type: application/json
 
 {
   "message": "Show me blue dresses under $100",
-  "session_id": "user_session_123"
+  "session_id": "c4212586-c01e-4fe9-b884-402747a61ff6"
 }
 ```
 
-#### Product Sync
-```http
-POST /api/sync/products
-Authorization: Bearer <token>
-```
-
-#### Order Processing
-```http
-POST /api/orders/webhook
-Content-Type: application/json
-```
-
 ## Development
-
-### Running Tests
-```bash
-# Run all tests
-python -m pytest tests/
-
-# Run specific test suite
-python -m pytest tests/hybrid_retrieval/
-
-# Run stress tests
-python tests/StressTester.py
-```
 
 ### Local Development
 ```bash
@@ -196,8 +170,8 @@ docker-compose up redis mongodb elasticsearch
 ### Production Deployment
 1. **Build and push Docker image**
    ```bash
-   docker build -t shopify-chatbot:latest .
-   docker push your-registry/shopify-chatbot:latest
+   docker build -t chatbot_Shopify:latest .
+   docker push your-registry/chatbot_Shopify:latest
    ```
 
 2. **Deploy using GitHub Actions**
