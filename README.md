@@ -37,16 +37,16 @@ An intelligent commerce assistant built for seamless Shopify storefront integrat
 ```mermaid
 graph TD
     A[User Query] --> B[Shopify Theme UI]
-    B --> C[Flask/FastAPI Server]
+    B --> C[FastAPI Server]
     C --> D[OpenAI LLM]
-    C --> E[Hybrid Retrieval]
+    D --> M[Vector File Store]
+    D --> N[MCP Server]
+    N --> E[Hybrid Retrieval]
     E --> F[FAISS Semantic Search]
     E --> G[Elasticsearch Lexical Search]
-    C --> H[Shopify API]
+    N --> H[Shopify API]
     C --> I[Redis Session Store]
     C --> J[MongoDB Chat History]
-    C --> K[RabbitMQ Sync]
-    C --> L[Response to User]
 ```
 
 ## Quick Start
