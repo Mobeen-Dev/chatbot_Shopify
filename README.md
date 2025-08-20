@@ -42,11 +42,16 @@ graph TD
     D --> M[Vector File Store]
     D --> N[MCP Server]
     N --> E[Hybrid Retrieval]
-    E --> F[FAISS Semantic Search]
-    E --> G[Elasticsearch Lexical Search]
+    E --> F[FAISS - Semantic]
+    E --> G[Elasticsearch - Lexical]
     N --> H[Shopify API]
-    C --> I[Redis Session Store]
-    C --> J[MongoDB Chat History]
+    H --> Q[Products Data]
+    H --> R[Orders Data]
+    H --> S[Customers Data]
+    C --> O[Session Management]
+    O --> I[Redis Store]
+    C --> P[Chat Storage]
+    P --> J[MongoDB TimeSeries]
 ```
 
 ## Quick Start
