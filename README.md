@@ -38,8 +38,7 @@ An intelligent commerce assistant built for seamless Shopify storefront integrat
 graph TD
     A[User Query] --> B[Shopify Theme UI]
     B --> C[FastAPI Server]
-    C --> D[OpenAI LLM]
-    D --> M[Vector File Store]
+    C --> D[OpenAI LLM]    
     D --> N[MCP Server]
     N --> E[Hybrid Retrieval]
     E --> F[FAISS - Semantic]
@@ -52,6 +51,7 @@ graph TD
     O --> I[Redis Store]
     C --> P[Chat Storage]
     P --> J[MongoDB TimeSeries]
+    D --> M[Vector File Store]
 ```
 
 ## Quick Start
