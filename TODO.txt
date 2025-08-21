@@ -1,12 +1,12 @@
-Phase #1
-    Basic openAi api Calling + Prompt Engineering
-    Product Knowledge Aware
+Phase #1 
+    Basic openAi api Calling + Prompt Engineering ✅
+    Product Knowledge Aware ✅
     
 Phase #2
     Session Based 
-        Short-Term Memory
-        Long-Term Memory
-    Recommend Products
+        Short-Term Memory ✅
+        Long-Term Memory 
+    Recommend Products   ✅
 
 Phase #3
     Retrieve Products | Orders Data
@@ -17,21 +17,23 @@ After MVP-2
     Refactor Api function 
     Refactor App Endpoints
     Refactor RAG Module
+
 Bring String into ENV / CONFIG
 Turn property into function in MODEL.PY
+
 Merging:
     openai tool list + functions + from Gpt Response to Output Appending
 
 Centeralized All the Object in FastApi 
 
 
-Server.py ln 156 function selection and respone appending in a clean seperate function
+Server.py ln 156 function selection and respone appending in a clean seperate function ✅
 
 handle detail of product 
-no product if quantity is zero
+no product if quantity is zero ✅
 
 Rewrite Hybrid Approach for Serialization of Chat
-Try-Caatch for code
+Try-Catch for code
 
 
 
@@ -45,8 +47,9 @@ Back-End:
 
 Front-End:
     - Develop a theme extension for Shopify Store as frontend agent for llm powered chat
-    - Unselectable Text
-
+    - Unselectable Text ✅
+ 
+ ----------------------------------------------------------------------------------------------------
 Admin Panel Features:
     - Enable/Disable Remember Mode
     - Switch Languages
