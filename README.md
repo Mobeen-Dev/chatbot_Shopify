@@ -15,7 +15,7 @@ An intelligent commerce assistant built for seamless Shopify storefront integrat
 
 ### Backend
 - **Language**: Python 3.10+
-- **Framework**: Flask/FastAPI
+- **Framework**: FastAPI
 - **Database**: MongoDB (persistence), Redis (sessions)
 - **Search**: FAISS (semantic), Elasticsearch/OpenSearch (lexical)
 - **Message Queue**: RabbitMQ
