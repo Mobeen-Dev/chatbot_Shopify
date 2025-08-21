@@ -176,6 +176,30 @@ class Shopify:
       
     return response.get("data", {}).get("product")   
   
+  async def fetch_order_by_name(self, order_name: str):
+    query = self.order_query_by_order_name()
+    
+    after_cursor = None  # first page has no cursor
+    query_string = f"name:{order_name} "
+    
+    variables = { 
+      "startCursor": after_cursor,
+      "query": query_string
+    }
+    self.logger.info(f"Fetching order by Name: {order_name}")
+    response = await self.send_graphql_mutation(query, variables, "OrderByName")
+    
+    # drill into the GraphQL data safely
+    orders_conn = response.get("data", {}).get("orders", {})
+    edges = orders_conn.get("edges", [])
+    nodes = []
+    for edge in edges:
+        node = edge.get("node")
+        if node is not None:
+          nodes.append(node)
+
+    return nodes  
+  
   async def product_id_by_handle(self, product_handle: str):
     
     query = self.product_query_by_identifier()
@@ -209,7 +233,6 @@ class Shopify:
     else:
       return {"error": "Product not found."}
     # self.logger.info(str(result))
-  
   
   async def delete_product_by_id(self, product_graphql_id: str):
    
@@ -784,6 +807,53 @@ class Shopify:
       }
       """
   
+  @staticmethod
+  def order_query_by_order_name():
+    return """
+      query GetOrdersbyName($startCursor: String, $query: String) {
+        orders(
+          first: 1
+          after: $startCursor
+          query: $query
+        ) {
+        edges {
+          node {
+            shippingAddress {
+              address1
+            }
+            displayFinancialStatus
+            displayFulfillmentStatus
+            totalPriceSet {
+              presentmentMoney {
+                amount
+                currencyCode
+              }
+            }
+            name
+            lineItems(first: 200) {
+              edges {
+                node {
+                  product {
+                    title
+                    priceRangeV2 {
+                      maxVariantPrice {
+                        amount
+                      }
+                      minVariantPrice {
+                        amount
+                      }
+                    }
+                  }
+                  quantity
+                }
+              }
+            }
+          }
+        }
+      }
+      }
+    """
+  
   def format_product(self, product: dict) -> dict:
       """
       Function to format the product data into a specific structure.
@@ -822,7 +892,6 @@ class Shopify:
         return {
           "Note": "This product is not active or not available for sale at the moment."
         }
-
 
   def parse_into_query_params(self, product: dict, child_p_id: str = ''):
     # product = await fetch_product(product_gid)
