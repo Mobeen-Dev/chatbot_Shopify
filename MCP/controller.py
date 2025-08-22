@@ -74,5 +74,23 @@ class Controller:
             
         return chat_request
 
+    async def get_order_via_order_number(self, order_number: str) -> str:
+        """
+        Fetch and format an order by its order number.
+        Ensures order number starts with '#'.
+        Returns structured data ready for LLM.
+        """
+        # Ensure order number starts with "#"
+        if not order_number.startswith("#"):
+            order_number = f"#{order_number}"
 
+        # Fetch from store
+        data = await self.store.fetch_order_by_name(order_number)
+        if not data:
+            return str({"success": False, "message": f"No order found for {order_number}"})
+
+        # Format for LLM
+        formatted = Shopify.format_order_for_llm(data)
+        
+        return formatted
 

@@ -40,6 +40,29 @@ tools_list: list[ChatCompletionToolParam] = [
             "additionalProperties": False
         }
     }
-}
-
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_order_via_order_number",
+      "description": "Retrieve and format Shopify order details using an order number.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "order_number": {
+            "type": "string",
+            "description": "The Shopify order number (with or without #, e.g., '#1234' or '1234')."
+          }
+        },
+        "required": ["order_number"],
+        "additionalProperties": False
+      }
+    }
+  }
+  
+  
+  
+  
+  
+  
 ]

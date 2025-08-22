@@ -818,6 +818,17 @@ class Shopify:
         ) {
         edges {
           node {
+            statusPageUrl
+            customer{
+              displayName
+              
+              defaultPhoneNumber{
+                phoneNumber
+              }
+              defaultEmailAddress{
+                emailAddress
+              }
+            }
             shippingAddress {
               address1
             }
@@ -853,6 +864,72 @@ class Shopify:
       }
       }
     """
+  
+  @staticmethod
+  def format_order_for_llm(order_data: list) -> str:
+    def mask_email(email: str) -> str:
+      """Dynamically mask the local part of an email address."""
+      
+      local, domain = email.split("@", 1)
+      length = len(local)
+      country_code = domain.split(".", 1)[1]
+      
+      if length <= 3:
+          return local + "@" + '*'*(len(domain)-len(country_code))+'.'+country_code
+      
+      extra_characters = '*' * (length-3)
+      return local[:4]+extra_characters+ "@" + domain
+    lines = []
+    for order in order_data:
+        customer = order.get("customer", {})
+        shipping = order.get("shippingAddress", {})
+        price_info = order.get("totalPriceSet", {}).get("presentmentMoney", {})
+
+        # Order meta
+        lines.append(f"OrderID: {order.get('name', '')}")
+        lines.append(f"FinancialStatus: {order.get('displayFinancialStatus', '')}")
+        lines.append(f"FulfillmentStatus: {order.get('displayFulfillmentStatus', '')}")
+        lines.append(f"Total: {price_info.get('amount', '')} {price_info.get('currencyCode', '')}")
+
+        # Customer
+        lines.append(f"CustomerName: {customer.get('displayName', 'N/A')}")
+        
+        data = shipping.get('phone', None)
+        if not data:
+            _data = order.get("billingAddress", {}).get("phone", None)
+            if not _data :
+                _data = customer.get("defaultPhoneNumber", {}).get('phoneNumber')
+            data = _data
+        
+        if data:
+          if len(data) > 10:
+            phone_number = '0'+data[3:6] + "*" *4 + data[-3:]
+            lines.append(f"CustomerPhone: {phone_number}")
+        mail = customer.get('defaultEmailAddress', {}).get('emailAddress', None)
+        if mail:
+            lines.append(f"CustomerEmail: {mask_email(mail)}")
+
+        # Shipping
+        lines.append(f"ShippingAddress: {shipping.get('address1', 'N/A')}")
+
+        # Items
+        lines.append("Items:")
+        line_items = order.get("lineItems", {}).get("edges", [])
+        for idx, item in enumerate(line_items, start=1):
+            node = item.get("node", {})
+            product = node.get("product")
+            quantity = node.get("quantity", 0)
+
+            if product:
+                title = product.get("title", "Unknown Product")
+                price = product.get("priceRangeV2", {}).get("minVariantPrice", {}).get("amount", "0")
+                lines.append(f"  - {title}, Qty: {quantity}, UnitPrice: {price}")
+            else:
+                lines.append(f"  - Unknown Product, Qty: {quantity}")
+
+        lines.append("")  # blank line between orders
+
+    return "\n".join(lines)
   
   def format_product(self, product: dict) -> dict:
       """

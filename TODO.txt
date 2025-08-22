@@ -26,6 +26,9 @@ Merging:
 
 Centeralized All the Object in FastApi 
 
+Dynamic Ui laoding 
+only shrink respinse with no product detected
+checkout-functionality- create - delete - update
 
 Server.py ln 156 function selection and respone appending in a clean seperate function ✅
 
