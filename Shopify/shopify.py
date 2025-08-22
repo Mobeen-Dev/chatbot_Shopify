@@ -810,27 +810,28 @@ class Shopify:
   @staticmethod
   def order_query_by_order_name():
     return """
-      query GetOrdersbyName($startCursor: String, $query: String) {
-        orders(
-          first: 1
-          after: $startCursor
-          query: $query
-        ) {
+    query GetOrdersbyName($startCursor: String, $query: String) {
+      orders(first: 1, after: $startCursor, query: $query) {
         edges {
           node {
             statusPageUrl
-            customer{
+            customer {
               displayName
-              
-              defaultPhoneNumber{
+              defaultPhoneNumber {
                 phoneNumber
               }
-              defaultEmailAddress{
+              defaultEmailAddress {
                 emailAddress
               }
             }
+            billingAddress {
+              phone
+            }
             shippingAddress {
               address1
+              phone
+              firstName
+              lastName
             }
             displayFinancialStatus
             displayFulfillmentStatus
@@ -846,6 +847,7 @@ class Shopify:
                 node {
                   product {
                     title
+                    handle
                     priceRangeV2 {
                       maxVariantPrice {
                         amount
@@ -862,7 +864,7 @@ class Shopify:
           }
         }
       }
-      }
+    }
     """
   
   @staticmethod
@@ -1018,7 +1020,7 @@ class Shopify:
           ],
           # "productOptions":product["options"],
           "productOptions": [{"name": option["name"], 'values': [{"name": value} for value in option["values"]]} for
-                             option in product["options"]],
+                            option in product["options"]],
           "variants": [
             {
               "optionValues": handle_variants(variant["node"]["title"]),
