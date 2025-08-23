@@ -20,7 +20,7 @@ from openai.types.chat import ChatCompletion
 # @ App level create a reference for 3rd Party Services
 redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 session_manager = SessionManager(redis_client, session_ttl=3600)
-mcp_controller = Controller(model="text-embedding-3-small")
+mcp_controller = Controller()
 
 client = OpenAI(
     api_key=settings.openai_api_key,

@@ -1,6 +1,6 @@
 from models import ChatRequest
 import json
-from config import settings
+from config import settings, embeddind_model
 from logger import get_logger
 from wrapper_chroma import ChromaRetriever
 from Shopify import Shopify
@@ -12,8 +12,8 @@ class Controller:
     This class interacts with the vector store and product store to fetch product data.
     """
 
-    def __init__(self, model: str = "text-embedding-3-small"):
-        self.vector_store = ChromaRetriever(model=model)
+    def __init__(self):
+        self.vector_store = ChromaRetriever()
         self.store = Shopify(settings.store, "ShopifyClient")
         self.logger = get_logger("MCP - Controller")
 

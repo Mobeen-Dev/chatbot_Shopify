@@ -1,6 +1,6 @@
 import openai
 import chromadb
-from chromadb.config import Settings
+# from chromadb.config import Settings
 from config import settings
 import os
 # Set up OpenAI API key

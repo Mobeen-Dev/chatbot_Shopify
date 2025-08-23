@@ -5,7 +5,7 @@ from langchain.docstore.document import Document
 from langchain_community.document_loaders import CSVLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import openai
-from config import settings
+from config import settings, embeddind_model, vector_db_collection_name
 import chromadb
 from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
 
@@ -63,7 +63,7 @@ def embed_and_save_to_chroma(
     persist_directory: str = "chroma_store",
     collection_name: str = "product_chunks",
     batch_size: int = 100,
-    model: str = "text-embedding-3-small",
+    model: str = embeddind_model,
 ):
     if not os.path.exists(persist_directory):
         os.makedirs(persist_directory)
@@ -123,7 +123,7 @@ def _save_batch_to_chroma(chunks: List[Document], collection, embedding_fn, star
         print(f"Chroma save failed for batch starting at {start_index}: {e}")
 
 class ChromaRetriever:
-    def __init__(self, persist_directory: str = "chroma_store", collection_name: str = "product_chunks", model: str = "text-embedding-3-small"):
+    def __init__(self, persist_directory: str = "chroma_store", collection_name: str = vector_db_collection_name, model: str = embeddind_model):
         
         self.model = model
         
