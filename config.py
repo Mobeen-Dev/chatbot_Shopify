@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     # === Shopify Master Store credentials ===
     shopify_api_key: str = Field(alias="SHOPIFY_API_KEY")
     shopify_api_secret: str = Field(alias="SHOPIFY_API_SECRET")
+    shopify_storefront_secret: str = Field(alias="SHOPIFY_STOREFRONT_API_SECRET")
     shopify_store_name: str = Field(alias="SHOPIFY_STORE_NAME")
     shopify_api_version: str = Field(alias="SHOPIFY_API_VERSION")
     
@@ -36,6 +37,7 @@ class Settings(BaseSettings):
         return {
             "api_key": self.shopify_api_key,
             "api_secret": self.shopify_api_secret,
+            "storefront_secret": self.shopify_storefront_secret,
             "store_name": self.shopify_store_name,
             "api_version": self.shopify_api_version,
         }

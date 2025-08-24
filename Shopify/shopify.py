@@ -9,6 +9,7 @@ from config import NO_IMAGE_URL
 class Shopify:
   def __init__(self, store:dict[str,str], logger_name:str="Shopify"):
     self.ACCESS_TOKEN = store["api_secret"]
+    self.STOREFRONT_ACCESS_TOKEN = store["storefront_secret"]
     self.API_VERSION = store["api_version"]
     self.SHOPIFY_STORE = store["store_name"]
     self.URL = f"https://{self.SHOPIFY_STORE}.myshopify.com/admin/api/{self.API_VERSION}/graphql.json"
@@ -18,7 +19,68 @@ class Shopify:
     }
 
     self.logger = get_logger(logger_name)
-    
+  
+  async def send_storefront_mutation(self, mutation: str, variables: dict, receiver: str = "child"):
+    URL = f"https://{self.SHOPIFY_STORE}.myshopify.com/api/{self.API_VERSION}/graphql.json"
+    HEADER = {
+      "Content-Type": "application/json",
+      "X-Shopify-Storefront-Access-Token": self.STOREFRONT_ACCESS_TOKEN
+    }
+    try:
+      async with aiohttp.ClientSession() as session:
+        async with session.post(
+            URL,
+            headers=HEADER,
+            json={"query": mutation, "variables": variables}
+        ) as resp:
+          resp.raise_for_status()
+          result = await resp.json()
+      
+      # 3. Top-level GraphQL errors
+      if "errors" in result:
+        await asyncio.sleep(25)
+        return await self.send_storefront_mutation(mutation, variables, receiver)
+      
+      data = result.get("data")
+      if not data:
+        raise RuntimeError(f"No 'data' field in response: {result}")
+      if receiver == "# Some Defualt Json Mining #":
+        ps = data.get("productSet") or {}
+        if ps is None:
+          pass
+          # Could be completely null if the mutation itself wasn't found, or input invalid
+          # raise RuntimeError(f"No 'productSet' returned in response: {result}")
+        
+        # 4. Collect userErrors on the root and operation
+        root_errors = ps.get("userErrors") or []
+        op = ps.get("productSetOperation") or {}
+        op_errors = op.get("userErrors") or []
+        
+        if root_errors:
+          product_handle = ""
+          code = root_errors[0].get("code")
+
+          if code == 'HANDLE_NOT_UNIQUE':
+            msg = root_errors[0]['message']
+            match = re.search(r"Handle '([^']+)'", msg)
+            if match:
+              product_handle = match.group(1)
+              await self.handle_product_duplication(product_handle)
+              return await self.send_graphql_mutation(mutation, variables, receiver)
+              
+          
+        if op_errors:
+          pass
+          # raise RuntimeError(f"User errors: {op_errors}"
+        
+        # 5. Success — return the productSet payload
+        return ps
+      return result
+    except Exception as err:
+      self.logger.exception(str(err))
+      return {}
+  
+  
   async def fetch_all_products(self):
     all_products:list = []
     query= self.all_products_query()
