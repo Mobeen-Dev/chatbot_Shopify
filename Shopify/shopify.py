@@ -2,6 +2,7 @@
 import re
 import aiohttp
 import asyncio
+from typing import List, Dict
 from logger import get_logger
 from config import NO_IMAGE_URL
 
@@ -80,6 +81,113 @@ class Shopify:
       self.logger.exception(str(err))
       return {}
   
+  async def create_cart(self, items: list[dict[str, str | int]]): # [ {"handle": "product-alpha", "qty" : 123 } ]
+    # The amount, before taxes and cart-level discounts, for the customer to pay.
+    mutation = """
+    mutation cartCreate($lines: [CartLineInput!]!, $buyerIdentity: CartBuyerIdentityInput, $attributes: [AttributeInput!]) {
+    cartCreate(
+      input: {lines: $lines, buyerIdentity: $buyerIdentity, attributes: $attributes}
+    ) {
+      cart {
+        cost {
+          subtotalAmount {
+            amount
+            currencyCode
+          }
+          subtotalAmountEstimated
+        }
+
+        id
+        checkoutUrl
+        createdAt
+        updatedAt
+        lines(first: 10) {
+          edges {
+            node {
+              id
+              merchandise {
+                ... on ProductVariant {
+                  id
+                }
+              }
+            }
+          }
+        }
+        buyerIdentity {
+          preferences {
+            delivery {
+              deliveryMethod
+            }
+          }
+        }
+        attributes {
+          key
+          value
+        }
+        cost {
+          totalAmount {
+            amount
+            currencyCode
+          }
+          subtotalAmount {
+            amount
+            currencyCode
+          }
+        }
+      }
+      userErrors {
+        field
+        message
+      }
+    }
+  }
+  """
+    variable = {
+      "lines": [
+        {
+          "quantity": 7,
+          "merchandiseId": "gid://shopify/ProductVariant/40516002512982"
+        },
+        {
+          "quantity": 8,
+          "merchandiseId": "gid://shopify/ProductVariant/40516001267798"
+        },
+        {
+          "quantity": 9,
+          "merchandiseId": "gid://shopify/ProductVariant/40516002185302"
+        },
+        {
+          "quantity": 10,
+          "merchandiseId": "gid://shopify/ProductVariant/40516007034966"
+        }
+      ],
+      "buyerIdentity": {
+        "email": "example@example.com",
+        "countryCode": "PK",
+        "deliveryAddressPreferences": {
+          "oneTimeUse": False,
+          "deliveryAddress": {
+            "address1": "Street 1 house 238 of Shalimar Housing society Salamatpura",
+            "address2": "",
+            "city": "Lahore",
+            "province": "Pubjab",
+            "country": "PK",
+            "zip": "54000"
+          }
+        },
+        "preferences": {
+          "delivery": {
+            "deliveryMethod": "PICK_UP"
+          }
+        }
+      },
+      "attributes": [
+        {
+          "key": "cart_attribute",
+          "value": "This is a cart attribute"
+        }
+      ]
+    }
   
   async def fetch_all_products(self):
     all_products:list = []

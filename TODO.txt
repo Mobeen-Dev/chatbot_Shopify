@@ -10,7 +10,7 @@ Phase #2
 
 Phase #3
     Retrieve Products | Orders Data ✅
-    Handle Cart | Checkout 
+    Handle Cart | Checkout  🚧
     Redirect to Different Pages
 
 After MVP-2
@@ -26,8 +26,8 @@ Merging:
 
 Centeralized All the Object in FastApi 
 
-Dynamic Ui laoding 
-only shrink respinse with no product detected
+Dynamic Ui loading 
+only shrink response with no product detected
 checkout-functionality- create - delete - update
 
 Server.py ln 156 function selection and respone appending in a clean seperate function ✅
