@@ -18,8 +18,16 @@ class Shopify:
       "Content-Type": "application/json",
       "X-Shopify-Access-Token": self.ACCESS_TOKEN
     }
-
+    self.id_table = {"sample":"not_build"}  
     self.logger = get_logger(logger_name)
+  
+  async def init_handle_id_table(self) -> dict[str,str]:
+    self.id_table = await self.load_handle_id_table()
+    return {"sample":"not_build"}  
+  
+  
+  async def load_handle_id_table(self) -> dict[str,str]:
+    return {"sample":"not_build"}
   
   async def send_storefront_mutation(self, mutation: str, variables: dict, receiver: str = "child"):
     URL = f"https://{self.SHOPIFY_STORE}.myshopify.com/api/{self.API_VERSION}/graphql.json"
@@ -81,13 +89,16 @@ class Shopify:
       self.logger.exception(str(err))
       return {}
   
-  async def create_cart(self, items: list[dict[str, str | int]]): # [ {"handle": "product-alpha", "qty" : 123 } ]
+  def handle_to_id(self, handle:str) -> str|None:
+    return self.id_table.get(handle, None)
+  
+  async def create_cart(self, items: list[dict[str, str | int]], session_id:str="default"): # [ {"handle": "product-alpha", "qty" : 123 } ]
     # The amount, before taxes and cart-level discounts, for the customer to pay.
     mutation = """
-    mutation cartCreate($lines: [CartLineInput!]!, $buyerIdentity: CartBuyerIdentityInput, $attributes: [AttributeInput!]) {
-    cartCreate(
-      input: {lines: $lines, buyerIdentity: $buyerIdentity, attributes: $attributes}
-    ) {
+    mutation cartCreate($lines: [CartLineInput!]!, $buyerIdentity: CartBuyerIdentityInput, $attributes: [AttributeInput!], $note: String) {
+      cartCreate(
+        input: {lines: $lines, buyerIdentity: $buyerIdentity, attributes: $attributes, note: $note}
+      ) {
       cart {
         cost {
           subtotalAmount {
@@ -142,32 +153,24 @@ class Shopify:
     }
   }
   """
-    variable = {
-      "lines": [
-        {
-          "quantity": 7,
-          "merchandiseId": "gid://shopify/ProductVariant/40516002512982"
-        },
-        {
-          "quantity": 8,
-          "merchandiseId": "gid://shopify/ProductVariant/40516001267798"
-        },
-        {
-          "quantity": 9,
-          "merchandiseId": "gid://shopify/ProductVariant/40516002185302"
-        },
-        {
-          "quantity": 10,
-          "merchandiseId": "gid://shopify/ProductVariant/40516007034966"
-        }
-      ],
+    lines = []
+    for obj in items:
+        merchandise_id = str(obj["handle"])
+        # merchandise_id = self.handle_to_id(str(obj["handle"]))
+        if merchandise_id:
+            lines.append({
+                "quantity": obj["qty"],
+                "merchandiseId": merchandise_id
+            })
+    variables = {
+      "lines": lines,
       "buyerIdentity": {
-        "email": "example@example.com",
+        "email": "info@digilog.pk",
         "countryCode": "PK",
         "deliveryAddressPreferences": {
           "oneTimeUse": False,
           "deliveryAddress": {
-            "address1": "Street 1 house 238 of Shalimar Housing society Salamatpura",
+            "address1": "13Th Regal chowk, Shahrah-e-Quaid-e-Azam, Mozang Chungi",
             "address2": "",
             "city": "Lahore",
             "province": "Pubjab",
@@ -183,12 +186,14 @@ class Shopify:
       },
       "attributes": [
         {
-          "key": "cart_attribute",
-          "value": "This is a cart attribute"
+          "key": "chat_reference",
+          "value": f"{session_id}"
         }
-      ]
+      ],
+      "note" : "This order was created with the help of AI."
     }
-  
+    result = await self.send_storefront_mutation(mutation, variables)
+    return result
   async def fetch_all_products(self):
     all_products:list = []
     query= self.all_products_query()

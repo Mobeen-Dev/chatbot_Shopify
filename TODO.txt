@@ -18,6 +18,8 @@ After MVP-2
     Refactor App Endpoints
     Refactor RAG Module
 
+manage session id 
+
 Bring String into ENV / CONFIG
 Turn property into function in MODEL.PY
 
