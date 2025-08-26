@@ -1,5 +1,6 @@
 import json 
 from pydantic import BaseModel, Field
+from dataclasses import dataclass, asdict
 from typing import Optional, List, Literal, Dict, Any, cast, Mapping, Tuple
 from openai.types.chat import ChatCompletionMessageToolCall, ChatCompletionMessageParam, ChatCompletionToolMessageParam,  ChatCompletionMessage, ChatCompletionSystemMessageParam
 import re
@@ -525,3 +526,18 @@ class ChatResponse(BaseModel):
     history: list = Field(default_factory=list)
     products: List[Dict[str, Any]] = []
     session_id: Optional[str] = None
+
+
+
+
+
+
+
+@dataclass
+class ProductEntry:
+    have_single_variant: bool
+    options: List[dict[str, str]]
+    vid: Optional[str]  # str if non-singular, None if singular
+
+
+

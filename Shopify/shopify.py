@@ -4,8 +4,11 @@ import aiohttp
 import asyncio
 from typing import List, Dict
 from logger import get_logger
-from config import NO_IMAGE_URL, llm_model
-
+from config import NO_IMAGE_URL, llm_model, product_dict_file_location
+from models import ProductEntry
+import asyncio
+import pickle
+from concurrent.futures import ThreadPoolExecutor
 
 class Shopify:
   def __init__(self, store:dict[str,str], logger_name:str="Shopify"):
@@ -21,13 +24,22 @@ class Shopify:
     self.id_table = {"state":"not_build"}  
     self.logger = get_logger(logger_name)
   
-  async def init_handle_id_table(self) -> dict[str,str]:
-    self.id_table = await self.load_handle_id_table()
-    return {"state":"built"}  
+  async def init_handle_id_table(self) -> bool:
+    try:
+      self.id_table = await self.load_handle_id_table()
+      return True
+    except Exception:
+      return False  
   
   
   async def load_handle_id_table(self) -> dict[str,str]:
-    return {"sample":"not_build"}
+    def load_data():
+      with open(product_dict_file_location, "rb") as f:
+        products = pickle.load(f)
+        return products
+    loop = asyncio.get_running_loop()
+    with ThreadPoolExecutor() as pool:
+      return await loop.run_in_executor(pool, load_data)
   
   async def send_storefront_mutation(self, mutation: str, variables: dict, receiver: str = "child"):
     URL = f"https://{self.SHOPIFY_STORE}.myshopify.com/api/{self.API_VERSION}/graphql.json"
@@ -89,8 +101,14 @@ class Shopify:
       self.logger.exception(str(err))
       return {}
   
-  def handle_to_id(self, handle:str) -> str|None:
-    return self.id_table.get(handle, None)
+  def handle_to_id(self, handle:str):
+    obj:ProductEntry = self.id_table.get(handle, {})  # type: ignore
+    print("OBJ",type(obj),"\n\n\n")
+    if obj.have_single_variant :
+      return obj.vid, ""
+    else:
+      return None, [option["variant_title"] for option in obj.options]
+      
   
   async def create_cart(self, items: list[dict[str, str | int]], session_id:str="default"): # [ {"handle": "product-alpha", "qty" : 123 } ]
     # The amount, before taxes and cart-level discounts, for the customer to pay.
@@ -154,14 +172,26 @@ class Shopify:
   }
   """
     lines = []
+    msg = []
     for obj in items:
-        merchandise_id = str(obj["handle"])
-        # merchandise_id = self.handle_to_id(str(obj["handle"]))
+        handle = str(obj["handle"])
+        # merchandise_id = str(obj["handle"])
+        merchandise_id, message = self.handle_to_id(handle)
+        qty = int(obj["qty"])
         if merchandise_id:
             lines.append({
-                "quantity": obj["qty"],
+                "quantity": qty,
                 "merchandiseId": merchandise_id
             })
+        else:
+          msg.append({
+            "handle": handle,
+            "message": "Multiple variants available. Please select one.",
+            "options":message
+          })
+          
+    raise RuntimeError(msg)
+
     variables = {
       "lines": lines,
       "buyerIdentity": {
@@ -193,7 +223,37 @@ class Shopify:
       "note" : "This order was created with the help of AI."
     }
     result = await self.send_storefront_mutation(mutation, variables)
+    print(variables)
     return result
+
+  async def fetch_mapping_products(self):
+    all_products:list = []
+    query= self.mapping_products_query()
+    query_params={
+      "after": None
+    }
+
+    hasNextPage = True
+    while hasNextPage :
+      try:
+        result = await self.send_graphql_mutation(query, query_params, "GetProductsAndVariants")
+        result = result['data']['products']
+      except Exception as e:  # noqa: F841
+        await asyncio.sleep(25)
+        continue
+      # Pagination Control
+      pageInfo = result["pageInfo"]
+      hasNextPage = pageInfo["hasNextPage"]
+      # hasNextPage = False
+      query_params['after'] = pageInfo["endCursor"]
+      # Product Handling Logic
+      products:list = result["nodes"]
+      # for product in products:
+      #   product["admin_graphql_api_id"] = product["id"]
+      #   product["id"] = self.extract_id_from_gid(product["id"])
+      all_products.extend(products)
+    return all_products   
+
   async def fetch_all_products(self):
     all_products:list = []
     query= self.all_products_query()
@@ -221,6 +281,7 @@ class Shopify:
         product["id"] = self.extract_id_from_gid(product["id"])
       all_products.extend(products)
     return all_products   
+
 
   async def fetch_product_by_id(self, product_id: int):
     product_gid = f"gid://shopify/Product/{product_id}"
@@ -853,6 +914,31 @@ class Shopify:
           }
         }
       """
+  
+  @staticmethod
+  def mapping_products_query():
+    return """
+    query GetProductsAndVariants($after: String) {
+      products(first: 249, after: $after) {
+        nodes {
+          id 
+          title
+          handle
+          variants(first: 249) {
+            nodes {
+              id
+              title
+              displayName
+            }
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+    """
   
   @staticmethod
   def customer_create_mutation() -> str:

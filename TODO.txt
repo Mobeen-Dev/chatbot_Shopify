@@ -21,6 +21,8 @@ After MVP-2
 
 manage session id 
 
+In classes Apply Direct Access Restriction
+
 Bring String into ENV / CONFIG ✅ --> on-going
 
 -> Turn property into function in MODEL.PY  

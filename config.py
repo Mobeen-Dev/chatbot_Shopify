@@ -62,3 +62,4 @@ NO_IMAGE_URL: str = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/N
 embeddind_model: str = "text-embedding-3-small"
 vector_db_collection_name:str = "product_chunks"
 llm_model = "gpt-4.1-mini"
+product_dict_file_location = "bucket/products.pkl"
