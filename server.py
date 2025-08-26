@@ -7,7 +7,7 @@ import uvicorn
 from openai import DefaultAioHttpClient
 from openai import AsyncOpenAI
 from openai import OpenAI
-from config import settings
+from config import settings, llm_model
 from logger import get_logger
 # from opneai_tools import tools_list
 from MCP import tools_list
@@ -116,7 +116,7 @@ async def process_with_tools(client, chat_request, tools_list) -> ChatCompletion
     
     while True:
         response = await client.chat.completions.create(
-            model="gpt-4.1-mini",
+            model=llm_model,
             tools=tools_list,
             messages=chat_request.n_openai_msgs,
             tool_choice="auto",

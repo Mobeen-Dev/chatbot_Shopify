@@ -4,7 +4,7 @@ import aiohttp
 import asyncio
 from typing import List, Dict
 from logger import get_logger
-from config import NO_IMAGE_URL
+from config import NO_IMAGE_URL, llm_model
 
 
 class Shopify:
@@ -18,12 +18,12 @@ class Shopify:
       "Content-Type": "application/json",
       "X-Shopify-Access-Token": self.ACCESS_TOKEN
     }
-    self.id_table = {"sample":"not_build"}  
+    self.id_table = {"state":"not_build"}  
     self.logger = get_logger(logger_name)
   
   async def init_handle_id_table(self) -> dict[str,str]:
     self.id_table = await self.load_handle_id_table()
-    return {"sample":"not_build"}  
+    return {"state":"built"}  
   
   
   async def load_handle_id_table(self) -> dict[str,str]:

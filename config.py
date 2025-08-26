@@ -61,4 +61,4 @@ base_url: str = "https://digilog.pk/products/"
 NO_IMAGE_URL: str = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/450px-No_image_available.svg.png"
 embeddind_model: str = "text-embedding-3-small"
 vector_db_collection_name:str = "product_chunks"
-
+llm_model = "gpt-4.1-mini"

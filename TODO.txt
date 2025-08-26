@@ -5,12 +5,13 @@ Phase #1
 Phase #2
     Session Based 
         Short-Term Memory ✅
-        Long-Term Memory 
+        Long-Term Memory  
     Recommend Products   ✅
 
 Phase #3
     Retrieve Products | Orders Data ✅
     Handle Cart | Checkout  🚧
+    -> cart-functionality - create ✅ - delete - update
     Redirect to Different Pages
 
 After MVP-2
@@ -20,8 +21,12 @@ After MVP-2
 
 manage session id 
 
-Bring String into ENV / CONFIG
-Turn property into function in MODEL.PY
+Bring String into ENV / CONFIG ✅ --> on-going
+
+-> Turn property into function in MODEL.PY  
+-> only shrink response with no product detected
+-> Rewrite Hybrid Approach for Serialization of Chat
+
 
 Merging:
     openai tool list + functions + from Gpt Response to Output Appending
@@ -29,38 +34,39 @@ Merging:
 Centeralized All the Object in FastApi 
 
 Dynamic Ui loading 
-only shrink response with no product detected
-checkout-functionality- create - delete - update
 
 Server.py ln 156 function selection and respone appending in a clean seperate function ✅
 
-handle detail of product 
+handle detail of product ✅
 no product if quantity is zero ✅
 
-Rewrite Hybrid Approach for Serialization of Chat
 Try-Catch for code
-
-
-
 
 Back-End:
     Server Building
     Ci/CD Pipeline
     MCP Connection 
 
-
-
 Front-End:
     - Develop a theme extension for Shopify Store as frontend agent for llm powered chat
     - Unselectable Text ✅
+    - Markdown renderer on frontend ✅
  
+
+ ----------------------------------------------
+    PipeLine for Updating RAG & handle_to_id table 
+ ----------------------------------------------
+
+
  ----------------------------------------------------------------------------------------------------
+
 Admin Panel Features:
-    - Enable/Disable Remember Mode
+    - Enable/Disable Remember Mode ✅
     - Switch Languages
-    - custom MCP / Backend URL
-    - Temperature settings
+    - custom MCP / Backend URL ✅
+    - Temperature settings ✅
     - Max Token per Message
+    - Max Tokens per Chat
     - Special Tone for Some Occusion
 
 Future Goals:
@@ -78,7 +84,5 @@ Optimization:
     Efficient Remember Mode
 
 
-Completed :
-    Enable/Disable Remember Mode
-    Markdown renderer on frontend
+
 
