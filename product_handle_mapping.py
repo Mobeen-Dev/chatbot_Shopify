@@ -10,12 +10,12 @@ import pickle
 
 async def test():
   store = Shopify(settings.store, "ProductHandleMapping")
-  # return await store.fetch_mapping_products()
+  return await store.fetch_mapping_products()
   await store.init_handle_id_table()
   return store.id_table
 
 
-print(asyncio.run(test()))
+# print(asyncio.run(test()))
 
 # products = asyncio.run(test())
 # data : dict[str,ProductEntry] = {}
@@ -26,15 +26,12 @@ print(asyncio.run(test()))
   
 #   variant_count  = len(variants)
 #   is_single_variant = variant_count==1
-#   v_id = None
-
-#   if is_single_variant:
-#     v_id = variants[0].get("id")
-  
+#   var = {}
+#   for v in variants:
+#     var[v["title"]] = {"vid": v["id"]}
 #   data[handle] = ProductEntry(
 #     have_single_variant= is_single_variant,
-#     options=[{"variant_title": v["title"], "vid": v["id"]} for v in variants],
-#     vid=v_id
+#     variants=var,
 #   )
 
 
@@ -43,8 +40,69 @@ print(asyncio.run(test()))
 # with open("bucket/products.pkl", "wb") as f:
 #     pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-# # load
-# with open("bucket/products.pkl", "rb") as f:
-#     dataw = pickle.load(f)
-#     print(len(dataw))
-#     print((dataw["high-quality-s2d0s05-n960-display-ic-for-samsung-n960"].have_single_variant))
+# load
+with open("bucket/products.pkl", "rb") as f:
+    dataw = pickle.load(f)
+    print(len(dataw))
+    print((dataw["high-quality-s2d0s05-n960-display-ic-for-samsung-n960"]))
+    print("\n\n\n\n")
+    print((dataw["red-snowboard"]))
+
+
+
+# Retrival Samples:
+
+#                                Uni Variant Product
+
+#  ProductEntry(
+#     "have_single_variant=True",
+#     "variants="{
+#        "Default Title":{
+#           "vid":"gid://shopify/ProductVariant/41571880042582"
+#        }
+#     }
+# )
+
+#                                Multi Variant Product
+
+#  ProductEntry(
+#     "have_single_variant=False",
+#     "variants="{
+#        "1R---B2 / Yellow":{
+#           "vid":"gid://shopify/ProductVariant/42394067566678"
+#        },
+#        "1R---B2 / Red":{
+#           "vid":"gid://shopify/ProductVariant/42394067632214"
+#        },
+#        "1.5R---B2 / Yellow":{
+#           "vid":"gid://shopify/ProductVariant/42394067697750"
+#        },
+#        "1.5R---B2 / Red":{
+#           "vid":"gid://shopify/ProductVariant/42394067763286"
+#        },
+#        "2.2R---B3 / Yellow":{
+#           "vid":"gid://shopify/ProductVariant/42394067828822"
+#        },
+#        "2.2R---B3 / Red":{
+#           "vid":"gid://shopify/ProductVariant/42394067894358"
+#        },
+#        "2.7R---B4 / Yellow":{
+#           "vid":"gid://shopify/ProductVariant/42394067959894"
+#        },
+#        "2.7R---B4 / Red":{
+#           "vid":"gid://shopify/ProductVariant/42394068025430"
+#        },
+#        "3.3R---B5 / Yellow":{
+#           "vid":"gid://shopify/ProductVariant/42394068090966"
+#        },
+#        "3.3R---B5 / Red":{
+#           "vid":"gid://shopify/ProductVariant/42394068156502"
+#        },
+#        "3.9R---B6 / Yellow":{
+#           "vid":"gid://shopify/ProductVariant/42394068222038"
+#        },
+#        "3.9R---B6 / Red":{
+#           "vid":"gid://shopify/ProductVariant/42394068287574"
+#        }
+#     }
+#  )

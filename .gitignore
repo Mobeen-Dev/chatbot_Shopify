@@ -19,3 +19,4 @@ Data/
 chroma_store/
 bucket
 bucket/app.log
+*.log

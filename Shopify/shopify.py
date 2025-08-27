@@ -101,16 +101,20 @@ class Shopify:
       self.logger.exception(str(err))
       return {}
   
-  def handle_to_id(self, handle:str):
+  def handle_to_id(self, handle:str, variant_title:str):
     obj:ProductEntry = self.id_table.get(handle, {})  # type: ignore
-    print("OBJ",type(obj),"\n\n\n")
     if obj.have_single_variant :
-      return obj.vid, ""
-    else:
-      return None, [option["variant_title"] for option in obj.options]
+      return obj.variants["Default Title"]["vid"], ""
+    try:
+      vid = obj.variants[variant_title]["vid"]
+      return vid, ""
+    except IndexError :
+      return None, obj.variants.keys() # variants titles
+
+      
       
   
-  async def create_cart(self, items: list[dict[str, str | int]], session_id:str="default"): # [ {"handle": "product-alpha", "qty" : 123 } ]
+  async def create_cart(self, items: list[dict[str, str | int]], session_id:str="default"): # [ {"handle": "product-alpha", "variant":"Default Title", "qty" : 123 } ]
     # The amount, before taxes and cart-level discounts, for the customer to pay.
     mutation = """
     mutation cartCreate($lines: [CartLineInput!]!, $buyerIdentity: CartBuyerIdentityInput, $attributes: [AttributeInput!], $note: String) {
@@ -172,11 +176,13 @@ class Shopify:
   }
   """
     lines = []
+    variant_error = False
     msg = []
     for obj in items:
         handle = str(obj["handle"])
+        variant = str(obj["variant"])
         # merchandise_id = str(obj["handle"])
-        merchandise_id, message = self.handle_to_id(handle)
+        merchandise_id, message = self.handle_to_id(handle, variant)
         qty = int(obj["qty"])
         if merchandise_id:
             lines.append({
@@ -184,13 +190,15 @@ class Shopify:
                 "merchandiseId": merchandise_id
             })
         else:
+          variant_error = True
           msg.append({
             "handle": handle,
-            "message": "Multiple variants available. Please select one.",
+            "message": "Multiple variants available. Please select one from below options.",
             "options":message
           })
           
-    raise RuntimeError(msg)
+    if variant_error:
+      raise RuntimeError(msg)
 
     variables = {
       "lines": lines,
@@ -216,14 +224,14 @@ class Shopify:
       },
       "attributes": [
         {
-          "key": "chat_reference",
+          "key": "Chat #",
           "value": f"{session_id}"
         }
       ],
       "note" : "This order was created with the help of AI."
     }
     result = await self.send_storefront_mutation(mutation, variables)
-    print(variables)
+    print(variables,"\n\n")
     return result
 
   async def fetch_mapping_products(self):

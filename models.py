@@ -536,8 +536,10 @@ class ChatResponse(BaseModel):
 @dataclass
 class ProductEntry:
     have_single_variant: bool
-    options: List[dict[str, str]]
-    vid: Optional[str]  # str if non-singular, None if singular
+    variants: dict[str,dict[str, str]]
+    # "Large": {
+    #    "vid": "gid://shopify/ProductVariant/40516000219222",
+    # },
 
 
 
