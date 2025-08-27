@@ -1,7 +1,7 @@
 from Shopify import Shopify
 from config import settings
 import asyncio
-from pprint import pprint
+
 # #####################################################################
 # ################## Helper Functions Start ###########################
 # #####################################################################
@@ -20,20 +20,19 @@ async def test():
     {
       "handle": "100pcs-2-watt-5-resistor-in-pakistan-copy",
       # "variant":"Default Title",
-      "variant":"2.2R---B3 / Yellow --",
+      "variant":"2.2R---B3 / Yellow",
       "qty": 7
     },
-    {
-      "handle": "red-snowboard",
-      # "variant":"Default Title",
-      "variant":"Yellow / Pealed --",
+    # {
+    #   "handle": "red-snowboard",
+    #   # "variant":"Default Title",
+    #   "variant":"Yellow / Pealed",
       
-      "qty": 8
-    }
+    #   "qty": 8
+    # }
   ]
-  # return await store.query_cart("gid://shopify/Cart/hWN2Hiq8ybacnqpIHoZgfFid?key=84eda6e4b4dc9ac81376863649d5504c") 
   return await store.create_cart(list_q)
 try:
-  (asyncio.run(test()))
+  print(asyncio.run(test()))
 except Exception as e:
-    print("Caught:", e)   # prevents full traceback
+  print("wow got error", e)

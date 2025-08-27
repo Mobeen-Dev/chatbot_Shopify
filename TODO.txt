@@ -12,6 +12,17 @@ Phase #3
     Retrieve Products | Orders Data ✅
     Handle Cart | Checkout  🚧
     -> cart-functionality - create ✅ - delete - update
+    
+      -> cartCreate
+      -> cartQuery
+
+        cartLinesAdd
+        cartLinesUpdate
+        cartLinesRemove
+        cartBuyerIdentityUpdate
+        cartNoteUpdate
+
+      -> some possible error senarios
     Redirect to Different Pages
 
 After MVP-2
