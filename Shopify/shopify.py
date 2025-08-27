@@ -31,7 +31,6 @@ class Shopify:
     except Exception:
       return False  
   
-  
   async def load_handle_id_table(self) -> dict[str,str]:
     def load_data():
       with open(product_dict_file_location, "rb") as f:
@@ -108,11 +107,8 @@ class Shopify:
     try:
       vid = obj.variants[variant_title]["vid"]
       return vid, ""
-    except IndexError :
+    except KeyError :
       return None, obj.variants.keys() # variants titles
-
-      
-      
   
   async def create_cart(self, items: list[dict[str, str | int]], session_id:str="default"): # [ {"handle": "product-alpha", "variant":"Default Title", "qty" : 123 } ]
     # The amount, before taxes and cart-level discounts, for the customer to pay.
@@ -134,9 +130,10 @@ class Shopify:
         checkoutUrl
         createdAt
         updatedAt
-        lines(first: 10) {
+        lines(first: 249) {
           edges {
             node {
+              quantity
               id
               merchandise {
                 ... on ProductVariant {
@@ -177,28 +174,30 @@ class Shopify:
   """
     lines = []
     variant_error = False
-    msg = []
+    errors = []
+    
     for obj in items:
-        handle = str(obj["handle"])
-        variant = str(obj["variant"])
-        # merchandise_id = str(obj["handle"])
-        merchandise_id, message = self.handle_to_id(handle, variant)
-        qty = int(obj["qty"])
-        if merchandise_id:
-            lines.append({
-                "quantity": qty,
-                "merchandiseId": merchandise_id
-            })
-        else:
-          variant_error = True
-          msg.append({
-            "handle": handle,
-            "message": "Multiple variants available. Please select one from below options.",
-            "options":message
+      
+      handle = str(obj["handle"])
+      variant = str(obj["variant"])
+
+      merchandise_id, message = self.handle_to_id(handle, variant)
+      qty = int(obj["qty"])
+      if merchandise_id:
+          lines.append({
+              "quantity": qty,
+              "merchandiseId": merchandise_id
           })
-          
+      else:
+        variant_error = True
+        errors.append({
+          "handle": handle,
+          "message": "Selected Variant doesnot exist. Please select one from below options.",
+          "options":message
+        })
+            
     if variant_error:
-      raise RuntimeError(msg)
+      raise KeyError(str(errors))
 
     variables = {
       "lines": lines,
@@ -231,8 +230,142 @@ class Shopify:
       "note" : "This order was created with the help of AI."
     }
     result = await self.send_storefront_mutation(mutation, variables)
-    print(variables,"\n\n")
-    return result
+    cart = result.get("data",{}).get("cartCreate",{}).get("cart",{})
+    # print(variables,"\n\n")
+    return self.format_cart(cart)
+
+  async def query_cart(self, id:str):
+    query = """
+      query getCart($id: ID!) {
+        cart(id: $id) {
+          note
+          cost {
+            subtotalAmount {
+              amount
+              currencyCode
+            }
+            subtotalAmountEstimated
+          }
+
+          id
+          checkoutUrl
+          createdAt
+          updatedAt
+          lines(first: 249) {
+            edges {
+              node {
+                quantity
+                id
+                merchandise {
+                  ... on ProductVariant {
+                    id
+                  }
+                }
+              }
+            }
+          }
+
+          buyerIdentity {
+            preferences {
+              delivery {
+                deliveryMethod
+              }
+            }
+          }
+
+          attributes {
+            key
+            value
+          }
+
+          cost {
+            totalAmount {
+              amount
+              currencyCode
+            }
+            subtotalAmount {
+              amount
+              currencyCode
+            }
+          }
+        }
+      }
+
+    """
+    variables = {
+      "id": id,
+    }
+    result = await self.send_storefront_mutation(query, variables)
+    cart = result.get("data",{}).get("cart",{})
+    
+    print(cart,"\n\n")
+    return self.format_cart(cart)
+
+  async def addCartLineItems(self, cartId:str, lineItems:List[dict[str,str|int]]):
+    query = """
+      query getCart($id: ID!) {
+        cart(id: $id) {
+          note
+          cost {
+            subtotalAmount {
+              amount
+              currencyCode
+            }
+            subtotalAmountEstimated
+          }
+
+          id
+          checkoutUrl
+          createdAt
+          updatedAt
+          lines(first: 249) {
+            edges {
+              node {
+                quantity
+                id
+                merchandise {
+                  ... on ProductVariant {
+                    id
+                  }
+                }
+              }
+            }
+          }
+
+          buyerIdentity {
+            preferences {
+              delivery {
+                deliveryMethod
+              }
+            }
+          }
+
+          attributes {
+            key
+            value
+          }
+
+          cost {
+            totalAmount {
+              amount
+              currencyCode
+            }
+            subtotalAmount {
+              amount
+              currencyCode
+            }
+          }
+        }
+      }
+
+    """
+    variables = {
+      "id": id,
+    }
+    result = await self.send_storefront_mutation(query, variables)
+    cart = result.get("data",{}).get("cart",{})
+    # print(cart,"\n\n")
+    return self.format_cart(cart)
 
   async def fetch_mapping_products(self):
     all_products:list = []
@@ -1219,7 +1352,7 @@ class Shopify:
         node = first_edge.get("node") or {}
         image = node.get("image") or {}
         image_url = image.get("url") or NO_IMAGE_URL
-
+        variants = product.get("variants", {}).get("edges", [])
         return {
           "title": product.get("title", ""),
           "handle": product.get("handle", ""),
@@ -1234,13 +1367,57 @@ class Shopify:
           },
           "totalInventory": product.get("totalInventory", 0),
           "image_url": image_url,
-          "variants_options": product.get("options", []),
+          "variants_options": [variant["node"]["title"] for variant in variants]
       }
       else:
         return {
           "Note": "This product is not active or not available for sale at the moment."
         }
 
+  def format_cart(self, cart: dict) -> dict:
+      """
+      Function to format the cart data into a specific structure.
+      """
+      try:
+        # cart = _cart.get("data",{}).get("cartCreate",{}).get("cart",{})
+        amount = cart["cost"]["subtotalAmount"]
+        line_items = cart.get("lines",{}).get("edges",[])
+        dilevery_methods = cart.get("buyerIdentity", {}).get("preferences", {}).get("delivery", {}).get("deliveryMethod", [])
+        
+        
+        return {
+          "id" : cart.get("id", ""),
+          "checkoutUrl": cart.get("checkoutUrl", ""),
+          
+          "createdAt": cart.get("createdAt", ""),
+          "updatedAt": cart.get("updatedAt", ""),
+          
+          "lineItems": [
+            {
+            "id":item["node"]["id"], 
+            "variant_id":item["node"]["merchandise"]["id"],
+            "quantity":item["node"]["quantity"]
+            } 
+            for item in line_items
+            ],
+          
+          "subtotalAmount": {
+              "CurrencyCode": amount["currencyCode"],
+              "amount": amount["amount"]
+            },
+          
+          "deliveryMethod":dilevery_methods[0],
+          "userErrors": cart.get("userErrors")
+          
+        }
+      except Exception:
+        return {
+          "state": "Error Arrise",
+          "server_response": cart,
+          "info": "The server returned an empty response because the ID you provided is incorrect. Please check the ID and try again."
+        }
+
+  
   def parse_into_query_params(self, product: dict, child_p_id: str = ''):
     # product = await fetch_product(product_gid)
     # print("Fetched product data:")
