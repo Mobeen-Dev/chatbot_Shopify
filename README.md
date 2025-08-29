@@ -4,18 +4,37 @@ An intelligent commerce assistant built for seamless Shopify storefront integrat
 
 ## Features
 
-- 🤖 **AI-Powered Conversations** - OpenAI LLM integration for natural language understanding
-- 🔍 **Hybrid Search** - FAISS semantic search combined with Elasticsearch lexical matching
-- 🛒 **Real-time Shopify Integration** - Live product, order, and customer data access
-- 💾 **Persistent Sessions** - Redis for active sessions, MongoDB for chat history
-- 🎨 **Theme Integration** - Native Shopify theme extension for seamless UI
-- 🐳 **Containerized Deployment** - Docker-based infrastructure with CI/CD
+- 🤖 **AI-Powered Conversations**  
+  OpenAI LLM integration for natural, context-aware dialogue with customers.  
+
+- 🔍 **Hybrid Search**  
+  FAISS semantic search combined with Elasticsearch lexical matching for highly accurate product discovery.  
+
+- 🛒 **Real-time Shopify Integration**  
+  Live access to products, customer accounts, and orders with seamless sync.  
+
+- 🧩 **Agentic Shopping Assistant**  
+  Smart, autonomous actions to:  
+  - Create, add, edit, and delete products from the cart  
+  - Finalize checkout flows  
+  - Handle customer account creation & authentication  
+  - Manage order status, updates, and tracking  
+
+- 💾 **Persistent Sessions**  
+  Redis for active user sessions and MongoDB for chat history to ensure continuity across conversations.  
+
+- 🎨 **Theme Integration**  
+  Native Shopify theme extension for an on-brand, seamless customer experience.  
+
+- 🐳 **Containerized Deployment**  
+  Docker-based infrastructure with CI/CD pipelines for reliable, scalable deployment. 
 
 ## Tech Stack
 
 ### Backend
-- **Language**: Python 3.10+
-- **Framework**: FastAPI
+- **Language**: Python 3.10+ (with async support)
+- **Framework**: FastAPI / Async ( `Async` support for high-concurrency operations ) 
+- **Data Validation**: Pydantic
 - **Database**: MongoDB (persistence), Redis (sessions)
 - **Search**: FAISS (semantic), Elasticsearch/OpenSearch (lexical)
 - **Message Queue**: RabbitMQ
@@ -33,6 +52,7 @@ An intelligent commerce assistant built for seamless Shopify storefront integrat
 - **Monitoring**: Custom logging with OVH Cloud Monitoring
 
 ## Architecture
+![Project Logo](https://github.com/Mobeen-Dev/chatbot_Shopify/blob/960a5f3d58875772c3ff3871c6f209446838a0d7/Shopify%20ChatBotUserFlow%20(2).jpeg)
 
 ```mermaid
 graph TD
@@ -52,6 +72,15 @@ graph TD
     C --> P[Chat Storage]
     P --> J[MongoDB TimeSeries]
     D --> M[Vector File Store]
+    N --> Ai[Agentic Abilities]
+    Ai --> AA[- Cart -]
+    AA --> AB[Create Cart]
+    AA --> AC[Update Cart]
+    AA --> AD[Add Cart Items]
+    AA --> AE[Remove Cart Items]
+    Ai --> AH[- Customer -]
+    AH --> AF[Create Customer]
+    AH --> AG[Create/Update Customer Orders]
 ```
 
 ## Quick Start
