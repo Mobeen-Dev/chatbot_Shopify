@@ -12,25 +12,30 @@ Phase #3
     Retrieve Products | Orders Data ✅
     Handle Cart | Checkout  🚧
     -> cart-functionality - create ✅ - delete - update
-    
-      -> cartCreate
-      -> cartQuery
 
-        cartLinesAdd
-        cartLinesUpdate
-        cartLinesRemove
-        cartBuyerIdentityUpdate
-        cartNoteUpdate
+      -> cartCreate  ✅
+      -> cartQuery   ✅
+ 
+      -> cartLinesRemove ✅
+      -> cartLinesAdd    ✅
 
+      -> cartLinesUpdate ✅
+
+       
       -> some possible error senarios
+
+      -> FrontEnd TWEAKS
     Redirect to Different Pages
 
 After MVP-2
     Refactor Api function 
     Refactor App Endpoints
-    Refactor RAG Module
+    Refactor RAG Module 
+      - add variant as well
 
 manage session id 
+
+async DB Module
 
 In classes Apply Direct Access Restriction
 
@@ -38,7 +43,7 @@ Bring String into ENV / CONFIG ✅ --> on-going
 
 -> Turn property into function in MODEL.PY  
 -> only shrink response with no product detected
--> Rewrite Hybrid Approach for Serialization of Chat
+-> Rewrite Hybrid Approach for Serialization of Chat  Model.py Line # 109
 
 
 Merging:
@@ -86,6 +91,11 @@ Future Goals:
     Front-End for Analytics
     Chat Record 
     Limits Settings
+    
+    functionality
+        cartBuyerIdentityUpdate
+        cartNoteUpdate
+
     
 Cost Saving Plans:
     stateful - prompt engineering - summary of chat - only add summary in the next prompt (after 10-th message)

@@ -20,20 +20,32 @@ async def test():
     {
       "handle": "100pcs-2-watt-5-resistor-in-pakistan-copy",
       # "variant":"Default Title",
-      "variant":"2.2R---B3 / Yellow --",
-      "qty": 7
+      "variant":"2.2R---B3 / Yellow",
+      "quantity": 7
     },
-    {
-      "handle": "red-snowboard",
-      # "variant":"Default Title",
-      "variant":"Yellow / Pealed --",
+    # {
+    #   "handle": "red-snowboard",
+    #   # "variant":"Default Title",
+    #   "variant":"Yellow / Pealed --",
       
-      "qty": 8
-    }
+    #   "quantity": 8
+    # }
   ]
   # return await store.query_cart("gid://shopify/Cart/hWN2Hiq8ybacnqpIHoZgfFid?key=84eda6e4b4dc9ac81376863649d5504c") 
-  return await store.create_cart(list_q)
+  # return await store.create_cart(list_q)
+  id = await store.create_cart(list_q)
+  id = id["id"]
+  data = await store.addCartLineItems(id, [{ "quantity": 8,  "handle": "red-snowboard", "variant":"Yellow / Pealed"}, { "quantity": 9,  "handle": "anycubic-full-metal-i3-mega-3d-printer-with-ultrabase-heatbed-and-3-5-inch-touch-screen", "variant":"Default Title"}])
+  data = data["checkoutUrl"]
+  print()
+  print(data,"\n\n")
+  data = await store.updateCartLineItems(id,[{ "handle": "anycubic-full-metal-i3-mega-3d-printer-with-ultrabase-heatbed-and-3-5-inch-touch-screen", "variant":"Default Title", "quantity": 128}])
+  data = data["checkoutUrl"]
+  print(data,"\n\n")
+  return await store.removeCartLineItems(id,[{ "handle": "anycubic-full-metal-i3-mega-3d-printer-with-ultrabase-heatbed-and-3-5-inch-touch-screen", "variant":"Default Title"}])
 try:
-  (asyncio.run(test()))
+  print(asyncio.run(test()))
 except Exception as e:
     print("Caught:", e)   # prevents full traceback
+    
+    

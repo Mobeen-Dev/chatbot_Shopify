@@ -182,7 +182,7 @@ class Shopify:
       variant = str(obj["variant"])
 
       merchandise_id, message = self.handle_to_id(handle, variant)
-      qty = int(obj["qty"])
+      qty = int(obj["quantity"])
       if merchandise_id:
           lines.append({
               "quantity": qty,
@@ -234,7 +234,7 @@ class Shopify:
     # print(variables,"\n\n")
     return self.format_cart(cart)
 
-  async def query_cart(self, id:str):
+  async def query_cart(self, id:str, dict_format=False) -> dict:
     query = """
       query getCart($id: ID!) {
         cart(id: $id) {
@@ -299,13 +299,13 @@ class Shopify:
     cart = result.get("data",{}).get("cart",{})
     
     print(cart,"\n\n")
-    return self.format_cart(cart)
+    return self.format_cart(cart, dict_format)
 
   async def addCartLineItems(self, cartId:str, lineItems:List[dict[str,str|int]]):
-    query = """
-      query getCart($id: ID!) {
-        cart(id: $id) {
-          note
+    mutation = """
+      mutation cartLinesAdd($cartId: ID!, $lines: [CartLineInput!]!) {
+        cartLinesAdd(cartId: $cartId, lines: $lines) {
+        cart {
           cost {
             subtotalAmount {
               amount
@@ -331,7 +331,6 @@ class Shopify:
               }
             }
           }
-
           buyerIdentity {
             preferences {
               delivery {
@@ -339,12 +338,10 @@ class Shopify:
               }
             }
           }
-
           attributes {
             key
             value
           }
-
           cost {
             totalAmount {
               amount
@@ -356,14 +353,263 @@ class Shopify:
             }
           }
         }
+        userErrors {
+          field
+          message
+        }
+        warnings {
+          target
+          code
+          message
+        }
       }
-
-    """
-    variables = {
-      "id": id,
     }
-    result = await self.send_storefront_mutation(query, variables)
-    cart = result.get("data",{}).get("cart",{})
+  """
+    
+    lines = []
+    variant_error = False
+    errors = []
+    
+    for obj in lineItems:
+      
+      handle = str(obj["handle"])
+      variant = str(obj["variant"])
+      qty = int(obj["quantity"])
+
+      merchandise_id, message = self.handle_to_id(handle, variant)
+      
+      if merchandise_id:
+          lines.append({
+              "quantity": qty,
+              "merchandiseId": merchandise_id
+          })
+      else:
+        variant_error = True
+        errors.append({
+          "handle": handle,
+          "message": "Selected Variant doesnot exist. Please select one from below options.",
+          "options":message
+        })
+            
+    if variant_error:
+      raise KeyError(str(errors))
+
+    variables = {
+      "cartId": cartId,
+      "lines": lines
+    }
+    result = await self.send_storefront_mutation(mutation, variables)
+    
+    cart = result.get("data",{}).get("cartLinesAdd",{}).get("cart",{})
+    # print(cart,"\n\n")
+    return self.format_cart(cart)
+
+  async def removeCartLineItems(self, cartId:str, lineItems:List[dict[str,str]]):
+    cart = await self.query_cart(cartId, True)
+    print("$$$$$ cart",cart,"\n\n\n\n")
+
+    cart_lines = cart["lineItems"]
+    mutation = """
+      mutation cartLinesRemove($cartId: ID!, $lineIds: [ID!]!) {
+        cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
+        cart {
+          cost {
+            subtotalAmount {
+              amount
+              currencyCode
+            }
+            subtotalAmountEstimated
+          }
+
+          id
+          checkoutUrl
+          createdAt
+          updatedAt
+          lines(first: 249) {
+            edges {
+              node {
+                quantity
+                id
+                merchandise {
+                  ... on ProductVariant {
+                    id
+                  }
+                }
+              }
+            }
+          }
+          buyerIdentity {
+            preferences {
+              delivery {
+                deliveryMethod
+              }
+            }
+          }
+          attributes {
+            key
+            value
+          }
+          cost {
+            totalAmount {
+              amount
+              currencyCode
+            }
+            subtotalAmount {
+              amount
+              currencyCode
+            }
+          }
+        }
+        userErrors {
+          field
+          message
+        }
+        warnings {
+          target
+          code
+          message
+        }
+      }
+    }
+  """
+    
+    lines = []
+    variant_error = False
+    errors = []
+
+    for obj in lineItems:      
+      handle = obj["handle"]
+      variant = obj["variant"]
+
+      merchandise_id, message = self.handle_to_id(handle, variant)
+      print("$$$$$ mid",merchandise_id,"\n\n\n\n")
+      cart_line_id = cart_lines.get(merchandise_id, None)
+      print("$$$$$ cli",cart_line_id,"\n\n\n\n")
+      
+      if cart_line_id:
+          lines.append( cart_line_id["id"] )
+      else:
+        variant_error = True
+        errors.append({
+          "handle": handle,
+          "message": "Selected Variant doesnot exist. Please select one from below options.",
+          "options":message
+        })
+            
+    if variant_error:
+      raise KeyError(str(errors))
+      
+    variables = {
+      "cartId": cartId,
+      "lineIds": lines
+    }
+    result = await self.send_storefront_mutation(mutation, variables)
+    
+    cart = result.get("data",{}).get("cartLinesRemove",{}).get("cart",{})
+    # print(cart,"\n\n")
+    return self.format_cart(cart)
+  
+  async def updateCartLineItems(self, cartId:str, lineItems:List[dict[str,str|int]]):
+    cart = await self.query_cart(cartId, True)
+    cart_lines = cart["lineItems"]
+    mutation = """
+      mutation cartLinesUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!) {
+        cartLinesUpdate(cartId: $cartId,  lines: $lines) {
+        cart {
+          cost {
+            subtotalAmount {
+              amount
+              currencyCode
+            }
+            subtotalAmountEstimated
+          }
+
+          id
+          checkoutUrl
+          createdAt
+          updatedAt
+          lines(first: 249) {
+            edges {
+              node {
+                quantity
+                id
+                merchandise {
+                  ... on ProductVariant {
+                    id
+                  }
+                }
+              }
+            }
+          }
+          buyerIdentity {
+            preferences {
+              delivery {
+                deliveryMethod
+              }
+            }
+          }
+          attributes {
+            key
+            value
+          }
+          cost {
+            totalAmount {
+              amount
+              currencyCode
+            }
+            subtotalAmount {
+              amount
+              currencyCode
+            }
+          }
+        }
+        userErrors {
+          field
+          message
+        }
+        warnings {
+          target
+          code
+          message
+        }
+      }
+    }
+  """
+    
+    lines = []
+    variant_error = False
+    errors = []
+
+    for obj in lineItems:      
+      handle = str(obj["handle"])
+      variant = str(obj["variant"])
+
+      merchandise_id, message = self.handle_to_id(handle, variant)
+      cart_line_id = cart_lines.get(merchandise_id, None)
+      if cart_line_id:
+          lines.append({
+            "id": cart_line_id["id"],
+            "quantity": obj["quantity"],
+            "merchandiseId": merchandise_id
+          })
+      else:
+        variant_error = True
+        errors.append({
+          "handle": handle,
+          "message": "Selected Variant doesnot exist. Please select one from below options.",
+          "options":message
+        })
+            
+    if variant_error:
+      raise KeyError(str(errors))
+      
+    variables = {
+      "cartId": cartId,
+      "lines": lines
+    }
+    result = await self.send_storefront_mutation(mutation, variables)
+    
+    cart = result.get("data",{}).get("cartLinesUpdate",{}).get("cart",{})
     # print(cart,"\n\n")
     return self.format_cart(cart)
 
@@ -422,7 +668,6 @@ class Shopify:
         product["id"] = self.extract_id_from_gid(product["id"])
       all_products.extend(products)
     return all_products   
-
 
   async def fetch_product_by_id(self, product_id: int):
     product_gid = f"gid://shopify/Product/{product_id}"
@@ -1374,17 +1619,37 @@ class Shopify:
           "Note": "This product is not active or not available for sale at the moment."
         }
 
-  def format_cart(self, cart: dict) -> dict:
+  def format_cart(self, cart: dict, line_items_dict:bool=False) -> dict:
       """
       Function to format the cart data into a specific structure.
       """
+      def return_lineItems(line_items):
+        lines = {}
+        if line_items_dict:
+          for  item in line_items:
+            vid = item["node"]["merchandise"]["id"]
+            lines[vid] = {
+              "id":item["node"]["id"], 
+              "variant_id": vid,
+              "quantity":item["node"]["quantity"]
+            } 
+          return lines
+        else:
+          return [
+              {
+                "id":item["node"]["id"], 
+                "variant_id":item["node"]["merchandise"]["id"],
+                "quantity":item["node"]["quantity"]
+              } 
+                for item in line_items
+            ]
+        
       try:
         # cart = _cart.get("data",{}).get("cartCreate",{}).get("cart",{})
         amount = cart["cost"]["subtotalAmount"]
         line_items = cart.get("lines",{}).get("edges",[])
         dilevery_methods = cart.get("buyerIdentity", {}).get("preferences", {}).get("delivery", {}).get("deliveryMethod", [])
-        
-        
+
         return {
           "id" : cart.get("id", ""),
           "checkoutUrl": cart.get("checkoutUrl", ""),
@@ -1392,14 +1657,7 @@ class Shopify:
           "createdAt": cart.get("createdAt", ""),
           "updatedAt": cart.get("updatedAt", ""),
           
-          "lineItems": [
-            {
-            "id":item["node"]["id"], 
-            "variant_id":item["node"]["merchandise"]["id"],
-            "quantity":item["node"]["quantity"]
-            } 
-            for item in line_items
-            ],
+          "lineItems": return_lineItems(line_items),
           
           "subtotalAmount": {
               "CurrencyCode": amount["currencyCode"],
@@ -1417,7 +1675,6 @@ class Shopify:
           "info": "The server returned an empty response because the ID you provided is incorrect. Please check the ID and try again."
         }
 
-  
   def parse_into_query_params(self, product: dict, child_p_id: str = ''):
     # product = await fetch_product(product_gid)
     # print("Fetched product data:")

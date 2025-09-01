@@ -58,11 +58,185 @@ tools_list: list[ChatCompletionToolParam] = [
         "additionalProperties": False
       }
     }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "create_cart",
+      "description": "Create a new shopping cart with initial items.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "description": "List of products to add to the new cart.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "handle": {
+                  "type": "string",
+                  "description": "The unique product handle."
+                },
+                "variant": {
+                  "type": "string",
+                  "description": "The product variant title or identifier."
+                },
+                "quantity": {
+                  "type": "integer",
+                  "description": "The number of items to add."
+                }
+              },
+              "required": ["handle", "variant", "quantity"],
+              "additionalProperties": False
+            }
+          },
+          "session_id": {
+            "type": "string",
+            "description": "A unique session identifier for the cart. Defaults to 'default'."
+          }
+        },
+        "required": ["items", "session_id"],
+        "additionalProperties": False
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "query_cart",
+      "description": "Retrieve the current state of a shopping cart.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "cart_id": {
+            "type": "string",
+            "description": "The unique identifier of the cart to fetch."
+          }
+        },
+        "required": ["cart_id"],
+        "additionalProperties": False
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "add_cartline_items",
+      "description": "Add one or more line items to an existing shopping cart.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "cart_id": {
+            "type": "string",
+            "description": "The unique identifier of the cart to update."
+          },
+          "line_items": {
+            "type": "array",
+            "description": "List of products to add to the cart.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "handle": {
+                  "type": "string",
+                  "description": "The unique product handle."
+                },
+                "variant": {
+                  "type": "string",
+                  "description": "The product variant title or identifier."
+                },
+                "quantity": {
+                  "type": "integer",
+                  "description": "The number of items to add."
+                }
+              },
+              "required": ["handle", "variant", "quantity"],
+              "additionalProperties": False
+            }
+          }
+        },
+        "required": ["cart_id", "line_items"],
+        "additionalProperties": False
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "update_cartline_items",
+      "description": "Update one or more line items in a shopping cart (e.g., adjust quantity or variant).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "cart_id": {
+            "type": "string",
+            "description": "The unique identifier of the cart to update."
+          },
+          "line_items": {
+            "type": "array",
+            "description": "List of line items to update in the cart.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "handle": {
+                  "type": "string",
+                  "description": "The unique product handle."
+                },
+                "variant": {
+                  "type": "string",
+                  "description": "The product variant title or identifier."
+                },
+                "quantity": {
+                  "type": "integer",
+                  "description": "The updated quantity for this line item."
+                }
+              },
+              "required": ["handle", "variant", "quantity"],
+              "additionalProperties": False
+            }
+          }
+        },
+        "required": ["cart_id", "line_items"],
+        "additionalProperties": False
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "remove_cartline_items",
+      "description": "Remove one or more line items from a shopping cart.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "cart_id": {
+            "type": "string",
+            "description": "The unique identifier of the cart to update."
+          },
+          "line_items": {
+            "type": "array",
+            "description": "List of line items to remove from the cart.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "handle": {
+                  "type": "string",
+                  "description": "The unique product handle."
+                },
+                "variant": {
+                  "type": "string",
+                  "description": "The product variant title or identifier."
+                }
+              },
+              "required": ["handle", "variant"],
+              "additionalProperties": False
+            }
+          }
+        },
+        "required": ["cart_id", "line_items"],
+        "additionalProperties": False
+      }
+    }
   }
-  
-  
-  
-  
   
   
 ]

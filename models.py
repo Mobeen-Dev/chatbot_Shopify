@@ -106,7 +106,8 @@ class ChatRequest(BaseModel):
     @staticmethod
     def serialize_tool_response(msg: ChatCompletionToolMessageParam) -> ChatCompletionToolMessageParam:
         content = str(msg["content"]) or "No content provided"
-        msg["content"] = f"{content[:100]}....{content[-100:]}" if len(content) > 200 else content
+        # msg["content"] = f"{content[:100]}....{content[-100:]}" if len(content) > 200 else content  //  Re-write hybrid Approach
+        msg["content"] = content
         return msg
 
     def n_Deserialize_chat_history(self, json_str: str) -> List[Dict[str, Any]]:
