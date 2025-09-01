@@ -460,6 +460,8 @@
                 this.chatMessages = document.getElementById('chat-messages');
                 this.chatInput = document.getElementById('chat-input');
                 this.sendButton = document.getElementById('send-button');
+                this.cartId = ""
+                this.sessionId = ""
                 
                 // Configuration
                 this.config = {
@@ -605,7 +607,16 @@
                 this.addMessage(message, 'user');
                 this.chatInput.value = '';
                 this.chatInput.style.height = 'auto';
-                
+
+                if (this.cartId !== '') {
+                message += `Use my cart ID as the main cart for all cart-related actions: ${this.cartId}. `;
+                }
+
+                if (this.sessionId !== '') {
+                message += `Use my session ID when creating a cart to ensure my records are tracked correctly: ${this.sessionId}. `;
+                }
+
+
                 // Add to conversation history if remember mode is on
                 if (!this.rememberMode) {
                     this.conversationHistory.push({ role: 'user', content: message });
@@ -884,6 +895,14 @@
                 this.conversationHistory = response.history;
                 const reply = response.reply; 
 
+                if (response.cartId !== null && response.cartId !== undefined) {
+                this.cartId = response.cartId;
+                }
+
+                if (response.sessionId !== null && response.sessionId !== undefined) {
+                this.sessionId = response.sessionId;
+                }
+                
                 
                 // Cache the response
                 this.responseCache.set(cacheKey, reply);
