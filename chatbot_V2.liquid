@@ -895,12 +895,12 @@
                 this.conversationHistory = response.history;
                 const reply = response.reply; 
 
-                if (response.cartId !== null && response.cartId !== undefined) {
-                this.cartId = response.cartId;
+                if (response.cart_id !== null && response.cart_id !== undefined) {
+                this.cartId = response.cart_id;
                 }
 
-                if (response.sessionId !== null && response.sessionId !== undefined) {
-                this.sessionId = response.sessionId;
+                if (response.session_id !== null && response.session_id !== undefined) {
+                this.sessionId = response.session_id;
                 }
                 
                 

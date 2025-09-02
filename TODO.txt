@@ -27,6 +27,9 @@ Phase #3
       -> FrontEnd TWEAKS
     Redirect to Different Pages
 
+Phase #4:
+    Embedding product handle+variants+price+category
+
 After MVP-2
     Refactor Api function 
     Refactor App Endpoints

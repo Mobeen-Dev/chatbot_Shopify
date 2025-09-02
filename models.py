@@ -527,6 +527,7 @@ class ChatResponse(BaseModel):
     history: list = Field(default_factory=list)
     products: List[Dict[str, Any]] = []
     session_id: Optional[str] = None
+    cart_id: Optional[str] = None
 
 
 
