@@ -51,7 +51,7 @@ async def async_chat_endpoint(chat_request: ChatRequest):
     if not user_message:
         raise HTTPException(status_code=400, detail="Message cannot be empty.")
     if not session_id:
-        session_id = await session_manager.create_session({"data":None}) # Created User Chat History Data
+        session_id = await session_manager.create_session({"data":None, "metadata":None}) # Created User Chat History Data
     else:
         # Retrieve existing session data
         session_data = await session_manager.get_session(session_id)
@@ -66,7 +66,7 @@ async def async_chat_endpoint(chat_request: ChatRequest):
             http_client=DefaultAioHttpClient(timeout=60),
         ) as client:
 
-            messages = chat_request.n_openai_msgs
+            messages = chat_request.openai_msgs()
             response = await process_with_tools(client, chat_request, tools_list)            
 
             chat_request.append_message({"role": "user", "content": user_message, "name": "Customer"})
@@ -76,7 +76,7 @@ async def async_chat_endpoint(chat_request: ChatRequest):
             # logger.info(f"\n\n History choices: {messages}")
             
             reply = str(response.choices[0].message.content).strip() 
-            products, reply = chat_request.extract_product_json_list(reply)
+            stucture_output, reply = chat_request.extract_json_objects(reply)
             
 
             messages = chat_request.n_history
@@ -88,7 +88,7 @@ async def async_chat_endpoint(chat_request: ChatRequest):
             
             return ChatResponse(
                 reply=reply,
-                products=products,
+                stuctural_data=stucture_output,
                 session_id=session_id
             )
 
@@ -118,7 +118,7 @@ async def process_with_tools(client, chat_request, tools_list) -> ChatCompletion
         response = await client.chat.completions.create(
             model=llm_model,
             tools=tools_list,
-            messages=chat_request.n_openai_msgs,
+            messages=chat_request.openai_msgs(),
             tool_choice="auto",
         )
         

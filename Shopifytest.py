@@ -16,6 +16,7 @@ async def test():
   await store.init_handle_id_table()
   # ps = await store.get_product_by_handle("100pcs-2-watt-5-resistor-in-pakistan-copy")
   # return store.format_product(ps)
+  
   list_q =  [
     {
       "handle": "100pcs-2-watt-5-resistor-in-pakistan-copy",

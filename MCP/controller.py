@@ -19,28 +19,10 @@ class Controller:
         self.logger = get_logger("MCP - Controller")
         
 
-    def get_products_data(self, query: str, top_k: int = 5) -> str:
-        """
-        Function for fetching product data based on a query.
-        This interact with a Comapany Vector database.
-        """
-        results = self.vector_store.query_chroma(query=query, top_k=top_k+3)
-        return json.dumps(results) 
-
-    async def get_product_via_handle(self, handle: str) -> str:
-        """
-        Function to fetch complete product data using the product handle.
-        This is used to get the most up-to-date product information.
-        """
-        product = await self.store.get_product_by_handle(handle)
-        if not product:
-            return json.dumps({"error": "Product not found."})
-        product = self.store.format_product(product)
-        return str(product)
-
     async def function_execution(self, chat_request: ChatRequest, tool_calls) -> ChatRequest:
         vector_db_flag = False
         shopify_flag = False
+        cart_flag = False
     
         for tool_call in tool_calls:
             function_name = tool_call.function.name
@@ -51,7 +33,7 @@ class Controller:
                 top_k = arguments.get("top_k_result", 7)
 
                 # Call the actual function
-                tool_output = self.get_products_data(query, top_k)
+                tool_output = await self.get_products_data(query, top_k)
 
                 # Append tool response to messages
                 chat_request.append_tool_response(tool_output, tool_call.id)
@@ -68,17 +50,20 @@ class Controller:
                 chat_request.append_tool_response(tool_output, tool_call.id)
                 
                 shopify_flag = True
+                
             elif function_name == "create_cart":
                 items = arguments["items"]
                 session_id = arguments.get("session_id", "default")
 
                 tool_output = await self.create_cart(items, session_id)
+                cart_flag = True
                 chat_request.append_tool_response(str(tool_output), tool_call.id)
 
             elif function_name == "query_cart":
                 cart_id = arguments["cart_id"]
 
                 tool_output = await self.query_cart(cart_id)
+                cart_flag = True
                 chat_request.append_tool_response(str(tool_output), tool_call.id)
 
             elif function_name == "add_cartline_items":
@@ -86,6 +71,7 @@ class Controller:
                 line_items = arguments["line_items"]
 
                 tool_output = await self.add_cartline_items(cart_id, line_items)
+                cart_flag = True
                 chat_request.append_tool_response(str(tool_output), tool_call.id)
 
             elif function_name == "update_cartline_items":
@@ -93,6 +79,7 @@ class Controller:
                 line_items = arguments["line_items"]
 
                 tool_output = await self.update_cartline_items(cart_id, line_items)
+                cart_flag = True
                 chat_request.append_tool_response(str(tool_output), tool_call.id)
 
             elif function_name == "remove_cartline_items":
@@ -100,6 +87,7 @@ class Controller:
                 line_items = arguments["line_items"]
 
                 tool_output = await self.removeCartline_items(cart_id, line_items)
+                cart_flag = True
                 chat_request.append_tool_response(str(tool_output), tool_call.id)
 
                     
@@ -107,9 +95,31 @@ class Controller:
             chat_request.append_vectorDb_prompt()
         if shopify_flag:
             chat_request.append_stuctural_output_prompt()
-            
-        return chat_request
+        if cart_flag:
+            chat_request.append_cart_output_prompt()
         
+        return chat_request
+
+# Vector DB
+    async def get_products_data(self, query: str, top_k: int = 5) -> str:
+        """
+        Function for fetching product data based on a query.
+        This interact with a Comapany Vector database.
+        """
+        results = await self.vector_store.query_chroma(query=query, top_k=top_k+3)
+        return json.dumps(results) 
+
+# Admin API
+    async def get_product_via_handle(self, handle: str) -> str:
+        """
+        Function to fetch complete product data using the product handle.
+        This is used to get the most up-to-date product information.
+        """
+        product = await self.store.get_product_by_handle(handle)
+        if not product:
+            return json.dumps({"error": "Product not found."})
+        product = self.store.format_product(product)
+        return str(product)
 
     async def get_order_via_order_number(self, order_number: str) -> str:
         """
@@ -131,6 +141,7 @@ class Controller:
         
         return formatted
 
+# StoreFront API
     async def create_cart(self, items: List[Dict[str, Union[str, int]]], session_id: str = "default") -> Dict[str, Any]:
         await self.store.init_handle_id_table()
         """

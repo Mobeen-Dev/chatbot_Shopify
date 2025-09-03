@@ -45,8 +45,9 @@ class SessionManager:
             await self.redis_client.expire(session_key, self.session_ttl)
             session_data = json.loads(session_data_json)  # dict
             json_str = json.dumps(session_data)  
-            return json_str     
+            return json_str
         return '{}'
+    
     async def delete_session(self, session_id: str):
         """Deletes a session."""
         session_key = f"{self.session_prefix}{session_id}"

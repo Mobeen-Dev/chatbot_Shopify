@@ -12,21 +12,21 @@ from concurrent.futures import ThreadPoolExecutor
 
 class Shopify:
   def __init__(self, store:dict[str,str], logger_name:str="Shopify"):
-    self.ACCESS_TOKEN = store["api_secret"]
-    self.STOREFRONT_ACCESS_TOKEN = store["storefront_secret"]
-    self.API_VERSION = store["api_version"]
-    self.SHOPIFY_STORE = store["store_name"]
-    self.URL = f"https://{self.SHOPIFY_STORE}.myshopify.com/admin/api/{self.API_VERSION}/graphql.json"
-    self.HEADER = {
+    self.__ACCESS_TOKEN = store["api_secret"]
+    self.__STOREFRONT_ACCESS_TOKEN = store["storefront_secret"]
+    self.__API_VERSION = store["api_version"]
+    self.__SHOPIFY_STORE = store["store_name"]
+    self.URL = f"https://{self.__SHOPIFY_STORE}.myshopify.com/admin/api/{self.__API_VERSION}/graphql.json"
+    self.__HEADER = {
       "Content-Type": "application/json",
-      "X-Shopify-Access-Token": self.ACCESS_TOKEN
+      "X-Shopify-Access-Token": self.__ACCESS_TOKEN
     }
-    self.id_table = {"state":"not_build"}  
+    self.__id_table = {"state":"not_build"}  
     self.logger = get_logger(logger_name)
   
   async def init_handle_id_table(self) -> bool:
     try:
-      self.id_table = await self.load_handle_id_table()
+      self.__id_table = await self.load_handle_id_table()
       return True
     except Exception:
       return False  
@@ -41,10 +41,10 @@ class Shopify:
       return await loop.run_in_executor(pool, load_data)
   
   async def send_storefront_mutation(self, mutation: str, variables: dict, receiver: str = "child"):
-    URL = f"https://{self.SHOPIFY_STORE}.myshopify.com/api/{self.API_VERSION}/graphql.json"
+    URL = f"https://{self.__SHOPIFY_STORE}.myshopify.com/api/{self.__API_VERSION}/graphql.json"
     HEADER = {
       "Content-Type": "application/json",
-      "X-Shopify-Storefront-Access-Token": self.STOREFRONT_ACCESS_TOKEN
+      "X-Shopify-Storefront-Access-Token": self.__STOREFRONT_ACCESS_TOKEN
     }
     try:
       async with aiohttp.ClientSession() as session:
@@ -101,7 +101,7 @@ class Shopify:
       return {}
   
   def handle_to_id(self, handle:str, variant_title:str):
-    obj:ProductEntry = self.id_table.get(handle, {})  # type: ignore
+    obj:ProductEntry = self.__id_table.get(handle, {})  # type: ignore
     if obj.have_single_variant :
       return obj.variants["Default Title"]["vid"], ""
     try:
@@ -138,6 +138,10 @@ class Shopify:
               merchandise {
                 ... on ProductVariant {
                   id
+                  title
+                  product {
+                    title
+                  }
                 }
               }
             }
@@ -258,7 +262,11 @@ class Shopify:
                 id
                 merchandise {
                   ... on ProductVariant {
-                    id
+                  id
+                  title
+                  product {
+                    title
+                  }
                   }
                 }
               }
@@ -326,6 +334,10 @@ class Shopify:
                 merchandise {
                   ... on ProductVariant {
                     id
+                  title
+                  product {
+                    title
+                  }
                   }
                 }
               }
@@ -433,6 +445,10 @@ class Shopify:
                 merchandise {
                   ... on ProductVariant {
                     id
+                  title
+                  product {
+                    title
+                  }
                   }
                 }
               }
@@ -536,6 +552,10 @@ class Shopify:
                 merchandise {
                   ... on ProductVariant {
                     id
+                  title
+                  product {
+                    title
+                  }
                   }
                 }
               }
@@ -871,7 +891,7 @@ class Shopify:
       async with aiohttp.ClientSession() as session:
         async with session.post(
             self.URL,
-            headers=self.HEADER,
+            headers=self.__HEADER,
             json={"query": mutation, "variables": variables}
         ) as resp:
           resp.raise_for_status()
@@ -1619,7 +1639,7 @@ class Shopify:
           "Note": "This product is not active or not available for sale at the moment."
         }
 
-  def format_cart(self, cart: dict, line_items_dict:bool=False) -> dict:
+  def format_cart(self, cart: dict, line_items_dict:bool=False, pretify_line_items=False) -> dict:
       """
       Function to format the cart data into a specific structure.
       """
@@ -1634,6 +1654,22 @@ class Shopify:
               "quantity":item["node"]["quantity"]
             } 
           return lines
+        elif pretify_line_items:
+          formatted_items = []
+          for  item in line_items:
+            product_title = item["node"]["merchandise"]["product"]["title"]
+            variant_title = item["node"]["merchandise"]["title"]
+            if variant_title == "Default Title":
+              variant_title = " "
+            else:
+              product_title += ' - '
+            formatted_items.append(
+              {
+              "merchandise_title": product_title+variant_title,
+              "quantity":item["node"]["quantity"]
+              }
+            )
+            return formatted_items
         else:
           return [
               {
@@ -1659,10 +1695,7 @@ class Shopify:
           
           "lineItems": return_lineItems(line_items),
           
-          "subtotalAmount": {
-              "CurrencyCode": amount["currencyCode"],
-              "amount": amount["amount"]
-            },
+          "subtotalAmount": f"{amount["amount"]} {amount["currencyCode"]}",
           
           "deliveryMethod":dilevery_methods[0],
           "userErrors": cart.get("userErrors")
