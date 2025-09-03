@@ -8,3 +8,6 @@ docker run -d   --name local-mongo   -p 27017:27017   -e MONGO_INITDB_ROOT_USERN
 # Volumne Inspection :
 docker volume ls
 docker volume inspect mongo_data
+
+
+docker run -d   --name local-redis  -p 6379:6379  redis:latest  redis-server --appendonly yes --notify-keyspace-events Ex

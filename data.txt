@@ -1,0 +1,36 @@
+Got it 👍 — if I act as the AI agent following your **rules strictly**, here are **sample outputs** for both prompts with valid dummy data.
+
+---
+
+### 🛒 `cart_output_prompt` (Cart JSON Response)
+
+```json
+{
+  "id": "gid://shopify/Cart/1234567890?key=abcde12345",
+  "checkoutUrl": "https://store.example.com/cart/c/abcde12345?key=xyz987654",
+  "subtotalAmount": "2450.00 PKR",
+  "lineItems": "Pass the dictionary exactly as received — no modifications, no renaming, no restructuring."
+}
+```
+
+---
+
+### 📦 `stuctural_output_prompt` (Product JSON Response)
+
+```json
+{
+  "link": "https://digilog.pk/products/smart-led-tv-55-inch",
+  "imageurl": "https://digilog.pk/cdn/shop/files/smart-led-tv-55inch.webp?v=1741255473&width=1400",
+  "title": "Smart LED TV 55 Inch",
+  "price": "89,999 PKR",
+  "description": "55-inch Smart LED TV with 4K Ultra HD resolution, HDR support, and slim bezel design. Built-in WiFi and streaming apps for seamless entertainment. Energy-efficient performance with advanced picture clarity and durability."
+}
+```
+
+---
+
+✅ Both follow the **exact JSON structure**.
+✅ All fields are **present** and **single-line strings**.
+✅ No extra keys or formatting outside JSON.
+
+Do you want me to also show you an **invalid example** (what would get rejected by your rules) so your AI agent can better distinguish compliance?

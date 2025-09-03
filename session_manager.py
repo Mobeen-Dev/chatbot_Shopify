@@ -13,6 +13,7 @@ class SessionManager:
         self.redis_client = redis_client
         self.session_ttl = session_ttl  # Time to live in seconds (default 1 hour)
         self.session_prefix = "session:"
+        self.shadow_prefix  = "session:shadow:"
 
     @staticmethod
     def extract_chat_history(json_string: str) -> List[ChatMessage]:
@@ -30,9 +31,16 @@ class SessionManager:
         """Creates a new session and returns the session ID."""
         session_id = str(uuid.uuid4())
         session_key = f"{self.session_prefix}{session_id}"
+        shadow_key = f"{self.shadow_prefix}{session_id}"
         
         # Store session data as a JSON string
-        await self.redis_client.set(session_key, json.dumps(user_data), ex=self.session_ttl)
+        payload = json.dumps(user_data)
+        
+        # Volatile key (expires)
+        await self.redis_client.set(session_key, payload, ex=self.session_ttl)
+        # Shadow key (no TTL)
+        await self.redis_client.set(shadow_key, payload)
+        
         return session_id
 
     async def get_session(self, session_id: str) -> str:
@@ -51,12 +59,21 @@ class SessionManager:
     async def delete_session(self, session_id: str):
         """Deletes a session."""
         session_key = f"{self.session_prefix}{session_id}"
+        shadow_key = f"{self.shadow_prefix}{session_id}"
         await self.redis_client.delete(session_key)
+        await self.redis_client.delete(shadow_key)
 
     async def update_session(self, session_id: str, new_data: str):
         """Updates session data, overwriting existing keys."""
         session_key = f"{self.session_prefix}{session_id}"
-        await self.redis_client.set(session_key, new_data, ex=self.session_ttl)
+        shadow_key = f"{self.shadow_prefix}{session_id}"
+        
+        payload = json.dumps(new_data)
+        
+        # Refresh volatile value + TTL
+        await self.redis_client.set(session_key, payload, ex=self.session_ttl)
+        # Update shadow copy
+        await self.redis_client.set(shadow_key, payload)
 
 import asyncio
 
