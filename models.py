@@ -18,10 +18,12 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     session_id: Optional[str] = None                            # Session ID for tracking conversation
     message: str                                                # Client Asked Question
+    metadata : dict = Field(default_factory=dict)               # Extensible for AI cost tracking, cart links, product references, etc.
     history: List[ChatMessage] = Field(default_factory=list)    # Chat History From Redis
     n_history: List[ChatCompletionMessageParam] = Field(default_factory=list)    # Chat History From Redis
     is_vector_review_prompt_added : bool = False
     is_structural_output_prompt_added : bool = False
+    is_cart_instructions_added : bool = False
 
     def n_Serialize_chat_history(self, chat_history: List[ChatCompletionMessageParam]) -> str:
         """Converts a list of Chatmsg objects to a JSON string."""
@@ -101,7 +103,7 @@ class ChatRequest(BaseModel):
                 list_of_dicts.append(dict(msg))
         
         
-        return json.dumps({"data":list_of_dicts})
+        return json.dumps({"data":list_of_dicts, "metadata":self.metadata})
     
     @staticmethod
     def serialize_tool_response(msg: ChatCompletionToolMessageParam) -> ChatCompletionToolMessageParam:
@@ -114,7 +116,7 @@ class ChatRequest(BaseModel):
         """Converts a JSON string from Redis back into a list of ChatCompletionMessageParam-like dicts."""
         obj = json.loads(json_str)
         chat_list = []
-
+        self.metadata = obj.get("metadata", {})
         for msg in obj.get("data", []):
             role = msg.get("role")
 
@@ -289,18 +291,30 @@ class ChatRequest(BaseModel):
         
         tool_prompt: ChatCompletionSystemMessageParam = {
             "role": "system",
-            "content": self.stuctural_output_prompt
+            "content": self.product_output_prompt
         }
         
         self.n_history.append(tool_prompt)
         self.is_structural_output_prompt_added = True
         
+    def append_cart_output_prompt(self):
+        if self.is_cart_instructions_added:
+            return
+        
+        tool_prompt: ChatCompletionSystemMessageParam = {
+            "role": "system",
+            "content": self.cart_output_prompt
+        }
+        
+        self.n_history.append(tool_prompt)
+        self.is_cart_instructions_added = True
+                
     def append_message(self, data: dict[str, Any]):
         msg_dict = cast(ChatCompletionMessageParam, data)
         self.n_history.append(msg_dict)
     
     @staticmethod
-    def extract_product_json_list(text: str) -> Tuple[List[dict[str, Any]], str]:
+    def extract_json_objects(text: str) -> Tuple[List[dict[str, Any]], str]:
         _CURRENCY_SYMBOLS = "€£$₹"
         _CURRENCY_CODE = r"[A-Z]{2,5}"
 
@@ -321,21 +335,32 @@ class ChatRequest(BaseModel):
             required = {"link", "imageurl", "title", "price", "description"}
             if set(obj.keys()) != required:
                 return False
-            # All single-line strings
             if not all(isinstance(v, str) and "\n" not in v for v in obj.values()):
                 return False
-            # https links
             if not (obj["link"].startswith("https://") and obj["imageurl"].startswith("https://")):
                 return False
-            # price format (accepts code/symbol before or after)
             if obj["price"].strip() and not _valid_price(obj["price"]):
                 return False
             return True
 
-        # ---------- Text utilities ----------
+        def _valid_cart(obj: Any) -> bool:
+            if not isinstance(obj, dict):
+                return False
+            required = {"id", "checkoutUrl", "subtotalAmount", "lineItems"}
+            if set(obj.keys()) != required:
+                return False
+            if not all(isinstance(v, str) and "\n" not in v for v in obj.values()):
+                return False
+            if not obj["id"].startswith("gid://shopify/Cart/"):
+                return False
+            if not obj["checkoutUrl"].startswith("https://"):
+                return False
+            if obj["subtotalAmount"].strip() and not _valid_price(obj["subtotalAmount"]):
+                return False
+            return True
 
+        # ---------- Text utilities ----------
         def _remove_spans(s: str, spans: List[Tuple[int, int]]) -> str:
-            """Remove [start, end) spans from s in one pass."""
             if not spans:
                 return s
             spans = sorted(spans)
@@ -347,16 +372,11 @@ class ChatRequest(BaseModel):
             return "".join(out)
 
         def _find_json_objects(text: str) -> List[Tuple[int, int, str]]:
-            """
-            Return list of (start, end, json_str) for JSON objects found via brace scanning.
-            Ignores braces inside quoted strings and handles escapes.
-            """
             results: List[Tuple[int, int, str]] = []
             stack = 0
             in_str = False
             esc = False
             start = -1
-
             for i, ch in enumerate(text):
                 if in_str:
                     if esc:
@@ -384,44 +404,52 @@ class ChatRequest(BaseModel):
         results: List[dict[str, Any]] = []
         remove_spans: List[Tuple[int, int]] = []
 
-        # 1) First handle fenced ```json blocks
-        fenced = re.compile(r"```json\s*(\{.*?\})\s*```", re.DOTALL)
+        # 1) Handle fenced blocks: ```product or ```cart
+        fenced = re.compile(r"```(product|cart)\s*(\{.*?\})\s*```", re.DOTALL)
         for m in fenced.finditer(text):
-            raw = m.group(1)
+            block_type = m.group(1).lower()
+            raw = m.group(2)
             try:
                 obj = json.loads(raw)
             except json.JSONDecodeError:
                 continue
-            if _valid_product(obj):
+
+            if block_type == "product" and _valid_product(obj):
+                obj["type"] = "Product"
+                results.append(obj)
+                remove_spans.append((m.start(), m.end()))
+            elif block_type == "cart" and _valid_cart(obj):
+                obj["type"] = "Cart"
                 results.append(obj)
                 remove_spans.append((m.start(), m.end()))
 
-        # Remove fenced now so indices for the next pass are clean
         intermediate = _remove_spans(text, remove_spans)
 
-        # 2) Find unfenced JSON objects via brace scanning
+        # 2) Unfenced JSON objects
         spans2: List[Tuple[int, int]] = []
         for s, e, raw in _find_json_objects(intermediate):
             try:
                 obj = json.loads(raw)
             except json.JSONDecodeError:
                 continue
+
             if _valid_product(obj):
+                obj["type"] = "Product"
+                results.append(obj)
+                spans2.append((s, e))
+            elif _valid_cart(obj):
+                obj["type"] = "Cart"
                 results.append(obj)
                 spans2.append((s, e))
 
         cleaned_text = _remove_spans(intermediate, spans2).strip()
-
-        # if len(cleaned_text) < 100:
-        cleaned_text = re.sub(r"\[\s*\]", "",cleaned_text)
+        cleaned_text = re.sub(r"\[\s*\]", "", cleaned_text)
         cleaned_text = re.sub(r"\[\s*(?:,\s*)*\]", "", cleaned_text)
-        cleaned_text =  re.sub(r"```(?:json)?\s*```", "", cleaned_text, flags=re.MULTILINE)
-        #  += ("\nCheckout the products Below." if cleaned_text else "Checkout the products Below.")
+        cleaned_text = re.sub(r"```(?:json|product|cart)?\s*```", "", cleaned_text, flags=re.MULTILINE)
 
         return results, cleaned_text.strip()
 
-    @property
-    def n_openai_msgs(self) -> List[ChatCompletionMessageParam]:
+    def openai_msgs(self) -> List[ChatCompletionMessageParam]:
         """Return full OpenAI-compatible msg list including history and user input."""
         
         if len(self.n_history) == 0:
@@ -442,7 +470,7 @@ class ChatRequest(BaseModel):
         
         copy_history = self.n_history.copy()
         copy_history.append(chat)
-        return copy_history
+        return copy_history[-10:]  # Return Last 10 messages 5 User and 5 Ai responses
     
     @staticmethod
     def extract_chat_history(json_string) -> List[ChatMessage]:
@@ -451,7 +479,6 @@ class ChatRequest(BaseModel):
         list_of_dicts = json_string.get("data", [])  # Handle both format
         return [ChatMessage(**d) for d in list_of_dicts]
     
-
     @property
     def system_prompt(self) -> str:
         return """
@@ -459,7 +486,7 @@ class ChatRequest(BaseModel):
             > Your role is to read and recommend products from the Digilog Store, providing responses in text only.
             > You must not access, request, or process any personal data or confidential company information.
             > If such information is requested, reply strictly with: **"Not eligible."**
-        """
+        """.strip()
         
     @property
     def vector_review_prompt(self) -> str:
@@ -476,24 +503,27 @@ class ChatRequest(BaseModel):
             5. Use get_product_via_handle function on all relevant products to fetch their all data.
 
             Only recommend or describe products that you're confident are genuinely aligned with the user's goal.
-        """
-    
+        """.strip()
     
     @property
-    def stuctural_output_prompt(self) -> str:
+    def product_output_prompt(self) -> str:
         return """
+            > All structured outputs must be wrapped in fenced code blocks.  
+            > Use exactly ```product for product outputs.  
+            > Do NOT use ```json or any other label.  
             > You must provide product details **only** in the following JSON structure.
             > **Every field is mandatory.**
             > **No extra fields, no changes to key names, no formatting outside JSON.**
             > If a value is unknown, you must use an empty string (`""`) — do not omit the field.
             > If this exact format is not followed, the system will reject the input and terminate processing.
 
-            ```json
+            ```product
             {
             "link": "https://digilog.pk/products/product-page",
             "imageurl": "https://digilog.pk/cdn/shop/files/product-image.wenbp?v=1234567890&width=1400",
             "title": "Exact Product Title Here",
             "price": "99.99 CurrencyCode",
+            "variants_options" : Contains valid product variants that must be communicated to the customer during chat to ensure clarity at the time of cart creation and to prevent any potential issues later.
             "description": "Rewrite the product description in a concise, buyer-focused style. Avoid long sentences. Present information as short bullet points that highlight only the most important specifications and benefits a buyer would consider before making a purchase. The tone should be clear, persuasive, and designed to elevate the product's value. Focus on properties that drive buying decisions (e.g., performance, durability, compatibility, size, unique advantages, price/value)."
             }
             ```
@@ -505,27 +535,83 @@ class ChatRequest(BaseModel):
             3. `"title"` → Exact name of the product, no extra words.
             4. `"price"` → Must include currency symbol and numeric value (e.g., `"19.99 PKR"`).
             5. "description" → Brief, precise, fact-focused summary.
-            6. **No additional fields** — only the above 5.
-            7. **No line breaks inside values** — all values must be single-line strings.
+            6. "variants_options" : "Pass the List exactly as received — no modifications, no renaming, no restructuring."
+            7. **No additional fields** — only the above 6.
+            8. **No line breaks inside values** — all values must be single-line strings.
 
             **Example of VALID input**:
 
-            ```json
+            ```product
             {
             "link": "https://digilog.pk/products/solar-wifi-device-solar-wifi-dongle-in-pakistan",
             "imageurl": "https://digilog.pk/cdn/shop/files/Untitled_design_144dd069-c4ec-4b66-a8f8-0db6cdf38d2e.webp?v=1741255473&width=1400",
             "title": "Inverterzone Solar Wifi Device Solar wifi Dongle In Pakistan",
             "price": "7,500 PKR",
+            "variants_options" : ["Metal_body", "Plastic_body"]
             "description": "The Inverterzone Solar WiFi Dongle is the ultimate solution for solar-powered homes, enabling real-time monitoring, efficient load consumption management, and scheduling of energy usage to maximize solar efficiency"
             }
             ```
-        """
+        """.strip()
+    
+    @property
+    def cart_output_prompt(self) -> str:
+        return """
+            > All structured outputs must be wrapped in fenced code blocks.  
+            > Use exactly ```cart for cart outputs.  
+            > Do NOT use ```json or any other label.  
+            > You must provide cart details **only** in the following JSON structure.
+            > **Every field is mandatory.**
+            > **No extra fields, no changes to key names, no formatting outside JSON.**
+            > If a value is unknown, you must use an empty string (`""`) — do not omit the field.
+            > If this exact format is not followed, the system will reject the input and terminate processing.
+
+            ```cart
+            {
+                "id": "gid://shopify/Cart/abc123?key=xyz789",
+                "checkoutUrl": "https://store.com/cart/c/xyz789?key=123456",
+                "subtotalAmount": "123.45 PKR",
+                "lineItems": "Pass the dictionary exactly as received — no modifications, no renaming, no restructuring."
+            }
+            ```
+
+            ### **Rules**
+
+            1. `"id"` → Shopify cart ID.
+            * Must be a valid Shopify GID string.
+            * Format: `"gid://shopify/Cart/<cart_id>?key=<key>"`.
+
+            2. `"checkoutUrl"` → Direct checkout URL.
+            * Must be a valid `https://` link.
+            * No spaces or line breaks.
+
+            3. `"subtotalAmount"` → Cart subtotal.
+            * Must include numeric value **and** standard currency.
+            * Example: `"1180.00 PKR"`.
+
+            4. `"lineItems"` → Line items dictionary.
+            * **Pass it exactly as received.**
+            * Do not alter field names, structure, or values.
+
+            5. **No additional fields** — Only the 4 keys above.
+            6. **All values must be single-line strings.**
+
+            **Example of VALID input**:
+
+            ```cart
+            {
+                "id": "gid://shopify/Cart/hWN2VMsRlxJ6NFxkDHvupfec?key=e8b1bedbf1d5f8b1d4abe21d1613d286",
+                "checkoutUrl": "https://store-mobeen-pk.myshopify.com/cart/c/hWN2VMsRlxJ6NFxkDHvupfec?key=e8b1bedbf1d5f8b1d4abe21d1613d286",
+                "subtotalAmount": "1180.00 PKR",
+                "lineItems": "Pass the dictionary exactly as received — no modifications, no renaming, no restructuring."
+            }
+            ```
+        """.strip()
 
 # Response schema
 class ChatResponse(BaseModel):
     reply: str | List[Dict[str, Any]]
     history: list = Field(default_factory=list)
-    products: List[Dict[str, Any]] = []
+    stuctural_data: List[dict[str, Any]] = []
     session_id: Optional[str] = None
     cart_id: Optional[str] = None
 
