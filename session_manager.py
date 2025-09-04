@@ -43,7 +43,7 @@ class SessionManager:
         
         return session_id
 
-    async def get_session(self, session_id: str) -> str:
+    async def get_session(self, session_id: str) -> dict:
         """Retrieves session data by session ID."""
         session_key = f"{self.session_prefix}{session_id}"
         session_data_json = await self.redis_client.get(session_key)
@@ -51,10 +51,11 @@ class SessionManager:
         if session_data_json:
             # Refresh the session expiration time (sliding expiration)
             await self.redis_client.expire(session_key, self.session_ttl)
-            session_data = json.loads(session_data_json)  # dict
-            json_str = json.dumps(session_data)  
-            return json_str
-        return '{}'
+            obj = json.loads(session_data_json)  # return dict directly
+            if isinstance(obj, str):
+                obj = json.loads(obj)
+            return obj
+        return {}
     
     async def delete_session(self, session_id: str):
         """Deletes a session."""

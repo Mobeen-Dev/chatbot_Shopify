@@ -58,7 +58,7 @@ async def async_chat_endpoint(chat_request: ChatRequest):
         chat_request.load_history(session_data)
         if not True:
             raise HTTPException(status_code=404, detail="Session not found.")
-        print(f"Session data retrieved chat_request.n_history: \n{chat_request.n_history}\n\n\n\n\n\n\n")
+        print(f"\n $$$ Session data retrieved chat_request.n_history: \n{chat_request.n_history}\n\n\n\n\n\n\n")
     try:
         response = None
         async with AsyncOpenAI(
@@ -67,10 +67,14 @@ async def async_chat_endpoint(chat_request: ChatRequest):
         ) as client:
 
             messages = chat_request.openai_msgs()
-            response = await process_with_tools(client, chat_request, tools_list)            
-
+            response = await process_with_tools(client, chat_request, tools_list) 
+            
+            
             chat_request.append_message({"role": "user", "content": user_message, "name": "Customer"})
             chat_request.append_message(response.choices[0].message.model_dump())
+            chat_request.added_total_tokens(response.usage)
+            
+            logger.info(chat_request)  
             
             logger.info(f"\n\n\n\n\nOpenAI response: {response}\n\n\n\n\n\n")
             # logger.info(f"\n\n History choices: {messages}")
@@ -123,12 +127,14 @@ async def process_with_tools(client, chat_request, tools_list) -> ChatCompletion
         )
         
         assistant_message = response.choices[0].message
+        message_cost = response.usage
         
         if not assistant_message.tool_calls:
             # No more tools, final AI reply
             return response
         
         chat_request.append_message(assistant_message.model_dump())
+        chat_request.added_total_tokens(message_cost)
 
         chat_request = await mcp_controller.function_execution(chat_request, assistant_message.tool_calls)
 

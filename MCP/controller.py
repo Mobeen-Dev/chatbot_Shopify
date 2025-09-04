@@ -107,7 +107,9 @@ class Controller:
         This interact with a Comapany Vector database.
         """
         results = await self.vector_store.query_chroma(query=query, top_k=top_k+3)
-        return json.dumps(results) 
+        results = json.dumps(results)
+        results = "#VectorDB-"+results  # Added Identifier for future Actions
+        return results 
 
 # Admin API
     async def get_product_via_handle(self, handle: str) -> str:

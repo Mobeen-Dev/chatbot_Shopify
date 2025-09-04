@@ -24,6 +24,17 @@ class ChatRequest(BaseModel):
     is_vector_review_prompt_added : bool = False
     is_structural_output_prompt_added : bool = False
     is_cart_instructions_added : bool = False
+    
+    def added_total_tokens(self, usage_info):
+        previous_cost = self.metadata.get("tokens_usage",{})
+        new_cost_completion = previous_cost.get("completion_tokens", 0)+usage_info.completion_tokens
+        new_cost_prompt = previous_cost.get("prompt_tokens", 0)+usage_info.prompt_tokens
+        new_cost_total = previous_cost.get("total_tokens", 0)+usage_info.total_tokens
+        self.metadata["tokens_usage"] = {
+            "completion_tokens": new_cost_completion,
+            "prompt_tokens":new_cost_prompt,
+            "total_tokens":new_cost_total
+        }
 
     def n_Serialize_chat_history(self, chat_history: List[ChatCompletionMessageParam]) -> str:
         """Converts a list of Chatmsg objects to a JSON string."""
@@ -108,15 +119,21 @@ class ChatRequest(BaseModel):
     @staticmethod
     def serialize_tool_response(msg: ChatCompletionToolMessageParam) -> ChatCompletionToolMessageParam:
         content = str(msg["content"]) or "No content provided"
-        # msg["content"] = f"{content[:100]}....{content[-100:]}" if len(content) > 200 else content  //  Re-write hybrid Approach
-        msg["content"] = content
+        # msg["content"] = f"{content[:100]}....{content[-100:]}" if len(content) > 200 else content  // TODO Re-write hybrid Approach
+        if content[:10] == "#VectorDB-":
+            objs = json.loads(content[10:])
+            msg["content"] = str([obj["metadata"] for obj in objs])
+        else:
+            msg["content"] = content
+        # TODO Remove unstuctured chunks from each tool output and only keep most relevant and stuctured part to Efficienlty use Chat Limits
         return msg
 
-    def n_Deserialize_chat_history(self, json_str: str) -> List[Dict[str, Any]]:
+    def n_Deserialize_chat_history(self, obj: dict) -> List[Dict[str, Any]]:
         """Converts a JSON string from Redis back into a list of ChatCompletionMessageParam-like dicts."""
-        obj = json.loads(json_str)
-        chat_list = []
+        
+        chat_list = []        
         self.metadata = obj.get("metadata", {})
+        
         for msg in obj.get("data", []):
             role = msg.get("role")
 
@@ -205,7 +222,7 @@ class ChatRequest(BaseModel):
             }
         }
 
-    def load_history(self, session_data: str) -> None:
+    def load_history(self, session_data: Dict) -> None:
         self.n_history = cast(
             List[ChatCompletionMessageParam], 
             self.n_Deserialize_chat_history(session_data)
@@ -312,7 +329,7 @@ class ChatRequest(BaseModel):
     def append_message(self, data: dict[str, Any]):
         msg_dict = cast(ChatCompletionMessageParam, data)
         self.n_history.append(msg_dict)
-    
+
     @staticmethod
     def extract_json_objects(text: str) -> Tuple[List[dict[str, Any]], str]:
         _CURRENCY_SYMBOLS = "€£$₹"
@@ -333,9 +350,9 @@ class ChatRequest(BaseModel):
             if not isinstance(obj, dict):
                 return False
             required = {"link", "imageurl", "title", "price", "description"}
-            if set(obj.keys()) != required:
+            if not required.issubset(obj.keys()):
                 return False
-            if not all(isinstance(v, str) and "\n" not in v for v in obj.values()):
+            if not all(isinstance(obj[k], str) and "\n" not in obj[k] for k in required):
                 return False
             if not (obj["link"].startswith("https://") and obj["imageurl"].startswith("https://")):
                 return False
@@ -347,15 +364,24 @@ class ChatRequest(BaseModel):
             if not isinstance(obj, dict):
                 return False
             required = {"id", "checkoutUrl", "subtotalAmount", "lineItems"}
-            if set(obj.keys()) != required:
+            if not required.issubset(obj.keys()):
                 return False
-            if not all(isinstance(v, str) and "\n" not in v for v in obj.values()):
+            # id, checkoutUrl, subtotalAmount must be strings
+            if not all(
+                isinstance(obj[k], str) and "\n" not in obj[k]
+                for k in ["id", "checkoutUrl", "subtotalAmount"]
+            ):
                 return False
             if not obj["id"].startswith("gid://shopify/Cart/"):
                 return False
             if not obj["checkoutUrl"].startswith("https://"):
                 return False
             if obj["subtotalAmount"].strip() and not _valid_price(obj["subtotalAmount"]):
+                return False
+            # lineItems must be a list of dicts
+            if not isinstance(obj["lineItems"], list):
+                return False
+            if not all(isinstance(item, dict) for item in obj["lineItems"]):
                 return False
             return True
 
@@ -405,12 +431,14 @@ class ChatRequest(BaseModel):
         remove_spans: List[Tuple[int, int]] = []
 
         # 1) Handle fenced blocks: ```product or ```cart
-        fenced = re.compile(r"```(product|cart)\s*(\{.*?\})\s*```", re.DOTALL)
+        fenced = re.compile(r"```(product|cart)\s*(.*?)```", re.DOTALL)
         for m in fenced.finditer(text):
             block_type = m.group(1).lower()
-            raw = m.group(2)
+            block_content = m.group(2).strip()
+
+            # Try parsing block_content directly as JSON
             try:
-                obj = json.loads(raw)
+                obj = json.loads(block_content)
             except json.JSONDecodeError:
                 continue
 
@@ -470,7 +498,8 @@ class ChatRequest(BaseModel):
         
         copy_history = self.n_history.copy()
         copy_history.append(chat)
-        return copy_history[-10:]  # Return Last 10 messages 5 User and 5 Ai responses
+        print("\n\n*********\n",copy_history,"\n*****\n\n")
+        return copy_history  # Return Last 10 messages 5 User and 5 Ai responses
     
     @staticmethod
     def extract_chat_history(json_string) -> List[ChatMessage]:
