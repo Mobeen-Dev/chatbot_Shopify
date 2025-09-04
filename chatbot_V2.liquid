@@ -601,7 +601,7 @@
             
             // Send user message to AI and process response            
             async sendMessage() {
-                const message = this.chatInput.value.trim();
+                let message = this.chatInput.value.trim();
                 if (!message || this.isAITyping) return;
                 
                 this.addMessage(message, 'user');
@@ -638,6 +638,22 @@
                     if (typeof response.reply === 'string') {
                         this.addMessage(response.reply, 'bot');
                     }
+                    let productList = [];
+
+                    if (response.structural_data && response.structural_data.length > 0) {
+                        response.structural_data.forEach((data) => {
+                            if (data.type === "Product") {
+                                productList.push(data);
+                            } else if (data.type === "Cart") {
+                                this.addCartFromResponse(data);
+                            }
+                        });
+
+                        if (productList.length > 0) {
+                            this.addProductsFromResponse(productList);
+                        }
+                    }
+
                     if (response.products.length > 0) {
                         this.addProductsFromResponse(response.products);
                     }
@@ -1147,6 +1163,76 @@
                 productDiv.appendChild(productLink);
                 this.chatMessages.appendChild(productDiv);
                 
+                this.scrollToBottom();
+            }
+            
+            // Add cart from response
+            addCartFromResponse(cart) {
+                // Intro message
+                this.addMessage("🛒 Here's your cart:", 'bot');
+
+                if (!cart.lineItems || cart.lineItems.length === 0) {
+                    this.addMessage("Your cart is empty.", 'bot');
+                    return;
+                }
+
+                // Add each line item
+                cart.lineItems.forEach((item, index) => {
+                    setTimeout(() => {
+                        this.addCartItem(item);
+                    }, index * 300);
+                });
+
+                // Subtotal
+                setTimeout(() => {
+                    this.addMessage(`Subtotal: ${cart.subtotalAmount}`, 'bot');
+                }, cart.lineItems.length * 300 + 200);
+
+                // Checkout link
+                setTimeout(() => {
+                    const checkoutDiv = document.createElement('div');
+                    checkoutDiv.classList.add('message', 'bot-message');
+
+                    const checkoutLink = document.createElement('a');
+                    checkoutLink.classList.add('product-card');
+                    checkoutLink.href = cart.checkoutUrl;
+                    checkoutLink.target = "_blank";
+                    checkoutLink.rel = "noopener noreferrer";
+                    checkoutLink.innerHTML = `
+                        <div class="product-info">
+                            <h4 class="product-title">Proceed to Checkout</h4>
+                            <p class="product-price">${cart.subtotalAmount}</p>
+                        </div>
+                    `;
+                    checkoutDiv.appendChild(checkoutLink);
+                    this.chatMessages.appendChild(checkoutDiv);
+                    this.scrollToBottom();
+                }, cart.lineItems.length * 300 + 500);
+            },
+
+
+            // Add individual cart item
+            addCartItem(item) {
+                const productDiv = document.createElement('div');
+                productDiv.classList.add('message', 'bot-message');
+
+                const productLink = document.createElement('div');
+                productLink.classList.add('product-card');
+
+                // Assuming item has merchandise name, qty, and price
+                const title = item.merchandise?.title || "Unnamed product";
+                const qty = item.quantity || 1;
+                const price = item.price || "";
+
+                productLink.innerHTML = `
+                    <div class="product-info">
+                        <h4 class="product-title">${title}</h4>
+                        <p class="product-price">${price} × ${qty}</p>
+                    </div>
+                `;
+
+                productDiv.appendChild(productLink);
+                this.chatMessages.appendChild(productDiv);
                 this.scrollToBottom();
             }
 

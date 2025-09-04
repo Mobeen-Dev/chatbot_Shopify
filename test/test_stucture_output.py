@@ -517,7 +517,7 @@ def extract_json_objects3(text: str) -> Tuple[List[dict[str, Any]], str]:
 
 
 ###############################3
-stucture_output, reply = extract_json_objects3(str(data))
+stucture_output, reply = extract_json_objects3(str(data2))
 
 print("stucture_output", stucture_output)
 print("reply", reply)
