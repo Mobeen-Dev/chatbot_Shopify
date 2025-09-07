@@ -24,6 +24,7 @@ class ChatRequest(BaseModel):
     is_vector_review_prompt_added : bool = False
     is_structural_output_prompt_added : bool = False
     is_cart_instructions_added : bool = False
+    is_order_instructions_added : bool = False
     
     def added_total_tokens(self, usage_info):
         previous_cost = self.metadata.get("tokens_usage",{})
@@ -123,6 +124,10 @@ class ChatRequest(BaseModel):
         if content[:10] == "#VectorDB-":
             objs = json.loads(content[10:])
             msg["content"] = str([obj["metadata"] for obj in objs])
+        elif content[:15] == "#ShopifyProduct-":
+            objs = json.loads(content[15:])
+            # msg["content"] = str([obj["metadata"] for obj in objs])
+            # TODO remove description from product as that is no more required after response
         else:
             msg["content"] = content
         # TODO Remove unstuctured chunks from each tool output and only keep most relevant and stuctured part to Efficienlty use Chat Limits
@@ -325,11 +330,25 @@ class ChatRequest(BaseModel):
         
         self.n_history.append(tool_prompt)
         self.is_cart_instructions_added = True
-                
+    
+    def append_order_output_prompt(self):
+        if self.is_order_instructions_added:
+            return
+        
+        tool_prompt: ChatCompletionSystemMessageParam = {
+            "role": "system",
+            "content": self.order_output_prompt
+        }
+        
+        self.n_history.append(tool_prompt)
+        self.is_order_instructions_added = True
+    
+    
+    
     def append_message(self, data: dict[str, Any]):
         msg_dict = cast(ChatCompletionMessageParam, data)
         self.n_history.append(msg_dict)
-
+    
     @staticmethod
     def extract_json_objects(text: str) -> Tuple[List[dict[str, Any]], str]:
         _CURRENCY_SYMBOLS = "€£$₹"
@@ -366,7 +385,6 @@ class ChatRequest(BaseModel):
             required = {"id", "checkoutUrl", "subtotalAmount", "lineItems"}
             if not required.issubset(obj.keys()):
                 return False
-            # id, checkoutUrl, subtotalAmount must be strings
             if not all(
                 isinstance(obj[k], str) and "\n" not in obj[k]
                 for k in ["id", "checkoutUrl", "subtotalAmount"]
@@ -378,12 +396,22 @@ class ChatRequest(BaseModel):
                 return False
             if obj["subtotalAmount"].strip() and not _valid_price(obj["subtotalAmount"]):
                 return False
-            # lineItems must be a list of dicts
             if not isinstance(obj["lineItems"], list):
                 return False
             if not all(isinstance(item, dict) for item in obj["lineItems"]):
                 return False
             return True
+
+        def _valid_order(obj: Any) -> bool:
+            """Lenient check for order JSON."""
+            if not isinstance(obj, dict):
+                return False
+            orderish_keys = {
+                "OrderID", "FinancialStatus", "FulfillmentStatus",
+                "CustomerName", "CustomerPhone", "CustomerEmail",
+                "Items", "ShippingAddress", "Total"
+            }
+            return any(k in obj for k in orderish_keys)
 
         # ---------- Text utilities ----------
         def _remove_spans(s: str, spans: List[Tuple[int, int]]) -> str:
@@ -430,13 +458,12 @@ class ChatRequest(BaseModel):
         results: List[dict[str, Any]] = []
         remove_spans: List[Tuple[int, int]] = []
 
-        # 1) Handle fenced blocks: ```product or ```cart
-        fenced = re.compile(r"```(product|cart)\s*(.*?)```", re.DOTALL)
+        # 1) Handle fenced blocks
+        fenced = re.compile(r"```(product|cart|order)\s*(.*?)```", re.DOTALL)
         for m in fenced.finditer(text):
             block_type = m.group(1).lower()
             block_content = m.group(2).strip()
 
-            # Try parsing block_content directly as JSON
             try:
                 obj = json.loads(block_content)
             except json.JSONDecodeError:
@@ -448,6 +475,10 @@ class ChatRequest(BaseModel):
                 remove_spans.append((m.start(), m.end()))
             elif block_type == "cart" and _valid_cart(obj):
                 obj["type"] = "Cart"
+                results.append(obj)
+                remove_spans.append((m.start(), m.end()))
+            elif block_type == "order" and _valid_order(obj):
+                obj["type"] = "Order"
                 results.append(obj)
                 remove_spans.append((m.start(), m.end()))
 
@@ -469,13 +500,18 @@ class ChatRequest(BaseModel):
                 obj["type"] = "Cart"
                 results.append(obj)
                 spans2.append((s, e))
+            elif _valid_order(obj):
+                obj["type"] = "Order"
+                results.append(obj)
+                spans2.append((s, e))
 
         cleaned_text = _remove_spans(intermediate, spans2).strip()
         cleaned_text = re.sub(r"\[\s*\]", "", cleaned_text)
         cleaned_text = re.sub(r"\[\s*(?:,\s*)*\]", "", cleaned_text)
-        cleaned_text = re.sub(r"```(?:json|product|cart)?\s*```", "", cleaned_text, flags=re.MULTILINE)
+        cleaned_text = re.sub(r"```(?:json|product|cart|order)?\s*```", "", cleaned_text, flags=re.MULTILINE)
 
         return results, cleaned_text.strip()
+
 
     def openai_msgs(self) -> List[ChatCompletionMessageParam]:
         """Return full OpenAI-compatible msg list including history and user input."""
@@ -599,7 +635,7 @@ class ChatRequest(BaseModel):
                 "id": "gid://shopify/Cart/abc123?key=xyz789",
                 "checkoutUrl": "https://store.com/cart/c/xyz789?key=123456",
                 "subtotalAmount": "123.45 PKR",
-                "lineItems": "Pass the dictionary exactly as received — no modifications, no renaming, no restructuring."
+                "lineItems":[{"merchandise_title": "Clay Toy small", "quantity": 12, "merchandise_price": "12.99 PKR"}, {"merchandise_title": "Lego Block Toy Empire State Building" , "quantity": 1, "merchandise_price": "1200.0 PKR"}]
             }
             ```
 
@@ -631,7 +667,74 @@ class ChatRequest(BaseModel):
                 "id": "gid://shopify/Cart/hWN2VMsRlxJ6NFxkDHvupfec?key=e8b1bedbf1d5f8b1d4abe21d1613d286",
                 "checkoutUrl": "https://store-mobeen-pk.myshopify.com/cart/c/hWN2VMsRlxJ6NFxkDHvupfec?key=e8b1bedbf1d5f8b1d4abe21d1613d286",
                 "subtotalAmount": "1180.00 PKR",
-                "lineItems": "Pass the dictionary exactly as received — no modifications, no renaming, no restructuring."
+                "lineItems": [{"merchandise_title": "Clay Toy small", "quantity": 12, "merchandise_price": "12.99 PKR"}, {"merchandise_title": "Lego Block Toy Empire State Building" , "quantity": 1, "merchandise_price": "1200.0 PKR"}]
+            }
+            ```
+        """.strip()
+    
+    @property
+    def order_output_prompt(self) -> str:
+        return """
+            > All structured outputs must be wrapped in fenced code blocks.  
+            > Use exactly  ```json for order outputs.  
+            > You must provide order details **only** in the following JSON structure.
+            > **Every field is mandatory.**
+            > **No extra fields, no changes to key names, no formatting outside JSON.**
+            > If a value is unknown, you must use an empty string (`""`) — do not omit the field.
+            > If this exact format is not followed, the system will reject the input and terminate processing.
+
+            ```json
+            {
+                "OrderID": "#12341",
+                "FinancialStatus": "Paid",
+                "FulfillmentStatus": "Shipped",
+                "CustomerName": "Syed Raza Gufran",
+                "CustomerPhone": "0321******51",
+                "CustomerEmail": "dev**********gmail.com",
+                "Items" : " - Surfing Product, Qty: 12, UnitPrice : 234 PKR "
+                "ShippingAddress" "st 12 house no 234 main colony newyork sector d "
+                "Total": "123.14 PKR"
+            }
+            ```
+
+            ### **Rules**
+
+            1. `"OrderID"` → Shopify Order Number.
+            * Must be a valid Shopify Order string.
+            * Format: `"[identifier i.e. #, !, 💙][number i.e. 123 42531]"`.
+
+            2. `"FinancialStatus"` → Payment status of the order (e.g., Paid, Pending, Refunded).
+            * Must be written in a single line without spaces or breaks.
+
+            3. `"FulfillmentStatus"` → Shipping/Delivery status of the order (e.g., Shipped, Unshipped, Partially Shipped).
+            * Must be written in a single line without spaces or breaks.
+            
+            4. "CustomerName", "CustomerPhone", "CustomerEmail", "ShippingAddress"→ These fields contain the customer’s personal details. Sometimes part of the information may be hidden (e.g., masked with *), but you must still pass them exactly as received.
+            
+            5. "Total"
+            * Must include numeric value **and** standard currency.
+            * Example: `"1180.00 PKR"`.
+
+            6. `"Items"` → Line items multilines data.
+            * **Pass it exactly as received.**
+            * Do not alter field names, structure, or values.
+
+            5. **No additional fields** — Only the 4 keys above.
+            6. **All values must be single-line strings.**
+
+            **Example of VALID input**:
+
+            ```json
+            {
+                "OrderID": "#12341",
+                "FinancialStatus": "Paid",
+                "FulfillmentStatus": "Shipped",
+                "CustomerName": "Syed Raza Gufran",
+                "CustomerPhone": "0321******51",
+                "CustomerEmail": "dev**********gmail.com",
+                "Items": " - Surfing Product, Qty: 12, UnitPrice : 234 PKR",
+                "ShippingAddress": "st 12 house no 234 main colony newyork sector d",
+                "Total": "$249.99"
             }
             ```
         """.strip()

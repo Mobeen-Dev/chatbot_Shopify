@@ -48,7 +48,47 @@ async def async_chat_endpoint(chat_request: ChatRequest):
     session_id = chat_request.session_id
     print(f"\n\nUser message: {user_message} \n  Session ID: {session_id}\n\n")
     # return ChatResponse(reply="Hello! When it comes to apples, taste can vary depending on the variety rather than just the color. However, here are some general guidelines:\n\n- **Red apples:** Varieties like Fuji, Gala, and Red Delicious are sweet and juicy.\n- **Green apples:** Granny Smith apples are tart and crisp, great if you like a tangy flavor.\n- **Yellow apples:** Golden Delicious apples are sweet and mellow.\n\nIf you prefer sweet apples, you might enjoy red or yellow ones. If you like tart and crisp, green apples are a good choice.\n\nWould you like me to recommend some specific apple products available on Digilog?If you can only buy two types of apples for your fruit salad, I recommend:\n\n1. **Fuji or Gala (Red apple)** – for sweetness and juiciness.\n2. **Granny Smith (Green apple)** – for tartness and crisp texture.\n\nThis combination will give your fruit salad a nice balance of sweet and tart flavors with a good crunch. Would you like me to help you find these apples on Digilog?",
-    #                     stuctural_data=[{'link': 'https://digilog.pk/products/esp-01-esp8266-wifi-module-in-pakistan', 'imageurl': 'https://cdn.shopify.com/s/files/1/0559/7832/8150/files/ESP01_ESP_01_ESP8266_WiFi_Module_lahore_islamabad_karachi_multan_rawalpindi_1f5c781b-3dd8-4918-8043-18e105f0fd20.webp?v=1735049240&width=1400', 'title': 'Esp01 Esp 01 Esp8266 Wifi Module', 'price': '290 PKR', 'variants_options': ['Default Title'], 'description': 'ESP8266 WiFi Module provides integrated TCP/IP stack for easy WiFi access with any microcontroller. It features low power consumption, 1MB flash memory, supports SPI, UART, and integrated power management for efficient performance.', 'type': 'Product'}, {'link': 'https://digilog.pk/products/arduino-mkr1000-wifi-board-module-in-pakistan', 'imageurl': 'https://cdn.shopify.com/s/files/1/0559/7832/8150/files/Arduino_MKR1000_WiFi_Board_Module_In_Lahore_Karachi_Islamabad_Peshawar_Quetta_Mardan_Multan_Sibbi_Hyderabad_Faisalabad_Rawalpindi_Pakistan__1.webp?v=1735057239&width=1400', 'title': 'Arduino Mkr1000 Wifi Board Module', 'price': '5,500 PKR', 'variants_options': ['Default Title'], 'description': 'Arduino MKR1000 WiFi Board combines functional power with ease of use for IoT projects. It includes low power ARM MCU, encryption chip, LiPo battery charger, and supports WiFi b/g/n, ideal for secure and versatile networking.', 'type': 'Product'}, {'link': 'https://digilog.pk/products/ai-thinker-nodemcu-ai-wb2-13-wifi-bluetooth-5-0-module', 'imageurl': 'https://cdn.shopify.com/s/files/1/0559/7832/8150/files/Ai-ThinkerNodeMCU-Ai-WB2-13WiFiBluetooth5.0Module.webp?v=1735048366&width=1400', 'title': 'Ai-thinker Nodemcu-ai-wb2-13 Wifi Bluetooth 5.0 Module', 'price': '900 PKR', 'variants_options': ['Default Title'], 'description': 'Ai-Thinker WB2-13 Kit supports IEEE 802.11 b/g/n WiFi and Bluetooth BLE 5.0 with robust security protocols. Features include 32-bit RISC CPU, multiple interfaces, low power consumption, suitable for IoT, smart home, and wearable applications.', 'type': 'Product'}, {'link': 'https://digilog.pk/products/wt32-eth01-embedded-serial-port-networking-ethernet-ble-wifi-combo-gateway-mcu-esp32-wireless-module-board-wt32-eth01', 'imageurl': 'https://cdn.shopify.com/s/files/1/0559/7832/8150/files/WT32ETH01.webp?v=1735046836&width=1400', 'title': 'Wt32-eth01 Embedded Serial Port Networking Ethernet Ble Wifi Combo Gateway Mcu Esp32 Wireless Module Board Wt32 Eth01', 'price': '3,800 PKR', 'variants_options': ['Default Title'], 'description': 'WT32-ETH01 is a versatile IoT gateway module with ESP32 MCU offering WiFi, Bluetooth, Ethernet, and serial port connectivity. Perfect for industrial automation, smart home projects, and remote monitoring applications.', 'type': 'Product'},{'id': 'gid://shopify/Cart/hWN2a8uYLxk8Lcn16fGm1Wom?key=ffccb89ca229089966ba0ae5bef1b0c0', 'checkoutUrl': 'https://store-mobeen-pk.myshopify.com/cart/c/hWN2a8uYLxk8Lcn16fGm1Wom?key=ffccb89ca229089966ba0ae5bef1b0c0', 'subtotalAmount': '0.0 PKR', 'lineItems': [{'id': 'gid://shopify/CartLine/a72ac2a5-8486-4282-90b2-a576d0d08973?cart=hWN2a8uYLxk8Lcn16fGm1Wom', 'variant_id': 'gid://shopify/ProductVariant/41220052746326', 'quantity': 0}], 'type': 'Cart'}])
+    #     stuctural_data = [
+    #         {
+    #             "link": "https://digilog.pk/products/esp-01-esp8266-wifi-module-in-pakistan",
+    #             "imageurl": "https://cdn.shopify.com/s/files/1/0559/7832/8150/files/ESP01_ESP_01_ESP8266_WiFi_Module_lahore_islamabad_karachi_multan_rawalpindi_1f5c781b-3dd8-4918-8043-18e105f0fd20.webp?v=1735049240&width=1400",
+    #             "title": "Esp01 Esp 01 Esp8266 Wifi Module",
+    #             "price": "290 PKR",
+    #             "variants_options": ["Default Title"],
+    #             "description": "ESP8266 WiFi Module provides integrated TCP/IP stack for easy WiFi access with any microcontroller. It features low power consumption, 1MB flash memory, supports SPI, UART, and integrated power management for efficient performance.",
+    #             "type": "Product",
+    #         },
+    #         {
+    #             "link": "https://digilog.pk/products/arduino-mkr1000-wifi-board-module-in-pakistan",
+    #             "imageurl": "https://cdn.shopify.com/s/files/1/0559/7832/8150/files/Arduino_MKR1000_WiFi_Board_Module_In_Lahore_Karachi_Islamabad_Peshawar_Quetta_Mardan_Multan_Sibbi_Hyderabad_Faisalabad_Rawalpindi_Pakistan__1.webp?v=1735057239&width=1400",
+    #             "title": "Arduino Mkr1000 Wifi Board Module",
+    #             "price": "5,500 PKR",
+    #             "variants_options": ["Default Title"],
+    #             "description": "Arduino MKR1000 WiFi Board combines functional power with ease of use for IoT projects. It includes low power ARM MCU, encryption chip, LiPo battery charger, and supports WiFi b/g/n, ideal for secure and versatile networking.",
+    #             "type": "Product",
+    #         },
+    #         {
+    #             "link": "https://digilog.pk/products/ai-thinker-nodemcu-ai-wb2-13-wifi-bluetooth-5-0-module",
+    #             "imageurl": "https://cdn.shopify.com/s/files/1/0559/7832/8150/files/Ai-ThinkerNodeMCU-Ai-WB2-13WiFiBluetooth5.0Module.webp?v=1735048366&width=1400",
+    #             "title": "Ai-thinker Nodemcu-ai-wb2-13 Wifi Bluetooth 5.0 Module",
+    #             "price": "900 PKR",
+    #             "variants_options": ["Default Title"],
+    #             "description": "Ai-Thinker WB2-13 Kit supports IEEE 802.11 b/g/n WiFi and Bluetooth BLE 5.0 with robust security protocols. Features include 32-bit RISC CPU, multiple interfaces, low power consumption, suitable for IoT, smart home, and wearable applications.",
+    #             "type": "Product",
+    #         },
+    #         {
+    #             "link": "https://digilog.pk/products/wt32-eth01-embedded-serial-port-networking-ethernet-ble-wifi-combo-gateway-mcu-esp32-wireless-module-board-wt32-eth01",
+    #             "imageurl": "https://cdn.shopify.com/s/files/1/0559/7832/8150/files/WT32ETH01.webp?v=1735046836&width=1400",
+    #             "title": "Wt32-eth01 Embedded Serial Port Networking Ethernet Ble Wifi Combo Gateway Mcu Esp32 Wireless Module Board Wt32 Eth01",
+    #             "price": "3,800 PKR",
+    #             "variants_options": ["Default Title"],
+    #             "description": "WT32-ETH01 is a versatile IoT gateway module with ESP32 MCU offering WiFi, Bluetooth, Ethernet, and serial port connectivity. Perfect for industrial automation, smart home projects, and remote monitoring applications.",
+    #             "type": "Product",
+    #         },
+    #         {'id': 'gid://shopify/Cart/1234567890', 'checkoutUrl': 'https://checkout.shopify.com/1234567890', 'subtotalAmount': '$129.99', 'lineItems': [{"merchandise_title": 'Blue T-Shirt', "quantity":2, "merchandise_price":'$29.99'},{"merchandise_title": 'Black Jeans', "quantity":12, "merchandise_price":'$59.99'}], 'type': 'Cart'},
+    #         {'OrderID': '#12341', 'FinancialStatus': 'Paid', 'FulfillmentStatus': 'Shipped', 'CustomerName': 'Syed Raza Gufran', 'CustomerPhone': '0321******51', 'CustomerEmail': 'dev**********gmail.com', "Items": " - Surfing Product, Qty: 12, UnitPrice : 234 PKR \n  - Safety Product, Qty: 4, UnitPrice : 120 PKR \n  - Saketing Product, Qty: 6, UnitPrice : 234 PKR \n", 'ShippingAddress': 'st 12 house no 234 main colony newyork sector d', 'Total': '$249.99', 'type': 'Order'}
+    #     ]
+    # )
     if not user_message:
         raise HTTPException(status_code=400, detail="Message cannot be empty.")
     if not session_id:
@@ -124,7 +164,7 @@ async def process_with_tools(client, chat_request, tools_list) -> ChatCompletion
             model=llm_model,
             tools=tools_list,
             messages=chat_request.openai_msgs(),
-            tool_choice="auto",
+            tool_choice="auto"
         )
         
         assistant_message = response.choices[0].message

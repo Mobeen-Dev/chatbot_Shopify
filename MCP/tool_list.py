@@ -62,7 +62,7 @@ tools_list: list[ChatCompletionToolParam] = [
   {
     "type": "function",
     "function": {
-      "name": "create_cart",
+      "name": "create_new_cart_with_items",
       "description": "Create a new shopping cart with initial items.",
       "parameters": {
         "type": "object",

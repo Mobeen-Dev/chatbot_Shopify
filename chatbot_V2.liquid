@@ -1,372 +1,5 @@
-<style>
-    /* Scoped styles that won't affect the rest of the website */
-    #chat-container {
-        --chat-primary: #3b4847c7;
-        --chat-primary-container: #314341b7;
-        --chat-on-primary: #ffffff;
-        --chat-on-primary-container: #eeeeeeff;
-        --chat-secondary: #4a6267;
-        --chat-surface: #fafdfd;
-        --chat-surface-variant: #dbe4e6;
-        --chat-on-surface: #191c1d;
-        --chat-on-surface-variant: #3f484a;
-        --chat-outline: #6f797a;
-        --chat-shadow: rgba(0, 0, 0, 0.15);
-        --chat-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.3);
-        --chat-elevation-2: 0 1px 3px rgba(184, 77, 77, 0.15), 0 4px 8px rgba(0, 0, 0, 0.15);
-        --chat-elevation-3: 0 4px 10px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.15);
-        --chat-radius-small: 14px;
-        --chat-radius-medium: 16px;
-        --chat-radius-large: 28px;
-        --chat-font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-        
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        z-index: 1000;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        font-family: var(--chat-font-main);
-        color: var(--chat-on-surface);
-        line-height: normal;
-        box-sizing: border-box;
-    }
-    
-    /* Reset for all elements inside chat container */
-    #chat-container * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: var(--chat-font-main);
-        line-height: normal;
-    }
+{{ 'styles.css' | asset_url | stylesheet_tag }}
 
-    /* Chat toggle button */
-    #chat-container #chat-toggle {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        background-color: var(--chat-primary);
-        color: var(--chat-on-primary);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-shadow: var(--chat-elevation-2);
-        transition: all 0.2s ease;
-        z-index: 2;
-        border: none;
-        outline: none;
-    }
-
-    #chat-container #chat-toggle:hover {
-        background-color: #293131;
-        box-shadow: var(--chat-elevation-3);
-    }
-
-    #chat-container .chat-icon {
-        font-size: 24px;
-        font-family: 'Material Icons';
-        font-weight: normal;
-        font-style: normal;
-        line-height: 1;
-        letter-spacing: normal;
-        text-transform: none;
-        display: inline-block;
-        white-space: nowrap;
-        word-wrap: normal;
-        direction: ltr;
-        -webkit-font-feature-settings: 'liga';
-        -webkit-font-smoothing: antialiased;
-    }
-
-    /* Chat window */
-    #chat-container #chat-window {
-        position: absolute;
-        bottom: 70px;
-        right: 0;
-        width: 450px;
-        height: 500px;
-        border-radius: var(--chat-radius-large);
-        background-color: var(--chat-surface);
-        box-shadow: var(--chat-elevation-3);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        transform-origin: bottom right;
-        transform: scale(0);
-        opacity: 0;
-    }
-
-    #chat-container #chat-window.open {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    /* Chat header */
-    #chat-container #chat-header {
-        background-color: var(--chat-primary);
-        color: var(--chat-on-primary);
-        padding: 10px 20px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        box-shadow: var(--chat-elevation-1);
-    }
-
-    #chat-container #chat-header h3 {
-        font-size: 16px;
-        font-weight: 500;
-        margin: 0;
-        padding: 0;
-        color: var(--chat-on-primary);
-    }
-
-    /* Chat messages area */
-    #chat-container #chat-messages {
-        flex: 1;
-        overflow-y: auto;
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        background-color: var(--chat-surface);
-    }
-
-    #chat-container .message {
-        max-width: 85%;
-        padding: 14px 16px;
-        border-radius: var(--chat-radius-medium);
-        font-size: 14px;
-        line-height: 1.4;
-        box-shadow: none;
-        border: none;
-    }
-
-    #chat-container .bot-message {
-        align-self: flex-start;
-        background-color: var(--chat-surface-variant);
-        color: var(--chat-on-surface-variant);
-        border-bottom-left-radius: 4px;
-    }
-
-    #chat-container .user-message {
-        align-self: flex-end;
-        background-color: var(--chat-primary-container);
-        color: var(--chat-on-primary-container);
-        border-bottom-right-radius: 4px;
-    }
-
-    /* Product card */
-    #chat-container .product-card {
-        width: 100%;
-        background-color: var(--chat-surface);
-        border-radius: var(--chat-radius-medium);
-        overflow: hidden;
-        border: 1px solid var(--chat-surface-variant);
-        box-shadow: var(--chat-elevation-1);
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        text-decoration: none;
-        color: inherit;
-    }
-
-    #chat-container .product-card:hover {
-        box-shadow: var(--chat-elevation-2);
-        transform: translateY(-2px);
-    }
-
-    #chat-container .product-image {
-        width: 90px;
-        height: 90px;
-        object-fit: cover;
-        margin-left: 10px;
-    }
-
-    #chat-container .product-info {
-        padding: 12px;
-        flex: 1;
-    }
-
-    #chat-container .product-title {
-        font-size: 15px;
-        font-weight: 500;
-        margin-bottom: 4px;
-        color: var(--chat-on-surface);
-    }
-
-    #chat-container .product-price {
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--chat-primary);
-    }
-
-    /* Chat input area */
-    #chat-container #chat-input-container {
-        padding: 8px 10px;
-        border-top: 1px solid var(--chat-surface-variant);
-        display: flex;
-        gap: 8px;
-        background-color: var(--chat-surface);
-        align-items: center;
-    }
-
-    #chat-container #chat-input {
-        flex: 1;
-        padding: 8px 10px;
-        border-radius: var(--chat-radius-medium);
-        border: 1px solid var(--chat-outline);
-        background-color: var(--chat-surface);
-        font-family: var(--chat-font-main);
-        font-size: 15px;
-        outline: none;
-        transition: border 0.2s ease;
-        resize: none;
-        min-height: 48px;
-        max-height: 120px;
-        overflow-y: auto;
-        line-height: 1.4;
-        color: var(--chat-on-surface);
-    }
-    #chat-container #chat-input:focus {
-        border-color: var(--chat-primary);
-    }
-
-    #chat-container #send-button {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background-color: var(--chat-primary);
-        color: var(--chat-on-primary);
-        border: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-        padding: 0;
-    }
-
-    #chat-container #send-button:hover {
-        background-color: #293131;
-    }
-
-    /* Typing indicator - Material 3 style */
-    #chat-container .typing-indicator {
-        display: flex;
-        align-items: center;
-        align-self: flex-start;
-        background-color: var(--chat-primary-container);
-        padding: 10px 16px;
-        border-radius: var(--chat-radius-medium);
-        border-bottom-left-radius: 4px;
-        margin-top: 8px;
-        box-shadow: var(--chat-elevation-1);
-    }
-
-    #chat-container .typing-indicator .dot {
-        height: 8px;
-        width: 8px;
-        border-radius: 50%;
-        background-color: var(--chat-primary);
-        display: inline-block;
-        margin-right: 5px;
-        animation: chat-typing 1.4s infinite;
-    }
-
-    #chat-container .typing-indicator .dot:nth-child(2) {
-        animation-delay: 0.2s;
-    }
-
-    #chat-container .typing-indicator .dot:nth-child(3) {
-        animation-delay: 0.4s;
-        margin-right: 8px;
-    }
-    
-    #chat-container .typing-indicator .text {
-        color: var(--chat-on-primary-container);
-        font-size: 14px;
-        font-weight: 500;
-    }
-
-    @keyframes chat-typing {
-        0% { transform: translateY(0); }
-        50% { transform: translateY(-5px); }
-        100% { transform: translateY(0); }
-    }
-    
-    /* Disabled input state */
-    #chat-container #chat-input:disabled {
-        background-color: var(--chat-surface-variant);
-        color: var(--chat-on-surface-variant);
-        opacity: 0.7;
-        cursor: not-allowed;
-    }
-    
-    #chat-container #send-button:disabled {
-        background-color: var(--chat-surface-variant);
-        color: var(--chat-on-surface-variant);
-        opacity: 0.7;
-        cursor: not-allowed;
-    }
-    
-    /* Chat header options */
-    #chat-container .header-option {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        margin-right: 8px;
-        transition: background-color 0.2s ease;
-    }
-    
-    #chat-container .header-option:hover {
-        background-color: rgba(255, 255, 255, 0.2);
-    }
-    
-    #chat-container .header-option .chat-icon {
-        font-size: 20px;
-        color: var(--chat-on-primary);
-    }
-    
-    /* System message */
-    #chat-container .system-message {
-        align-self: center;
-        background-color: var(--chat-primary-container);
-        color: var(--chat-on-primary-container);
-        font-size: 14px;
-        padding: 8px 14px;
-        border-radius: var(--chat-radius-small);
-        margin: 8px 0;
-        opacity: 1;
-        transition: opacity 0.3s ease;
-    }
-    
-    /* Error message */
-    #chat-container .error-message {
-        background-color: #ffebee;
-        color: #b71c1c;
-        border-left: 4px solid #f44336;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 480px) {
-        #chat-container #chat-window {
-            width: calc(100vw - 48px);
-            height: 60vh;
-            bottom: 70px;
-            right: 0;
-        }
-    }
-</style>
 
 <body>
     <!-- Chat Container -->
@@ -403,6 +36,7 @@
     </div>
 
     <script>
+
         // Load Material Icons font inline without external dependencies
         (function() {
             // Only execute if Material Icons are not already loaded
@@ -608,15 +242,6 @@
                 this.chatInput.value = '';
                 this.chatInput.style.height = 'auto';
 
-                if (this.cartId !== '') {
-                message += `Use my cart ID as the main cart for all cart-related actions: ${this.cartId}. `;
-                }
-
-                if (this.sessionId !== '') {
-                message += `Use my session ID when creating a cart to ensure my records are tracked correctly: ${this.sessionId}. `;
-                }
-
-
                 // Add to conversation history if remember mode is on
                 if (!this.rememberMode) {
                     this.conversationHistory.push({ role: 'user', content: message });
@@ -630,7 +255,7 @@
                     // For demo purposes, use local response processor
                     // In production, this would call the backend API
                     const response = await this.getAIResponse(message);
-                    console.log(`AI response: ${JSON.stringify(response)}`);
+                    console.log(`Line 633 getAIResponse : ${JSON.stringify(response)}`);
                     this.hideTypingIndicator();
                     
                     console.log(`Received Formatted response: ${response}`);  
@@ -640,22 +265,20 @@
                     }
                     let productList = [];
 
-                    if (response.structural_data && response.structural_data.length > 0) {
-                        response.structural_data.forEach((data) => {
+                    if (response.stuctural_data && response.stuctural_data.length > 0) {
+                        response.stuctural_data.forEach((data) => {
                             if (data.type === "Product") {
                                 productList.push(data);
                             } else if (data.type === "Cart") {
                                 this.addCartFromResponse(data);
+                            } else if (data.type === "Order") {
+                                this.addOrderFromResponse(data);
                             }
                         });
 
                         if (productList.length > 0) {
                             this.addProductsFromResponse(productList);
                         }
-                    }
-
-                    if (response.products.length > 0) {
-                        this.addProductsFromResponse(response.products);
                     }
                     
                     // Add AI response to history if remember mode is on
@@ -907,7 +530,7 @@
                     {% comment %} history: this.rememberMode ? this.conversationHistory : [], {% endcomment %}
                     session_id: this.sessionId
                 };
-                const response = await this.makeRequest(requestData);
+                let response = await this.makeRequest(requestData);
                 this.conversationHistory = response.history;
                 const reply = response.reply; 
 
@@ -932,10 +555,8 @@
                 const formattedReply = this.renderMarkdown(reply);                
                 {% comment %} return formattedReply; {% endcomment %}
                 
-                return {
-                "reply": formattedReply,
-                "products": response.products || []
-                }
+                response.reply = formattedReply
+                return response
             }
             
             
@@ -1131,8 +752,14 @@
                 // Add intro message
                 this.addMessage("Products recommendations :", 'bot');
                 
+                const sortedProducts = products.sort((a, b) => {
+                    const priceA = parseFloat(a.price.slice(0, -4)) || 0;
+                    const priceB = parseFloat(b.price.slice(0, -4)) || 0;
+                    return priceA - priceB; // ascending
+                });
+
                 // Add each product
-                products.forEach((product, index) => {
+                sortedProducts.forEach((product, index) => {
                     setTimeout(() => {
                         this.addProduct(product);
                     }, index * 300);
@@ -1168,47 +795,115 @@
             
             // Add cart from response
             addCartFromResponse(cart) {
-                // Intro message
-                this.addMessage("🛒 Here's your cart:", 'bot');
+                const cartDiv = document.createElement('div');
+                cartDiv.classList.add('message', 'bot-message', 'cart-wrapper');
 
-                if (!cart.lineItems || cart.lineItems.length === 0) {
-                    this.addMessage("Your cart is empty.", 'bot');
-                    return;
+                let html = `<p class="cart-header">🛒 Here's your cart:</p>`;
+                html += `<hr class="cart-header-divider">`;
+
+                if (!cart.lineItems) {
+                    html += `<p>Your cart is empty.</p><hr class="divider">`;
+                } else {
+                    html += `<div class="cart-products">`;
+
+                    cart.lineItems.forEach((item, index) => {
+                        const title = item.merchandise_title || "Unnamed product";
+                        const qty = item.quantity || 1;
+                        const price = item.merchandise_price || "Price Not Confirmed";
+
+                        // Truncate long product names
+                        const safeTitle = title.length > 50 ? title.slice(0, 50) + "…" : title;
+
+                        html += `
+                            <div class="cart-item">
+                                <span class="cart-title">${safeTitle}</span>
+                                <span class="cart-price">${price} × ${qty}</span>
+                            </div>
+                        `;
+                        if (index < cart.lineItems.length - 1) {
+                            html += `<hr class="divider">`;
+                        }
+                    });
+
+                    html += `</div>`;
+                    html += `<hr class="divider subtotal-divider">`;
+                    html += `<p class="subtotal">Subtotal: ${cart.subtotalAmount || "$0.00"}</p>`;
+
+                    if (cart.checkoutUrl) {
+                        html += `
+                            <a class="checkout-link" href="${cart.checkoutUrl}" target="_blank" rel="noopener noreferrer">
+                                Proceed to Checkout — ${cart.subtotalAmount || ""}
+                            </a>
+                        `;
+                    }
                 }
 
-                // Add each line item
-                cart.lineItems.forEach((item, index) => {
-                    setTimeout(() => {
-                        this.addCartItem(item);
-                    }, index * 300);
-                });
+                cartDiv.innerHTML = html;
+                this.chatMessages.appendChild(cartDiv);
 
-                // Subtotal
-                setTimeout(() => {
-                    this.addMessage(`Subtotal: ${cart.subtotalAmount}`, 'bot');
-                }, cart.lineItems.length * 300 + 200);
+                // Always scroll chat down
+                this.scrollToBottom();
+            }
+            
+            // Render order summary in chat
+            addOrderFromResponse(order) {
+                const chatMessages = document.getElementById("chat-messages");
 
-                // Checkout link
-                setTimeout(() => {
-                    const checkoutDiv = document.createElement('div');
-                    checkoutDiv.classList.add('message', 'bot-message');
+                const orderDiv = document.createElement("div");
+                orderDiv.classList.add("message", "bot-message", "order-wrapper");
 
-                    const checkoutLink = document.createElement('a');
-                    checkoutLink.classList.add('product-card');
-                    checkoutLink.href = cart.checkoutUrl;
-                    checkoutLink.target = "_blank";
-                    checkoutLink.rel = "noopener noreferrer";
-                    checkoutLink.innerHTML = `
-                        <div class="product-info">
-                            <h4 class="product-title">Proceed to Checkout</h4>
-                            <p class="product-price">${cart.subtotalAmount}</p>
-                        </div>
-                    `;
-                    checkoutDiv.appendChild(checkoutLink);
-                    this.chatMessages.appendChild(checkoutDiv);
-                    this.scrollToBottom();
-                }, cart.lineItems.length * 300 + 500);
-            },
+                let html = `<p class="order-header">📦 Your Order Summary</p>`;
+                html += `<hr class="order-divider">`;
+
+                // Safe extractors
+                const safe = (val, fallback = "—") => (val && String(val).trim() ? val : fallback);
+
+                html += `
+                    <div class="order-info">
+                        <div class="order-row"><strong>Order ID:</strong> ${safe(order.OrderID)}</div>
+                        <div class="order-row"><strong>Status:</strong> ${safe(order.FinancialStatus)} / ${safe(order.FulfillmentStatus)}</div>
+                        <div class="order-row"><strong>Customer:</strong> ${safe(order.CustomerName)}</div>
+                        <div class="order-row"><strong>Phone:</strong> ${safe(order.CustomerPhone)}</div>
+                        <div class="order-row"><strong>Email:</strong> ${safe(order.CustomerEmail)}</div>
+                `;
+
+                {% comment %} if (order.Items) {
+                    html += `<div class="order-row"><strong>Items:</strong> ${order.Items}</div>`;
+                } {% endcomment %}
+
+                if (order.Items) {
+                    const items = order.Items.split("^break^");
+                    console.log(items)
+                    let itemsHtml = "<div class='order-row'><strong>Items:</strong><br>";
+
+                    items.forEach((item, index) => {
+                        itemsHtml += `${item.trim()}`;
+                        if (index < items.length - 1) {
+                            itemsHtml += "<br>"; // add line break between items
+                        }
+                    });
+
+                    itemsHtml += "</div>";
+                    html += itemsHtml;
+                }
+
+                if (order.ShippingAddress) {
+                    html += `<div class="order-row"><strong>Ship To:</strong> ${order.ShippingAddress}</div>`;
+                }
+
+                html += `
+                        <div class="order-row total"><strong>Total:</strong> ${safe(order.Total, "$0.00")}</div>
+                    </div>
+                `;
+
+                orderDiv.innerHTML = html;
+                chatMessages.appendChild(orderDiv);
+
+                // Auto scroll
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+
 
 
             // Add individual cart item
@@ -1283,6 +978,7 @@
                 return new Promise(resolve => setTimeout(resolve, ms));
             }
         }
+        
     </script>   
 </body>
 

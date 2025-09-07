@@ -139,6 +139,10 @@ class Shopify:
                 ... on ProductVariant {
                   id
                   title
+                  price {
+                    amount
+                    currencyCode
+                  }
                   product {
                     title
                   }
@@ -236,7 +240,7 @@ class Shopify:
     result = await self.send_storefront_mutation(mutation, variables)
     cart = result.get("data",{}).get("cartCreate",{}).get("cart",{})
     # print(variables,"\n\n")
-    return self.format_cart(cart)
+    return self.format_cart(cart, pretify_line_items=True)
 
   async def query_cart(self, id:str, dict_format=False) -> dict:
     query = """
@@ -264,6 +268,10 @@ class Shopify:
                   ... on ProductVariant {
                   id
                   title
+                  price {
+                    amount
+                    currencyCode
+                  }
                   product {
                     title
                   }
@@ -307,7 +315,7 @@ class Shopify:
     cart = result.get("data",{}).get("cart",{})
     
     print(cart,"\n\n")
-    return self.format_cart(cart, dict_format)
+    return self.format_cart(cart, dict_format, pretify_line_items=True)
 
   async def addCartLineItems(self, cartId:str, lineItems:List[dict[str,str|int]]):
     mutation = """
@@ -335,6 +343,10 @@ class Shopify:
                   ... on ProductVariant {
                     id
                   title
+                  price {
+                    amount
+                    currencyCode
+                  }
                   product {
                     title
                   }
@@ -414,7 +426,7 @@ class Shopify:
     
     cart = result.get("data",{}).get("cartLinesAdd",{}).get("cart",{})
     # print(cart,"\n\n")
-    return self.format_cart(cart)
+    return self.format_cart(cart, pretify_line_items=True)
 
   async def removeCartLineItems(self, cartId:str, lineItems:List[dict[str,str]]):
     cart = await self.query_cart(cartId, True)
@@ -446,6 +458,10 @@ class Shopify:
                   ... on ProductVariant {
                     id
                   title
+                  price {
+                    amount
+                    currencyCode
+                  }
                   product {
                     title
                   }
@@ -523,7 +539,7 @@ class Shopify:
     
     cart = result.get("data",{}).get("cartLinesRemove",{}).get("cart",{})
     # print(cart,"\n\n")
-    return self.format_cart(cart)
+    return self.format_cart(cart, pretify_line_items=True)
   
   async def updateCartLineItems(self, cartId:str, lineItems:List[dict[str,str|int]]):
     cart = await self.query_cart(cartId, True)
@@ -553,6 +569,10 @@ class Shopify:
                   ... on ProductVariant {
                     id
                   title
+                  price {
+                    amount
+                    currencyCode
+                  }
                   product {
                     title
                   }
@@ -631,7 +651,7 @@ class Shopify:
     
     cart = result.get("data",{}).get("cartLinesUpdate",{}).get("cart",{})
     # print(cart,"\n\n")
-    return self.format_cart(cart)
+    return self.format_cart(cart, pretify_line_items=True)
 
   async def fetch_mapping_products(self):
     all_products:list = []
@@ -1562,8 +1582,11 @@ class Shopify:
 
         # Customer
         lines.append(f"CustomerName: {customer.get('displayName', 'N/A')}")
+        data = None
         
-        data = shipping.get('phone', None)
+        if shipping:
+          data = shipping.get('phone', None)
+        
         if not data:
             _data = order.get("billingAddress", {}).get("phone", None)
             if not _data :
@@ -1579,7 +1602,10 @@ class Shopify:
             lines.append(f"CustomerEmail: {mask_email(mail)}")
 
         # Shipping
-        lines.append(f"ShippingAddress: {shipping.get('address1', 'N/A')}")
+        if shipping:
+          lines.append(f"ShippingAddress: {shipping.get('address1', 'N/A')}")
+        else:
+          lines.append("ShippingAddress: SELF_PICKUP at Store")
 
         # Items
         lines.append("Items:")
@@ -1592,7 +1618,7 @@ class Shopify:
             if product:
                 title = product.get("title", "Unknown Product")
                 price = product.get("priceRangeV2", {}).get("minVariantPrice", {}).get("amount", "0")
-                lines.append(f"  - {title}, Qty: {quantity}, UnitPrice: {price}")
+                lines.append(f"⇒ {title}, Qty: {quantity}, UnitPrice: {price} ^break^ ")
             else:
                 lines.append(f"  - Unknown Product, Qty: {quantity}")
 
@@ -1657,8 +1683,11 @@ class Shopify:
         elif pretify_line_items:
           formatted_items = []
           for  item in line_items:
-            product_title = item["node"]["merchandise"]["product"]["title"]
-            variant_title = item["node"]["merchandise"]["title"]
+            data = item["node"]["merchandise"]
+            amount = data["price"]
+            product_title = data["product"]["title"]
+            variant_title = data["title"]
+            total_price = amount["amount"]+" "+amount["currencyCode"]
             if variant_title == "Default Title":
               variant_title = " "
             else:
@@ -1666,7 +1695,8 @@ class Shopify:
             formatted_items.append(
               {
               "merchandise_title": product_title+variant_title,
-              "quantity":item["node"]["quantity"]
+              "quantity":item["node"]["quantity"],
+              "merchandise_price":total_price
               }
             )
             return formatted_items

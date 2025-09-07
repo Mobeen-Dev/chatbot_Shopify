@@ -1,7 +1,7 @@
 from models import ChatRequest
 import json
 from typing import List, Dict, Any, Union
-from config import settings, embeddind_model
+from config import settings, embeddind_model, order_prefix
 from logger import get_logger
 from wrapper_chroma import ChromaRetriever
 from Shopify import Shopify
@@ -23,6 +23,7 @@ class Controller:
         vector_db_flag = False
         shopify_flag = False
         cart_flag = False
+        order_flag = False
     
         for tool_call in tool_calls:
             function_name = tool_call.function.name
@@ -30,7 +31,7 @@ class Controller:
 
             if function_name == "get_products_data":
                 query = arguments["query"]
-                top_k = arguments.get("top_k_result", 7)
+                top_k = arguments.get("top_k_result", 6)
 
                 # Call the actual function
                 tool_output = await self.get_products_data(query, top_k)
@@ -51,11 +52,22 @@ class Controller:
                 
                 shopify_flag = True
                 
-            elif function_name == "create_cart":
+            elif function_name == "get_order_via_order_number":
+                order_number = arguments["order_number"]
+                
+                # Call the actual function
+                tool_output = await self.get_order_via_order_number(order_number)
+
+                # Append tool response to messages
+                chat_request.append_tool_response(tool_output, tool_call.id)
+                
+                order_flag = True
+                
+            elif function_name == "create_new_cart_with_items":
                 items = arguments["items"]
                 session_id = arguments.get("session_id", "default")
 
-                tool_output = await self.create_cart(items, session_id)
+                tool_output = await self.create_new_cart_with_items(items, session_id)
                 cart_flag = True
                 chat_request.append_tool_response(str(tool_output), tool_call.id)
 
@@ -90,13 +102,16 @@ class Controller:
                 cart_flag = True
                 chat_request.append_tool_response(str(tool_output), tool_call.id)
 
-                    
+            else:
+                raise ReferenceError
         if vector_db_flag:
             chat_request.append_vectorDb_prompt()
         if shopify_flag:
             chat_request.append_stuctural_output_prompt()
         if cart_flag:
             chat_request.append_cart_output_prompt()
+        if order_flag:
+            chat_request.append_order_output_prompt()
         
         return chat_request
 
@@ -106,7 +121,9 @@ class Controller:
         Function for fetching product data based on a query.
         This interact with a Comapany Vector database.
         """
-        results = await self.vector_store.query_chroma(query=query, top_k=top_k+3)
+        if top_k < 5:
+            top_k += 3
+        results = await self.vector_store.query_chroma(query=query, top_k=top_k)
         results = json.dumps(results)
         results = "#VectorDB-"+results  # Added Identifier for future Actions
         return results 
@@ -130,8 +147,8 @@ class Controller:
         Returns structured data ready for LLM.
         """
         # Ensure order number starts with "#"
-        if not order_number.startswith("#"):
-            order_number = f"#{order_number}"
+        if not order_number.startswith(str(order_prefix)):
+            order_number = f"{order_prefix}{order_number}"
 
         # Fetch from store
         data = await self.store.fetch_order_by_name(order_number)
@@ -144,7 +161,7 @@ class Controller:
         return formatted
 
 # StoreFront API
-    async def create_cart(self, items: List[Dict[str, Union[str, int]]], session_id: str = "default") -> Dict[str, Any]:
+    async def create_new_cart_with_items(self, items: List[Dict[str, Union[str, int]]], session_id: str = "default") -> Dict[str, Any]:
         await self.store.init_handle_id_table()
         """
         Create a new shopping cart with initial items.
@@ -216,6 +233,7 @@ class Controller:
             # Success response
             return {
                 "success": True,
+                "message": 'Your Request is fulfilled please check the cart details in "cart" ',
                 "cart": data.get("cart", data)  # fallback if "cart" not explicitly returned
             }
 
@@ -510,6 +528,7 @@ class Controller:
             # Success response
             return {
                 "success": True,
+
                 "cart": data.get("cart", data)  # fallback if "cart" not explicitly returned
             }
 

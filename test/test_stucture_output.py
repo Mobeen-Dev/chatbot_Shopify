@@ -6,8 +6,8 @@ from openai.types.chat import ChatCompletionMessageToolCall, ChatCompletionMessa
 import re
 
 
-data = """
-```product
+data1 = """
+```json
 {
 "link": "https://digilog.pk/products/esp-01-esp8266-wifi-module-in-pakistan",
 "imageurl": "https://cdn.shopify.com/s/files/1/0559/7832/8150/files/ESP01_ESP_01_ESP8266_WiFi_Module_lahore_islamabad_karachi_multan_rawalpindi_1f5c781b-3dd8-4918-8043-18e105f0fd20.webp?v=1735049240&width=1400",
@@ -49,8 +49,8 @@ data = """
 ```
 """
 
-data2 = """
-```cart
+data22 = """
+```json
 {
   "id": "gid://shopify/Cart/hWN2a8uYLxk8Lcn16fGm1Wom?key=ffccb89ca229089966ba0ae5bef1b0c0",
   "checkoutUrl": "https://store-mobeen-pk.myshopify.com/cart/c/hWN2a8uYLxk8Lcn16fGm1Wom?key=ffccb89ca229089966ba0ae5bef1b0c0",
@@ -66,8 +66,33 @@ data2 = """
 ```
 """
 
+test_cart_text = """
+Here is a Shopify cart object we received:
+
+{
+    "id": "gid://shopify/Cart/1234567890",
+    "checkoutUrl": "https://checkout.shopify.com/1234567890",
+    "subtotalAmount": "$129.99",
+    "lineItems": [
+        {
+            "title": "Blue T-Shirt",
+            "quantity": 2,
+            "price": "$29.99"
+        },
+        {
+            "title": "Black Jeans",
+            "quantity": 1,
+            "price": "$69.99"
+        }
+    ]
+}
+
+Thanks.
+"""
+
+
 data3 = """
-```cart
+```json
 {
     "id": "gid://shopify/Cart/hWN2a9Jvj5IRGIK4fZCczGAW?key=94d2d93dbe9f6aa8daeafae85b7fd443",
     "checkoutUrl": "https://store-mobeen-pk.myshopify.com/cart/c/hWN2a9Jvj5IRGIK4fZCczGAW?key=94d2d93dbe9f6aa8daeafae85b7fd443",
@@ -83,7 +108,41 @@ data3 = """
 ```
 """
 
+data4 = """
+```json
+{
+    "OrderID": "#12341",
+    "FinancialStatus": "Paid",
+    "FulfillmentStatus": "Shipped",
+    "CustomerName": "Syed Raza Gufran",
+    "CustomerPhone": "0321******51",
+    "CustomerEmail": "dev**********gmail.com",
+    "Items": " - Surfing Product, Qty: 12 ",
+    "ShippingAddress": "st 12 house no 234 main colony newyork sector d",
+    "Total": "$249.99"
+}
+```
+"""
 
+test_text = """
+Hello team, please check this order:
+
+{
+    "OrderID": "#12341",
+    "FinancialStatus": "Paid",
+    "FulfillmentStatus": "Shipped",
+    "CustomerName": "Syed Raza Gufran",
+    "CustomerPhone": "0321******51",
+    "CustomerEmail": "dev**********gmail.com",
+    "Items": " - Surfing Product, Qty: 12, UnitPrice : 234 PKR \n  - Safety Product, Qty: 4, UnitPrice : 120 PKR \n  - Saketing Product, Qty: 6, UnitPrice : 234 PKR \n",
+    "ShippingAddress": "st 12 house no 234 main colony newyork sector d",
+    "Total": "$249.99"
+}
+
+Thanks.
+"""
+
+gpt5_output = 'Here are great WiFi-ready microcontroller boards for IoT projects. Pick based on your performance needs, budget, and form factor preference.\n\n```product\n{\n"link": "https://digilog.pk/products/espressif-esp32-wroom-32d-development-board",\n"imageurl": "https://cdn.shopify.com/s/files/1/0559/7832/8150/files/Espressif_ESP32_WROOM_32D_Development_Board.webp?v=1735056350",\n"title": "Espressif Esp32 Wroom 32d Development Board Esp32d Esp 32d",\n"price": "1,199 PKR",\n"variants_options" : ["Default Title"],\n"description": "Dual‑core 240 MHz ESP32 with 802.11 b/g/n Wi‑Fi and Bluetooth (Classic + BLE) • 4MB flash, CP2102 USB‑UART, breadboard‑friendly headers • Rich peripherals: ADC, DAC, UART, SPI, I2C, PWM, touch, hall sensor • AWS FreeRTOS/ESP‑IDF/Arduino IDE support • Ideal for robust IoT, home automation, sensors, and gateways at a great value"\n}\n```\n\n```product\n{\n"link": "https://digilog.pk/products/raspberry-pi-pico-w",\n"imageurl": "https://cdn.shopify.com/s/files/1/0559/7832/8150/files/Raspberry_Pi_Pico_W_1_4807f6c2-75a5-4121-8ae9-4a90a7998461.webp?v=1735105109",\n"title": "Raspberry Pi Pico w",\n"price": "2,700 PKR",\n"variants_options" : ["Default Title"],\n"description": "RP2040 dual‑core 133 MHz with 2.4 GHz 802.11n Wi‑Fi (CYW43439) • 26 GPIO, 2MB flash, PIO, ADC, PWM • Compact, low‑power board ideal for sensors and automation • Program with MicroPython or C/C++ • Great for learning, quick prototyping, and Wi‑Fi‑enabled embedded tasks"\n}\n```\n\n```product\n{\n"link": "https://digilog.pk/products/nodemcu-v2-lua-esp8266-development-board-cp2102-in-pakistan",\n"imageurl": "https://cdn.shopify.com/s/files/1/0559/7832/8150/files/CP2102_NodeMcu_v2_ESP8266_Lua_ESP8266_WIFI_Development_Board_IoT_Development_Board_3b75fb14-0c10-433b-a550-1224bf7cb475.webp?v=1735049397",\n"title": "NodeMCU V2 Lua Wifi Iot Development Board Esp 12E Esp8266 In Pakistan",\n"price": "680 PKR",\n"variants_options" : ["Default Title"],\n"description": "Budget‑friendly ESP8266 Wi‑Fi board for simple IoT • 11 b/g/n Wi‑Fi, TCP/IP stack • Easy USB programming via CP2102; Arduino IDE and Lua supported • Breadboard‑friendly, onboard 3.3V regulator • Best for basic Wi‑Fi sensors, relays, and dashboards at ultra‑low cost"\n}\n```\n\n```product\n{\n"link": "https://digilog.pk/products/esp32-cam-wifi-bluetooth-camera-module-development-board-esp32-with-camera-module-ov2640-for-arduino",\n"imageurl": "https://cdn.shopify.com/s/files/1/0559/7832/8150/files/ESP32-CAM_WiFi___Bluetooth_Camera_Module_Development_Board_ESP32_With_Camera_Module_OV2640_islamabad_karachi_e0458bad-9c46-4dbf-850e-3e8bb74f848d.webp?v=1735050012",\n"title": "Esp32-cam Wifi + Bluetooth Camera Module Development Board Esp32 With Camera Module Ov2640 For Arduino",\n"price": "1,499 PKR",\n"variants_options" : ["Default Title"],\n"description": "ESP32 with Wi‑Fi + BLE and OV2640 camera for vision‑enabled IoT • Captures JPEG, supports TF card storage • Compact module for wireless streaming, surveillance, smart doorbells, and image‑based automation • Arduino/ESP‑IDF compatible for fast prototyping"\n}\n```'
 
 
 def extract_json_objects2(text: str) -> Tuple[List[dict[str, Any]], str]:
@@ -362,6 +421,167 @@ def extract_json_objects(text: str) -> Tuple[List[dict[str, Any]], str]:
       return results, cleaned_text.strip()
 
 
+def extract_json_objects4(text: str) -> Tuple[List[dict[str, Any]], str]:
+    _CURRENCY_SYMBOLS = "€£$₹"
+    _CURRENCY_CODE = r"[A-Z]{2,5}"
+
+    _price_leading = re.compile(
+        rf"^(?:{_CURRENCY_CODE}|[{_CURRENCY_SYMBOLS}])\s*\d+(?:,\d{{3}})*(?:\.\d+)?$"
+    )
+    _price_trailing = re.compile(
+        rf"^\d+(?:,\d{{3}})*(?:\.\d+)?\s*(?:{_CURRENCY_CODE}|[{_CURRENCY_SYMBOLS}])$"
+    )
+
+    def _valid_price(s: str) -> bool:
+        s = s.strip()
+        return bool(_price_leading.match(s) or _price_trailing.match(s))
+
+    def _valid_product(obj: Any) -> bool:
+        if not isinstance(obj, dict):
+            return False
+        required = {"link", "imageurl", "title", "price", "description"}
+        if not required.issubset(obj.keys()):
+            return False
+        if not all(isinstance(obj[k], str) and "\n" not in obj[k] for k in required):
+            return False
+        if not (obj["link"].startswith("https://") and obj["imageurl"].startswith("https://")):
+            return False
+        if obj["price"].strip() and not _valid_price(obj["price"]):
+            return False
+        return True
+
+    def _valid_cart(obj: Any) -> bool:
+        if not isinstance(obj, dict):
+            return False
+        required = {"id", "checkoutUrl", "subtotalAmount", "lineItems"}
+        if not required.issubset(obj.keys()):
+            return False
+        if not all(
+            isinstance(obj[k], str) and "\n" not in obj[k]
+            for k in ["id", "checkoutUrl", "subtotalAmount"]
+        ):
+            return False
+        if not obj["id"].startswith("gid://shopify/Cart/"):
+            return False
+        if not obj["checkoutUrl"].startswith("https://"):
+            return False
+        if obj["subtotalAmount"].strip() and not _valid_price(obj["subtotalAmount"]):
+            return False
+        if not isinstance(obj["lineItems"], list):
+            return False
+        if not all(isinstance(item, dict) for item in obj["lineItems"]):
+            return False
+        return True
+
+    def _valid_order(obj: Any) -> bool:
+        """Lenient check for order JSON."""
+        if not isinstance(obj, dict):
+            return False
+        orderish_keys = {
+            "OrderID", "FinancialStatus", "FulfillmentStatus",
+            "CustomerName", "CustomerPhone", "CustomerEmail",
+            "Items", "ShippingAddress", "Total"
+        }
+        return any(k in obj for k in orderish_keys)
+
+    # ---------- Text utilities ----------
+    def _remove_spans(s: str, spans: List[Tuple[int, int]]) -> str:
+        if not spans:
+            return s
+        spans = sorted(spans)
+        out, prev = [], 0
+        for a, b in spans:
+            out.append(s[prev:a])
+            prev = b
+        out.append(s[prev:])
+        return "".join(out)
+
+    def _find_json_objects(text: str) -> List[Tuple[int, int, str]]:
+        results: List[Tuple[int, int, str]] = []
+        stack = 0
+        in_str = False
+        esc = False
+        start = -1
+        for i, ch in enumerate(text):
+            if in_str:
+                if esc:
+                    esc = False
+                elif ch == "\\":
+                    esc = True
+                elif ch == '"':
+                    in_str = False
+            else:
+                if ch == '"':
+                    in_str = True
+                elif ch == "{":
+                    if stack == 0:
+                        start = i
+                    stack += 1
+                elif ch == "}":
+                    if stack > 0:
+                        stack -= 1
+                        if stack == 0 and start != -1:
+                            end = i + 1
+                            results.append((start, end, text[start:end]))
+                            start = -1
+        return results
+
+    results: List[dict[str, Any]] = []
+    remove_spans: List[Tuple[int, int]] = []
+
+    # 1) Handle fenced blocks
+    fenced = re.compile(r"```(product|cart|order)\s*(.*?)```", re.DOTALL)
+    for m in fenced.finditer(text):
+        block_type = m.group(1).lower()
+        block_content = m.group(2).strip()
+
+        try:
+            obj = json.loads(block_content)
+        except json.JSONDecodeError:
+            continue
+
+        if block_type == "product" and _valid_product(obj):
+            obj["type"] = "Product"
+            results.append(obj)
+            remove_spans.append((m.start(), m.end()))
+        elif block_type == "cart" and _valid_cart(obj):
+            obj["type"] = "Cart"
+            results.append(obj)
+            remove_spans.append((m.start(), m.end()))
+        elif block_type == "order" and _valid_order(obj):
+            obj["type"] = "Order"
+            results.append(obj)
+            remove_spans.append((m.start(), m.end()))
+
+    intermediate = _remove_spans(text, remove_spans)
+
+    # 2) Unfenced JSON objects
+    spans2: List[Tuple[int, int]] = []
+    for s, e, raw in _find_json_objects(intermediate):
+        try:
+            obj = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+
+        if _valid_product(obj):
+            obj["type"] = "Product"
+            results.append(obj)
+            spans2.append((s, e))
+        elif _valid_cart(obj):
+            obj["type"] = "Cart"
+            results.append(obj)
+            spans2.append((s, e))
+        elif _valid_order(obj):
+            obj["type"] = "Order"
+            results.append(obj)
+            spans2.append((s, e))
+
+    cleaned_text = _remove_spans(intermediate, spans2).strip()
+    cleaned_text = re.sub(r"\[\s*\]", "", cleaned_text)
+    cleaned_text = re.sub(r"\[\s*(?:,\s*)*\]", "", cleaned_text)
+    cleaned_text = re.sub(r"```(?:json|product|cart|order)?\s*```", "", cleaned_text, flags=re.MULTILINE)
+
+    return results, cleaned_text.strip()
 
 
 def extract_json_objects3(text: str) -> Tuple[List[dict[str, Any]], str]:
@@ -511,15 +731,25 @@ def extract_json_objects3(text: str) -> Tuple[List[dict[str, Any]], str]:
     return results, cleaned_text.strip()
 
 
-
+wow = """
+```cart
+{
+    "id": "gid://shopify/Cart/hWN2grAtOUpAPbnPCjS4ctcZ?key=93c8dda56f995f99a10ac018607962f5",
+    "checkoutUrl": "https://store-mobeen-pk.myshopify.com/cart/c/hWN2grAtOUpAPbnPCjS4ctcZ?key=93c8dda56f995f99a10ac018607962f5",
+    "subtotalAmount": "680.00 PKR",
+    "lineItems": "Pass the dictionary exactly as received — no modifications, no renaming, no restructuring."
+}
+```
+"""
 
 
 
 
 ###############################3
-stucture_output, reply = extract_json_objects3(str(data2))
+stucture_output, reply = extract_json_objects4(str(wow))
 
 print("stucture_output", stucture_output)
+print("\n---- cleaned ----\n")
 print("reply", reply)
 
 
