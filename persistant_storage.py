@@ -75,7 +75,7 @@ class persistant_thread:
 
 # print(asyncio.run(insert_chatRecord(data)))
 
-async def demo():
+async def store_session_in_db():
     manager = persistant_thread()
     await manager.listen_for_expiry()
     # Create multiple demo sessions
@@ -89,4 +89,4 @@ async def demo():
 
 
 if __name__ == "__main__":
-    asyncio.run(demo())
+    asyncio.run(store_session_in_db())

@@ -15,12 +15,16 @@ from MCP import Controller
 import redis.asyncio as redis
 from session_manager import SessionManager
 from openai.types.chat import ChatCompletion
-
+from threading import Thread
+from persistant_storage import store_session_in_db
 
 # @ App level create a reference for 3rd Party Services
 redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 session_manager = SessionManager(redis_client, session_ttl=3600)
 mcp_controller = Controller()
+
+persist_session = Thread(target=store_session_in_db)
+persist_session.start()
 
 client = OpenAI(
     api_key=settings.openai_api_key,
