@@ -11,3 +11,13 @@ docker volume inspect mongo_data
 
 
 docker run -d   --name local-redis  -p 6379:6379  redis:latest  redis-server --appendonly yes --notify-keyspace-events Ex
+
+
+docker run -d --rm --name chromadb -p 9001:9001  -v /C:/DRIVE_D/PythonProject/chatbot_Shopify/chroma_store:/data/chroma_store  chromadb/chroma:latest   run --host 0.0.0.0 --port 9001 --path /data/chroma_store
+
+
+import chromadb
+from chromadb.config import Settings
+
+client = chromadb.HttpClient(host="localhost", port=9001, settings=Settings())
+

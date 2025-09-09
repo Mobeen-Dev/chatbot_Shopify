@@ -17,20 +17,41 @@ from session_manager import SessionManager
 from openai.types.chat import ChatCompletion
 from threading import Thread
 from persistant_storage import store_session_in_db
+from contextlib import asynccontextmanager
 
-# @ App level create a reference for 3rd Party Services
-redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
-session_manager = SessionManager(redis_client, session_ttl=3600)
-mcp_controller = Controller()
+# @ App level reference for 3rd Party Services
+# redis_client = None
+session_manager:SessionManager
+mcp_controller:Controller
+background_task = None
+client:OpenAI
 
-persist_session = Thread(target=store_session_in_db)
-persist_session.start()
-
-client = OpenAI(
-    api_key=settings.openai_api_key,
-)
 logger = get_logger("FastAPI")
-app = FastAPI()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global session_manager, mcp_controller, client
+    redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+    session_manager = SessionManager(redis_client, session_ttl=3600)
+    mcp_controller = Controller()
+    client = OpenAI(api_key=settings.openai_api_key,)
+    background_task = asyncio.create_task(store_session_in_db())
+    logger.info("Background task for persisting sessions started.")
+    yield
+    # Clean up and release the resources
+    if background_task:
+        background_task.cancel()
+        try:
+            await background_task
+        except asyncio.CancelledError:
+            logger.info("Background task cancelled on shutdown.")
+            
+
+
+
+app = FastAPI(lifespan=lifespan)
+
 
 # CORS setup for frontend (adjust origins in production)
 app.add_middleware(

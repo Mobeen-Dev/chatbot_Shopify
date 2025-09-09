@@ -11,6 +11,8 @@ from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
 import asyncio
 from openai import AsyncOpenAI
 import asyncio
+
+
 # Configure your OpenAI key
 openai.api_key = settings.openai_api_key
 
@@ -61,8 +63,8 @@ def stream_chunks_from_csv(
                     yield chunk
 
 # 2. Embed and save to Chroma
-def embed_and_save_to_chroma(
-    persist_directory: str = "chroma_store",
+def embed_and_save_to_faiss(
+    persist_directory: str = "faiss_store",
     collection_name: str = "product_chunks",
     batch_size: int = 100,
     model: str = embeddind_model,
@@ -70,23 +72,12 @@ def embed_and_save_to_chroma(
     if not os.path.exists(persist_directory):
         os.makedirs(persist_directory)
     # Chroma client
-    client = chromadb.PersistentClient(path=persist_directory)
-
-    # Use OpenAI embedding function wrapper
-    embedding_fn = OpenAIEmbeddingFunction(
-        api_key=openai.api_key,
-        model_name=model
-    )
+    
     def get_embedding(text, model="text-embedding-ada-002"):
         response = openai.embeddings.create(input=text, model=model)
         return response.data[0].embedding
 
-    # Create or load collection (with embedding_fn provided at add-time, not creation-time)
-    if collection_name not in [c.name for c in client.list_collections()]:
-        collection = client.create_collection(name=collection_name)
-    else:
-        collection = client.get_collection(name=collection_name)
-
+    
     chunk_generator = stream_chunks_from_csv()
     buffer = []
     processed = 0
@@ -126,101 +117,11 @@ def _save_batch_to_chroma(chunks: List[Document], collection, embedding_fn, star
 
 # Code to Build the vector store
 # Uncomment the following lines to run the embedding and saving process
-# if __name__ == "__main__":
-#     embed_and_save_to_chroma(
-#         persist_directory="chroma_store",
-#         collection_name="product_chunks",
-#         batch_size=100
-#     )
-    
-    
-class ChromaRetriever:
-    def __init__(
-        self,
-        persist_directory: str = "chroma_store",
-        collection_name: str = vector_db_collection_name,
-        model: str = embeddind_model,
-    ):
-        self.model = model
-        # self.client = AsyncOpenAI(api_key=settings.openai_api_key,)  # async client
-        # Chroma is sync, so we keep it as-is
-        self.chroma_client = chromadb.PersistentClient(path=persist_directory)
-        
-        self.collection = self.chroma_client.get_collection(name=collection_name)
-
-    # async def aclose(self):
-    #     await self.client.close()
-    
-    async def query_chroma(
-        self,
-        query: str,
-        top_k: int = 5,
-    ):
-        # 1. Async call to OpenAI for embedding
-        try:
-            response = None
-            async with AsyncOpenAI(api_key=settings.openai_api_key,) as client:
-                # Perform your asynchronous OpenAI API calls here
-                response = await client.embeddings.create(
-                    model=self.model,
-                    input=[query]
-                )
-        except Exception as e:
-            raise RuntimeError(f"Embedding API failed: {e}")
-
-        if not response or not response.data:
-            raise ValueError("Failed to embed query.")
-
-        query_embedding = response.data[0].embedding
-
-        # 2. Run Chroma (sync) in a thread so it doesn’t block event loop
-        results = await asyncio.to_thread(
-            self.collection.query,
-            query_embeddings=[query_embedding],
-            n_results=top_k,
-            include=["documents", "metadatas", "distances"],
-        )
-
-        docs, metas, dists = (
-            results.get("documents"),
-            results.get("metadatas"),
-            results.get("distances"),
-        )
-
-        if not docs or not metas or not dists or not docs[0]:
-            return []
-
-        return [
-            {"content": doc, "metadata": meta, "distance": dist}
-            for doc, meta, dist in zip(docs[0], metas[0], dists[0])
-        ]
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
 if __name__ == "__main__":
-    store = ChromaRetriever()
-    user_query = "Do you have MICRO CONTROLLER like arduino?"
-    matches = asyncio.run(store.query_chroma(query=user_query, top_k=5))
-
-    for i, match in enumerate(matches):
-        print(f"\nMatch {i + 1}:")
-        print(f"Distance: {match['distance']:.4f}")
-        print(f"Metadata: {match['metadata']}")
-        print(f"Content:\n{match['content']}")
-        print("-" * 80)
+    embed_and_save_to_chroma(
+        persist_directory="faiss_store",
+        collection_name="product_chunks",
+        batch_size=100
+    )
+    
+    

@@ -90,7 +90,7 @@ async def wow():
 
     # 2. Simulate a user login and create a session
     user_info = {"user_id": 123, "username": "alice", "roles": ["user"]}
-    session_id = "05851e1b-8050-49c9-a342-0dfd1522d385"
+    session_id = "566bd5c9-456c-4054-b2d2-6b432bab7a7b"
     # await session_manager.create_session(user_info)
     print(f"New session created with ID: {session_id}")
 

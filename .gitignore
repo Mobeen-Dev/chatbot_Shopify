@@ -13,8 +13,7 @@ venv/
 
 # Env files and sensitive data
 creds/.env
-/ShopifyExtension/ai-chatbot/*
-
+/ShopifyExtension/
 Data/
 chroma_store/
 bucket

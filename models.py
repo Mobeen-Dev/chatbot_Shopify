@@ -360,10 +360,13 @@ class ChatRequest(BaseModel):
         _price_trailing = re.compile(
             rf"^\d+(?:,\d{{3}})*(?:\.\d+)?\s*(?:{_CURRENCY_CODE}|[{_CURRENCY_SYMBOLS}])$"
         )
+        _price_range = re.compile(
+        rf"^\d+(?:,\d{{3}})*(?:\.\d+)?\s*-\s*\d+(?:,\d{{3}})*(?:\.\d+)?\s*(?:{_CURRENCY_CODE}|[{_CURRENCY_SYMBOLS}])$"
+    )
 
         def _valid_price(s: str) -> bool:
             s = s.strip()
-            return bool(_price_leading.match(s) or _price_trailing.match(s))
+            return bool(_price_leading.match(s) or _price_trailing.match(s) or _price_range.match(s))
 
         def _valid_product(obj: Any) -> bool:
             if not isinstance(obj, dict):
@@ -511,6 +514,7 @@ class ChatRequest(BaseModel):
         cleaned_text = re.sub(r"```(?:json|product|cart|order)?\s*```", "", cleaned_text, flags=re.MULTILINE)
 
         return results, cleaned_text.strip()
+
 
 
     def openai_msgs(self) -> List[ChatCompletionMessageParam]:

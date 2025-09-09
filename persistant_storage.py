@@ -86,7 +86,9 @@ async def store_session_in_db():
     #         "timestamp": datetime.datetime.now(datetime.UTC).isoformat()
     #     })
 
-
-
+def run_session_store():
+  asyncio.run(store_session_in_db())
+  
+  
 if __name__ == "__main__":
     asyncio.run(store_session_in_db())

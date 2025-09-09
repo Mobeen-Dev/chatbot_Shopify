@@ -209,33 +209,33 @@ class Shopify:
 
     variables = {
       "lines": lines,
-      "buyerIdentity": {
-        "email": "info@digilog.pk",
-        "countryCode": "PK",
-        "deliveryAddressPreferences": {
-          "oneTimeUse": False,
-          "deliveryAddress": {
-            "address1": "13Th Regal chowk, Shahrah-e-Quaid-e-Azam, Mozang Chungi",
-            "address2": "",
-            "city": "Lahore",
-            "province": "Pubjab",
-            "country": "PK",
-            "zip": "54000"
-          }
-        },
-        "preferences": {
-          "delivery": {
-            "deliveryMethod": "PICK_UP"
-          }
-        }
-      },
+      # "buyerIdentity": {
+      #   "email": "info@digilog.pk",
+      #   "countryCode": "PK",
+      #   "deliveryAddressPreferences": {
+      #     "oneTimeUse": False,
+      #     "deliveryAddress": {
+      #       "address1": "13Th Regal chowk, Shahrah-e-Quaid-e-Azam, Mozang Chungi",
+      #       "address2": "",
+      #       "city": "Lahore",
+      #       "province": "Pubjab",
+      #       "country": "PK",
+      #       "zip": "54000"
+      #     }
+      #   },
+      #   "preferences": {
+      #     "delivery": {
+      #       "deliveryMethod": "PICK_UP"
+      #     }
+      #   }
+      # },
       "attributes": [
         {
           "key": "Chat #",
           "value": f"{session_id}"
         }
       ],
-      "note" : "This order was created with the help of AI."
+      "note" : "This order was created with the help of Ai."
     }
     result = await self.send_storefront_mutation(mutation, variables)
     cart = result.get("data",{}).get("cartCreate",{}).get("cart",{})
@@ -1699,7 +1699,8 @@ class Shopify:
               "merchandise_price":total_price
               }
             )
-            return formatted_items
+          
+          return formatted_items
         else:
           return [
               {

@@ -5,10 +5,10 @@ Phase #1 ✅
     Basic openAi api Calling + Prompt Engineering ✅
     Product Knowledge Aware ✅
     
-Phase #2
+Phase #2 ✅
     Session Based 
         Short-Term Memory ✅
-        Long-Term Memory  
+        Long-Term Memory  ✅
     Recommend Products   ✅
 
 Phase #3 ✅
@@ -26,9 +26,19 @@ Phase #3 ✅
 
     Redirect to Different Pages
 
-Phase #4:
-    Embedding product handle+variants+price+category
 
+Urgent:
+    Move Chroma to AsyncHttp
+Phase #4:
+    Implement In-Memory DataBase Faiss
+    Embedding product handle + variants + price + category
+    change communication module from HTTPS -> Stream
+    manage stuctured Output in FrontEnd
+    update Product UI componenet
+    Activity List per Request
+    Manage CartId
+
+    tax problem ✅
 After MVP-2
     Refactor Api function 
     Refactor App Endpoints
