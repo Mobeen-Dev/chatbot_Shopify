@@ -154,7 +154,9 @@ async def async_chat_endpoint(chat_request: ChatRequest):
             latest_chat = chat_request.n_Serialize_chat_history(messages)
             await session_manager.update_session(session_id, latest_chat)
             
-            print(f"\n\nFinal Data: {reply}\n\n")
+            print(f"\n Stuctural Data: {stucture_output}\n")
+            print(f"\n Final Data: {reply}\n")
+            print(f" Execution : {chat_request.activity_record}\n")
             
             return ChatResponse(
                 reply=reply,
@@ -197,6 +199,7 @@ async def process_with_tools(client, chat_request, tools_list) -> ChatCompletion
         
         if not assistant_message.tool_calls:
             # No more tools, final AI reply
+            chat_request.activity_record += " -> Output"
             return response
         
         chat_request.append_message(assistant_message.model_dump())

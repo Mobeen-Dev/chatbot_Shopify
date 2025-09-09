@@ -314,7 +314,7 @@ class Shopify:
     result = await self.send_storefront_mutation(query, variables)
     cart = result.get("data",{}).get("cart",{})
     
-    print(cart,"\n\n")
+    # print(cart,"\n\n")
     return self.format_cart(cart, dict_format, pretify_line_items=True)
 
   async def addCartLineItems(self, cartId:str, lineItems:List[dict[str,str|int]]):
@@ -430,7 +430,7 @@ class Shopify:
 
   async def removeCartLineItems(self, cartId:str, lineItems:List[dict[str,str]]):
     cart = await self.query_cart(cartId, True)
-    print("$$$$$ cart",cart,"\n\n\n\n")
+    # print("$$$$$ cart",cart,"\n\n\n\n")
 
     cart_lines = cart["lineItems"]
     mutation = """
@@ -514,9 +514,9 @@ class Shopify:
       variant = obj["variant"]
 
       merchandise_id, message = self.handle_to_id(handle, variant)
-      print("$$$$$ mid",merchandise_id,"\n\n\n\n")
+      # print("$$$$$ mid",merchandise_id,"\n\n\n\n")
       cart_line_id = cart_lines.get(merchandise_id, None)
-      print("$$$$$ cli",cart_line_id,"\n\n\n\n")
+      # print("$$$$$ cli",cart_line_id,"\n\n\n\n")
       
       if cart_line_id:
           lines.append( cart_line_id["id"] )
@@ -886,7 +886,7 @@ class Shopify:
       }
     }
     result = await self.send_graphql_mutation(query, query_params, "product")
-    print(f"get_product_by_handle :: {result}")
+    # print(f"get_product_by_handle :: {result}")
     product = result.get("data", {}).get("product",{})
     if product:
       id = product.get("id", None)

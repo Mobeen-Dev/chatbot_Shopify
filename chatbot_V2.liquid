@@ -99,7 +99,7 @@
                 
                 // Configuration
                 this.config = {
-                    timeout: 60000,              // Maximum request timeout (ms)
+                    timeout: 500000,              // Maximum request timeout (ms)
                     maxRetries: 3,               // Maximum number of retry attempts
                     retryDelay: 1000,            // Base delay between retries (ms)
                     debounceDelay: 300,          // Debounce delay for input (ms)
@@ -246,14 +246,16 @@
                 if (!this.rememberMode) {
                     this.conversationHistory.push({ role: 'user', content: message });
                 }
+
+                if (this.sessionId) {
+                message += `\n    session_id: ${this.sessionId} -- Used only for cart related functions/tools`;
+                }
                 
                 // Disable input while AI is processing
                 this.setInputDisabled(true);
                 this.showTypingIndicator();
                 
                 try {
-                    // For demo purposes, use local response processor
-                    // In production, this would call the backend API
                     const response = await this.getAIResponse(message);
                     console.log(`Line 633 getAIResponse : ${JSON.stringify(response)}`);
                     this.hideTypingIndicator();
@@ -524,7 +526,6 @@
                 } 
                 {% endcomment %}
                 
-                // In production, this would be a real API call using makeRequest
                 const requestData = {
                     message: message,
                     {% comment %} history: this.rememberMode ? this.conversationHistory : [], {% endcomment %}

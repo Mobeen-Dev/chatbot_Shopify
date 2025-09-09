@@ -30,6 +30,8 @@ class Controller:
             arguments = json.loads(tool_call.function.arguments)
 
             if function_name == "get_products_data":
+                chat_request.activity_record += " -> get_products_data"
+                
                 query = arguments["query"]
                 top_k = arguments.get("top_k_result", 6)
 
@@ -43,6 +45,7 @@ class Controller:
                 
             elif function_name == "get_product_via_handle":
                 handle = arguments["handle"]
+                chat_request.activity_record += " -> get_product_via_handle"
                 
                 # Call the actual function
                 tool_output = await self.get_product_via_handle(handle)
@@ -54,6 +57,7 @@ class Controller:
                 
             elif function_name == "get_order_via_order_number":
                 order_number = arguments["order_number"]
+                chat_request.activity_record += " -> get_order_via_order_number"
                 
                 # Call the actual function
                 tool_output = await self.get_order_via_order_number(order_number)
@@ -66,6 +70,7 @@ class Controller:
             elif function_name == "create_new_cart_with_items":
                 items = arguments["items"]
                 session_id = arguments.get("session_id", "default")
+                chat_request.activity_record += " -> create_new_cart_with_items"
 
                 tool_output = await self.create_new_cart_with_items(items, session_id)
                 cart_flag = True
@@ -73,7 +78,8 @@ class Controller:
 
             elif function_name == "query_cart":
                 cart_id = arguments["cart_id"]
-
+                chat_request.activity_record += " -> query_cart"
+                
                 tool_output = await self.query_cart(cart_id)
                 cart_flag = True
                 chat_request.append_tool_response(str(tool_output), tool_call.id)
@@ -81,6 +87,7 @@ class Controller:
             elif function_name == "add_cartline_items":
                 cart_id = arguments["cart_id"]
                 line_items = arguments["line_items"]
+                chat_request.activity_record += " -> add_cartline_items"
 
                 tool_output = await self.add_cartline_items(cart_id, line_items)
                 cart_flag = True
@@ -89,6 +96,7 @@ class Controller:
             elif function_name == "update_cartline_items":
                 cart_id = arguments["cart_id"]
                 line_items = arguments["line_items"]
+                chat_request.activity_record += " -> update_cartline_items"
 
                 tool_output = await self.update_cartline_items(cart_id, line_items)
                 cart_flag = True
@@ -97,6 +105,7 @@ class Controller:
             elif function_name == "remove_cartline_items":
                 cart_id = arguments["cart_id"]
                 line_items = arguments["line_items"]
+                chat_request.activity_record += " -> remove_cartline_items"
 
                 tool_output = await self.removeCartline_items(cart_id, line_items)
                 cart_flag = True

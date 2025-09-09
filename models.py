@@ -21,10 +21,12 @@ class ChatRequest(BaseModel):
     metadata : dict = Field(default_factory=dict)               # Extensible for AI cost tracking, cart links, product references, etc.
     history: List[ChatMessage] = Field(default_factory=list)    # Chat History From Redis
     n_history: List[ChatCompletionMessageParam] = Field(default_factory=list)    # Chat History From Redis
+    activity_record: str = ''
     is_vector_review_prompt_added : bool = False
     is_structural_output_prompt_added : bool = False
     is_cart_instructions_added : bool = False
     is_order_instructions_added : bool = False
+    
     
     def added_total_tokens(self, usage_info):
         previous_cost = self.metadata.get("tokens_usage",{})
@@ -538,7 +540,7 @@ class ChatRequest(BaseModel):
         
         copy_history = self.n_history.copy()
         copy_history.append(chat)
-        print("\n\n*********\n",copy_history,"\n*****\n\n")
+        # print("\n\n*********\n",copy_history,"\n*****\n\n")
         return copy_history  # Return Last 10 messages 5 User and 5 Ai responses
     
     @staticmethod
