@@ -681,7 +681,7 @@ class Shopify:
       all_products.extend(products)
     return all_products   
 
-  async def fetch_all_products(self):
+  async def fetch_all_products(self, test_mode=False):
     all_products:list = []
     query= self.all_products_query()
     query_params={
@@ -699,7 +699,8 @@ class Shopify:
       # Pagintion Control
       pageInfo = result["pageInfo"]
       hasNextPage = pageInfo["hasNextPage"]
-      # hasNextPage = False
+      if test_mode:
+        hasNextPage = False
       query_params['after'] = pageInfo["endCursor"]
       # Product Handling Logic
       products:list = result["nodes"]
@@ -1294,7 +1295,7 @@ class Shopify:
   def all_products_query():
     return """
         query GetProductsAndVariants($after: String) {
-          products(first: 249, after: $after) {
+          products(first: 2, after: $after) {
             nodes {
               category {
                 fullName
@@ -1305,34 +1306,76 @@ class Shopify:
               title
               vendor
               handle
-              images(first: 10) {
+              media(first: 1) {
                 edges {
                   node {
-                    url
-                  }
-                }
-              }
-              variants(first: 249) {
-                nodes {
-                  inventoryItem {
-                    measurement {
-                      weight {
-                        value
-                        unit
+                    ... on MediaImage {
+                      image {
+                        id
+                        altText
+                        url
+                        width
+                        height
                       }
                     }
                   }
-                  displayName
-                  id
-                  title
-                  price
-                  sellableOnlineQuantity
-                  image {
-                    url
+                }
+              }
+              priceRangeV2 {
+                minVariantPrice {
+                  amount
+                  currencyCode
+                }
+                maxVariantPrice {
+                  amount
+                  currencyCode
+                }
+              }
+              totalInventory
+              variants(first: 249) {
+                edges {
+                  node {
+                    id
+                    title
+                    sku
+                    taxable
+                    price
+                    compareAtPrice
+                    inventoryQuantity
+                    availableForSale
+                    barcode
+                    createdAt
+                    updatedAt
+                    inventoryPolicy
+                    inventoryItem {
+                      id
+                      tracked
+                      measurement {
+                        weight {
+                          value
+                          unit
+                        }
+                      }
+                      unitCost {
+                        amount
+                        currencyCode
+                      }
+                      countryCodeOfOrigin
+                      harmonizedSystemCode
+                      requiresShipping
+                    }
+                    image {
+                      width
+                      height
+                      id
+                      altText
+                      url
+                      width
+                      height
+                    }
                   }
                 }
               }
-            }
             pageInfo {
               hasNextPage
               endCursor
@@ -1636,7 +1679,7 @@ class Shopify:
         return {
           "Note": "This product is OUT OF STOCK or not available for sale at the moment."
         }
-      print(f"Product Status: {status}")
+      # print(f"Product Status: {status}")
       if status == "ACTIVE" :
         edges = (product.get("media") or {}).get("edges") or []
         first_edge = edges[0] if edges else {}

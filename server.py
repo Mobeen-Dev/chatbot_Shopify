@@ -124,7 +124,7 @@ async def async_chat_endpoint(chat_request: ChatRequest):
         chat_request.load_history(session_data)
         if not True:
             raise HTTPException(status_code=404, detail="Session not found.")
-        print(f"\n $$$ Session data retrieved chat_request.n_history: \n{chat_request.n_history}\n\n\n\n\n\n\n")
+        # print(f"\n $$$ Session data retrieved chat_request.n_history: \n{chat_request.n_history}\n\n\n\n\n\n\n")
     try:
         response = None
         async with AsyncOpenAI(
