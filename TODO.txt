@@ -29,9 +29,13 @@ Phase #3 ✅
 
 Urgent:
     Move Chroma to AsyncHttp
+    stop button
+    session clearance
+    read page urls
+    
 Phase #4:
     Implement In-Memory DataBase Faiss
-    Embedding product handle + variants + price + category
+    Embedding product handle + variants + descripton + category
     change communication module from HTTPS -> Stream
     manage stuctured Output in FrontEnd
     update Product UI componenet
