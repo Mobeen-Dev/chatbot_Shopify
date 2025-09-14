@@ -1294,79 +1294,42 @@ class Shopify:
   @staticmethod
   def all_products_query():
     return """
-        query GetProductsAndVariants($after: String) {
-          products(first: 2, after: $after) {
-            nodes {
-              category {
-                fullName
+      query GetProductsAndVariants($after: String) {
+        products(first: 250, after: $after) {
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+          nodes {
+            id
+            options {
+              name
+              values
+            }
+            title
+            handle
+            vendor
+            productType
+            description
+            category {
+              fullName
+            }
+            priceRangeV2 {
+              minVariantPrice {
+                amount
+                currencyCode
               }
-              productType
-              id
-              description
-              title
-              vendor
-              handle
-              media(first: 1) {
-                edges {
-                  node {
-                    ... on MediaImage {
-                      image {
-                        id
-                        altText
-                        url
-                        width
-                        height
-                      }
-                    }
-                  }
-                }
+              maxVariantPrice {
+                amount
+                currencyCode
               }
-              priceRangeV2 {
-                minVariantPrice {
-                  amount
-                  currencyCode
-                }
-                maxVariantPrice {
-                  amount
-                  currencyCode
-                }
-              }
-              totalInventory
-              variants(first: 249) {
-                edges {
-                  node {
-                    id
-                    title
-                    sku
-                    taxable
-                    price
-                    compareAtPrice
-                    inventoryQuantity
-                    availableForSale
-                    barcode
-                    createdAt
-                    updatedAt
-                    inventoryPolicy
-                    inventoryItem {
-                      id
-                      tracked
-                      measurement {
-                        weight {
-                          value
-                          unit
-                        }
-                      }
-                      unitCost {
-                        amount
-                        currencyCode
-                      }
-                      countryCodeOfOrigin
-                      harmonizedSystemCode
-                      requiresShipping
-                    }
+            }
+            totalInventory
+            media(first: 1) {
+              edges {
+                node {
+                  ... on MediaImage {
                     image {
-                      width
-                      height
                       id
                       altText
                       url
@@ -1376,12 +1339,56 @@ class Shopify:
                   }
                 }
               }
-            pageInfo {
-              hasNextPage
-              endCursor
+            }
+            variants(first: 249) {
+              pageInfo {
+                hasNextPage
+                endCursor
+              }
+              edges {
+                node {
+                  id
+                  title
+                  sku
+                  taxable
+                  price
+                  compareAtPrice
+                  inventoryQuantity
+                  availableForSale
+                  barcode
+                  createdAt
+                  updatedAt
+                  inventoryPolicy
+                  inventoryItem {
+                    id
+                    tracked
+                    measurement {
+                      weight {
+                        value
+                        unit
+                      }
+                    }
+                    unitCost {
+                      amount
+                      currencyCode
+                    }
+                    countryCodeOfOrigin
+                    harmonizedSystemCode
+                    requiresShipping
+                  }
+                  image {
+                    id
+                    altText
+                    url
+                    width
+                    height
+                  }
+                }
+              }
             }
           }
         }
+      }
       """
   
   @staticmethod

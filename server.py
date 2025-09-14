@@ -129,7 +129,7 @@ async def async_chat_endpoint(chat_request: ChatRequest):
         response = None
         async with AsyncOpenAI(
             api_key=settings.openai_api_key,
-            http_client=DefaultAioHttpClient(timeout=60),
+            http_client=DefaultAioHttpClient(timeout=600),
         ) as client:
 
             messages = chat_request.openai_msgs()

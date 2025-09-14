@@ -1,2 +1,18 @@
+from shopify
+async def get_order_via_order_number(order_number: str) -> str:
+    """
+    Fetch and format an order by its order number.
+    Ensures order number starts with '#'.
+    Returns structured data ready for LLM.
+    """
+    # Ensure order number starts with "#"
 
- {"cartId": "gid://shopify/Cart/hWN2JeQOXsZQZKH1BZQIXoXc?key=8e70430a4f7b667eb49cb70dbe2d9a90", "lineIds": ["gid://shopify/CartLine/72b4efd5-84fd-491a-953e-f21955c58dd5?cart=hWN2JeQOXsZQZKH1BZQIXoXc"]}
+    # Fetch from store
+    data = await store.fetch_order_by_name(order_number)
+    if not data:
+        return str({"success": False, "message": f"No order found for {order_number}"})
+
+    # Format for LLM
+    formatted = Shopify.format_order_for_llm(data)
+    
+    return formatted
