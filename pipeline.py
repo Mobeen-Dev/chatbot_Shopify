@@ -2,7 +2,8 @@ from Shopify import Shopify
 from config import settings
 import asyncio
 import random
-
+import os
+import json
 import pickle
 import faiss
 import numpy as np
@@ -11,7 +12,7 @@ from openai import OpenAI
 client = OpenAI(api_key=settings.openai_api_key)
 store = Shopify(settings.store)
 
-products = asyncio.run(store.fetch_all_products(True))
+products = asyncio.run(store.fetch_all_products())
 # print(products)
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
@@ -138,23 +139,93 @@ def search_faiss(query, index_path="faiss_index", top_k=5):
         })
 
     return results
-    
+
+def create_request_object(request_number, text_chunk):
+    """
+    Creates a request object for the OpenAI embeddings API.
+
+    Args:
+        request_number (int): The sequential request number.
+        job_title (str): The job title to be embedded.
+
+    Returns:
+        Dict[str, Any]: A dictionary representing the API request object.
+    """
+
+    request_object = {
+        "custom_id": f"request-{request_number}",
+        "method": "POST",
+        "url": "/v1/embeddings",
+        "body": {
+            "model": "text-embedding-3-small",
+            "input": text_chunk,
+            "encoding_format": "float",
+            
+            }
+        }
+    return request_object
+
+def create_batch_jsonl(batch_num, data_folder, genres, updated_idx_start):
+    """
+    Creates a JSONL file containing a batch of job title requests.
+
+    Args:
+        batch_num (int): The batch number.
+        job_titles_folder (str): The folder to save the JSONL file.
+        job_titles (List): A list of job titles to include in the batch.
+        updated_idx_start (int): The starting index for job titles.
+    """
+
+    with open(f"{data_folder}/file_batch_{batch_num}.jsonl", "w") as f:
+        for idx, genre in enumerate(genres):
+            
+            request_number = idx+1 + updated_idx_start
+            
+            genre_request_object = create_request_object(request_number, genre)
+            f.write(json.dumps(genre_request_object) + "\n")
+
 # Example usage
 if __name__ == "__main__":
-  print(search_faiss("whats ai"))
-  
-  
-  
-  for product in products:
-    break
+    # print(search_faiss("whats ai"))
+    chunks = []
     
-    chunks = chunk_product_description(product)
     
-    print(f"Total chunks created: {len(chunks)}\n")
-    save_chunks_to_faiss(chunks)
-    for c in chunks:
-        print(c.page_content, "\n")
-        print(c.metadata)
-        print()
+    for product in products:
+        
+        
+        chunks.extend( chunk_product_description(product) ) 
+        
+        # print(f"Total chunks created: {len(chunks)}\n")
+        # save_chunks_to_faiss(chunks)
+        # for c in chunks:
+        #     print(c.page_content, "\n")
+        #     print(c.metadata)
+        #     print()
 
-  print(len(products))
+    print(len(products))
+    
+    chunks = [c.page_content for c in chunks]
+    
+    data_folder = "embed_job_data"
+    if not os.path.exists(data_folder):
+        os.mkdir(data_folder)
+    
+    batch_num = 10000 if len(chunks) > 10000 else int(len(chunks))
+
+    new_beginning = 0
+    for batch_idx, num in enumerate(range(0, len(chunks)+1, batch_num )):
+        
+        batch_genres = chunks[new_beginning: new_beginning + batch_num]
+        
+        create_batch_jsonl(batch_idx, data_folder, batch_genres, updated_idx_start = num)
+        print(f"{new_beginning = }\n {batch_num = }")
+        new_beginning += batch_num
+        
+        
+        
+    
+    
+    
+    
+    
+

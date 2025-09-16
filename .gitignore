@@ -19,8 +19,12 @@ chroma_store/
 bucket
 bucket/app.log
 *.log
-
+/bucket
+*.pkl
+*.indexx
 /beta 
-
+faiss_index.*
+app.log
 !/ShopifyExtension/ai-chatbot/extensions/chatbot/assets
 !/ShopifyExtension/ai-chatbot/extensions/chatbot/blocks
+embed_job_data
