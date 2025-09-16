@@ -1,21 +1,23 @@
-from Shopify import Shopify
-from config import settings
-import asyncio
-import random
 import os
 import json
-import pickle
 import faiss
+import pickle
+import random
+import asyncio
 import numpy as np
 from openai import OpenAI
+from Shopify import Shopify
+from config import settings
+from langchain.schema import Document
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
 
 client = OpenAI(api_key=settings.openai_api_key)
 store = Shopify(settings.store)
 
 products = asyncio.run(store.fetch_all_products())
 # print(products)
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.schema import Document
+
 
 def chunk_product_description(product, chunk_size: int = 500, chunk_overlap: int = 70):
     """
@@ -62,7 +64,7 @@ def chunk_product_description(product, chunk_size: int = 500, chunk_overlap: int
     if category:
       category = category["fullName"]
     
-    p_info = f" Product : {product["title"]} at url /{product["handle"]} .With variants {variants} Belongs to {category}"
+    p_info = f" Product : {product["title"]} at url /{product["handle"]} .With variants {variants} Belongs to {category} \n "
     
     # Make sure metadata carries the product id
     added = False
@@ -184,48 +186,126 @@ def create_batch_jsonl(batch_num, data_folder, genres, updated_idx_start):
             genre_request_object = create_request_object(request_number, genre)
             f.write(json.dumps(genre_request_object) + "\n")
 
-# Example usage
-if __name__ == "__main__":
-    # print(search_faiss("whats ai"))
-    chunks = []
-    
-    
-    for product in products:
-        
-        
-        chunks.extend( chunk_product_description(product) ) 
-        
-        # print(f"Total chunks created: {len(chunks)}\n")
-        # save_chunks_to_faiss(chunks)
-        # for c in chunks:
-        #     print(c.page_content, "\n")
-        #     print(c.metadata)
-        #     print()
+def process_products_to_batches(products, 
+                                chunk_per_file=4000, 
+                                index_path="faiss_index",
+                                data_folder="embed_job_data"):
+    """
+    Processes a list of products by chunking their descriptions, saving metadata,
+    and batching chunks into jsonl files.
 
-    print(len(products))
-    
+    Args:
+        products (list): List of product objects.
+        chunk_per_file (int): Number of chunks per batch file.
+        index_path (str): Path prefix for saving metadata pickle.
+        data_folder (str): Folder to save batch jsonl files.
+    """
+
+    chunks = []
+    for product in products:
+        chunks.extend(chunk_product_description(product))
+        
+    print(f"Total products processed: {len(products)}")
+    print(f"Total chunks created: {len(chunks)}")
+
+    # Extract metadata and page contents separately
+    meta_chunks = [c.metadata for c in chunks]
     chunks = [c.page_content for c in chunks]
-    
-    data_folder = "embed_job_data"
-    if not os.path.exists(data_folder):
+
+    # Save metadata as pickle file
+    with open(index_path + "_meta.pkl", "wb") as f:
+        pickle.dump(meta_chunks, f)
+
+    # Clear existing files in data_folder
+    if os.path.exists(data_folder):
+        for filename in os.listdir(data_folder):
+            file_path = os.path.join(data_folder, filename)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+    else:
         os.mkdir(data_folder)
-    
-    batch_num = 10000 if len(chunks) > 10000 else int(len(chunks))
+
+    batch_num = chunk_per_file if len(chunks) > chunk_per_file else len(chunks)
 
     new_beginning = 0
-    for batch_idx, num in enumerate(range(0, len(chunks)+1, batch_num )):
-        
-        batch_genres = chunks[new_beginning: new_beginning + batch_num]
-        
-        create_batch_jsonl(batch_idx, data_folder, batch_genres, updated_idx_start = num)
-        print(f"{new_beginning = }\n {batch_num = }")
+    for batch_idx, num in enumerate(range(0, len(chunks)+1, batch_num)):
+        batch_genres = chunks[new_beginning:new_beginning + batch_num]
+        create_batch_jsonl(batch_idx, data_folder, batch_genres, updated_idx_start=num)
+        print(f"{new_beginning = }\n{batch_num = }")
         new_beginning += batch_num
+
+def upload_batch_files_and_get_ids(folder_path, client):
+    """
+    Uploads all files in the specified folder to the API and returns a list of file IDs.
+
+    Args:
+        folder_path (str): Path to the folder containing batch files to upload.
+        client: The API client object with a .files.create() method.
+
+    Returns:
+        List[str]: List of uploaded file IDs.
+    """
+
+    uploaded_file_ids = []
+
+    # List all files in the folder
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
         
-        
-        
+        # Make sure it is a file (skip directories)
+        if os.path.isfile(file_path):
+            print(f"Uploading file: {filename}")
+            with open(file_path, "rb") as f:
+                batch_input_file = client.files.create(
+                    file=f,
+                    purpose="batch"
+                )
+                uploaded_file_ids.append(batch_input_file.id)
+
+    return uploaded_file_ids
+
+def create_batches_from_file_ids(file_ids, client, endpoint="/v1/chat/completions", completion_window="24h", metadata=None):
+    """
+    Creates batch operations for each uploaded file ID.
+
+    Args:
+        file_ids (list): List of file IDs to create batches for.
+        client: API client object with .batches.create() method.
+        endpoint (str): API endpoint for the batch completion.
+        completion_window (str): Duration for the batch completion window.
+        metadata (dict): Optional metadata for the batch.
+
+    Returns:
+        list: List of batch operation responses.
+    """
+    if metadata is None:
+        metadata = {"description": "batch job"}
+
+    batch_responses = []
+
+    for file_id in file_ids:
+        print(f"Creating batch for file ID: {file_id}")
+        batch_response = client.batches.create(
+            input_file_id=file_id,
+            endpoint=endpoint,
+            completion_window=completion_window,
+            metadata=metadata
+        )
+        batch_responses.append(batch_response)
+
+    return batch_responses
+
+# Example usage
+if __name__ == "__main__":
+    data_folder="embed_job_data"
+    process_products_to_batches(products, chunk_per_file=4000, index_path="faiss_index", data_folder=data_folder)
     
+    file_ids = upload_batch_files_and_get_ids(data_folder, client)
     
-    
+    batch_responses = create_batches_from_file_ids(file_ids, client)
+    print("Batch operations created:", batch_responses)
+    with open("batch_job_responses.json", 'w') as f:
+        json.dump(batch_responses, f, indent=2)
     
     
 
