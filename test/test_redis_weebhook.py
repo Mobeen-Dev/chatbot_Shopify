@@ -4,6 +4,7 @@ import datetime
 import uuid
 import redis.asyncio as redis
 
+
 class SessionManager:
     def __init__(self, redis_url="redis://localhost:6379/0", ttl_seconds: int = 10):
         self.redis = redis.from_url(redis_url, decode_responses=True)
@@ -63,7 +64,9 @@ class SessionManager:
                 # The volatile key is gone; recover from shadow
                 shadow_data = await self.redis.get(shadow_key)
                 recovered = (
-                    json.loads(shadow_data) if shadow_data else {"info": "No shadow found"}
+                    json.loads(shadow_data)
+                    if shadow_data
+                    else {"info": "No shadow found"}
                 )
                 print(
                     "💾 Recovered expired session\n"
@@ -76,7 +79,6 @@ class SessionManager:
                 # await mongo_collection.insert_one({...})
                 await self.redis.delete(shadow_key)
 
-
     async def close(self):
         await self.redis.close()
 
@@ -85,22 +87,25 @@ async def demo():
     manager = SessionManager(ttl_seconds=5)  # very short for demo
     # Create multiple demo sessions
     for i in range(1, 15):
-      await manager.create_session({
-          "data": {
-              "user": f"{i}{i}{i}",
-              "chat": ["Hi!", "Hello!", "How are you?"],
-              "timestamp": datetime.datetime.now(datetime.UTC).isoformat()
-          },
-          "metadata": {
-              "source": "chatbot",
-              "session_type": "demo",
-              "created_at": datetime.datetime.now(datetime.UTC).isoformat()
-          }
-      })
-      await asyncio.sleep(2)
+        await manager.create_session(
+            {
+                "data": {
+                    "user": f"{i}{i}{i}",
+                    "chat": ["Hi!", "Hello!", "How are you?"],
+                    "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
+                },
+                "metadata": {
+                    "source": "chatbot",
+                    "session_type": "demo",
+                    "created_at": datetime.datetime.now(datetime.UTC).isoformat(),
+                },
+            }
+        )
+        await asyncio.sleep(2)
 
     # Run the expiry listener (will print recovered data)
     await manager.listen_for_expiry(db_index=0)
+
 
 if __name__ == "__main__":
     asyncio.run(demo())

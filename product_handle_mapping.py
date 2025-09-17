@@ -8,11 +8,12 @@ import pickle
 # @ App level create a reference for Shopify API client
 # store = await Shopify(settings.store, "ShopifyClient")
 
+
 async def test():
-  store = Shopify(settings.store, "ProductHandleMapping")
-  return await store.fetch_mapping_products()
-  await store.init_handle_id_table()
-  return store.id_table
+    store = Shopify(settings.store, "ProductHandleMapping")
+    return await store.fetch_mapping_products()
+    await store.init_handle_id_table()
+    return store.id_table
 
 
 # print(asyncio.run(test()))
@@ -23,7 +24,7 @@ async def test():
 # for product in products:
 #   handle = product.get("handle","404")
 #   variants = product.get("variants",{}).get("nodes",[])
-  
+
 #   variant_count  = len(variants)
 #   is_single_variant = variant_count==1
 #   var = {}
@@ -33,7 +34,6 @@ async def test():
 #     have_single_variant= is_single_variant,
 #     variants=var,
 #   )
-
 
 
 # # save
@@ -47,7 +47,6 @@ with open("bucket/products.pkl", "rb") as f:
     print((dataw["high-quality-s2d0s05-n960-display-ic-for-samsung-n960"]))
     print("\n\n\n\n")
     print((dataw["red-snowboard"]))
-
 
 
 # Retrival Samples:

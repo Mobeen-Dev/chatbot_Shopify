@@ -4,6 +4,7 @@ from config import resource_path
 
 LOG_FILE = resource_path("bucket/app.log")  # adjust path as needed
 
+
 def get_logger(name: str) -> Logger:
     """
     Returns a logger that writes INFO+ to both console and a log file.

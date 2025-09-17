@@ -9,6 +9,7 @@ from openai import AsyncOpenAI
 from openai import OpenAI
 from config import settings, llm_model
 from logger import get_logger
+
 # from opneai_tools import tools_list
 from MCP import tools_list
 from MCP import Controller
@@ -21,10 +22,10 @@ from contextlib import asynccontextmanager
 
 # @ App level reference for 3rd Party Services
 # redis_client = None
-session_manager:SessionManager
-mcp_controller:Controller
+session_manager: SessionManager
+mcp_controller: Controller
 background_task = None
-client:OpenAI
+client: OpenAI
 
 logger = get_logger("FastAPI")
 
@@ -32,10 +33,12 @@ logger = get_logger("FastAPI")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global session_manager, mcp_controller, client
-    redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+    redis_client = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
     session_manager = SessionManager(redis_client, session_ttl=3600)
     mcp_controller = Controller()
-    client = OpenAI(api_key=settings.openai_api_key,)
+    client = OpenAI(
+        api_key=settings.openai_api_key,
+    )
     background_task = asyncio.create_task(store_session_in_db())
     logger.info("Background task for persisting sessions started.")
     yield
@@ -46,8 +49,6 @@ async def lifespan(app: FastAPI):
             await background_task
         except asyncio.CancelledError:
             logger.info("Background task cancelled on shutdown.")
-            
-
 
 
 app = FastAPI(lifespan=lifespan)
@@ -56,16 +57,19 @@ app = FastAPI(lifespan=lifespan)
 # CORS setup for frontend (adjust origins in production)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Use specific origin in production (e.g., ["https://yourfrontend.com"])
+    allow_origins=[
+        "*"
+    ],  # Use specific origin in production (e.g., ["https://yourfrontend.com"])
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Chatbot API!"}
+
 
 @app.post("/async-chat", response_model=ChatResponse)
 async def async_chat_endpoint(chat_request: ChatRequest):
@@ -117,7 +121,9 @@ async def async_chat_endpoint(chat_request: ChatRequest):
     if not user_message:
         raise HTTPException(status_code=400, detail="Message cannot be empty.")
     if not session_id:
-        session_id = await session_manager.create_session({"data":None, "metadata":None}) # Created User Chat History Data
+        session_id = await session_manager.create_session(
+            {"data": None, "metadata": None}
+        )  # Created User Chat History Data
     else:
         # Retrieve existing session data
         session_data = await session_manager.get_session(session_id)
@@ -131,37 +137,34 @@ async def async_chat_endpoint(chat_request: ChatRequest):
             api_key=settings.openai_api_key,
             http_client=DefaultAioHttpClient(timeout=600),
         ) as client:
-
             messages = chat_request.openai_msgs()
-            response = await process_with_tools(client, chat_request, tools_list) 
-            
-            
-            chat_request.append_message({"role": "user", "content": user_message, "name": "Customer"})
+            response = await process_with_tools(client, chat_request, tools_list)
+
+            chat_request.append_message(
+                {"role": "user", "content": user_message, "name": "Customer"}
+            )
             chat_request.append_message(response.choices[0].message.model_dump())
             chat_request.added_total_tokens(response.usage)
-            
-            logger.info(chat_request)  
-            
+
+            logger.info(chat_request)
+
             logger.info(f"\n\n\n\n\nOpenAI response: {response}\n\n\n\n\n\n")
             # logger.info(f"\n\n History choices: {messages}")
-            
-            reply = str(response.choices[0].message.content).strip() 
+
+            reply = str(response.choices[0].message.content).strip()
             stucture_output, reply = chat_request.extract_json_objects(reply)
-            
 
             messages = chat_request.n_history
-            
+
             latest_chat = chat_request.n_Serialize_chat_history(messages)
             await session_manager.update_session(session_id, latest_chat)
-            
+
             print(f"\n Stuctural Data: {stucture_output}\n")
             print(f"\n Final Data: {reply}\n")
             print(f" Execution : {chat_request.activity_record}\n")
-            
+
             return ChatResponse(
-                reply=reply,
-                stuctural_data=stucture_output,
-                session_id=session_id
+                reply=reply, stuctural_data=stucture_output, session_id=session_id
             )
 
     except OpenAIError as e:
@@ -183,30 +186,32 @@ async def async_chat_endpoint(chat_request: ChatRequest):
             detail="Internal server error.",
         )
 
+
 async def process_with_tools(client, chat_request, tools_list) -> ChatCompletion:
     """Handle recursive tool calls until no more tool calls are in the model's response."""
-    
+
     while True:
         response = await client.chat.completions.create(
             model=llm_model,
             tools=tools_list,
             messages=chat_request.openai_msgs(),
-            tool_choice="auto"
+            tool_choice="auto",
         )
-        
+
         assistant_message = response.choices[0].message
         message_cost = response.usage
-        
+
         if not assistant_message.tool_calls:
             # No more tools, final AI reply
             chat_request.activity_record += " -> Output"
             return response
-        
+
         chat_request.append_message(assistant_message.model_dump())
         chat_request.added_total_tokens(message_cost)
 
-        chat_request = await mcp_controller.function_execution(chat_request, assistant_message.tool_calls)
-
+        chat_request = await mcp_controller.function_execution(
+            chat_request, assistant_message.tool_calls
+        )
 
 
 if __name__ == "__main__":

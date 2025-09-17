@@ -3,11 +3,11 @@ import faiss
 import psutil, os
 
 # Parameters
-d = 3027          # dimension
-n = 1_000_000     # number of vectors
+d = 3027  # dimension
+n = 1_000_000  # number of vectors
 
 # Generate 1M random vectors (float32)
-xb = np.random.rand(n, d).astype('float16')
+xb = np.random.rand(n, d).astype("float16")
 
 # Check process memory before FAISS
 process = psutil.Process(os.getpid())

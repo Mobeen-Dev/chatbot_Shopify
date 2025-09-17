@@ -13,14 +13,14 @@ class SessionManager:
         self.redis_client = redis_client
         self.session_ttl = session_ttl  # Time to live in seconds (default 1 hour)
         self.session_prefix = "session:"
-        self.shadow_prefix  = "session:shadow:"
+        self.shadow_prefix = "session:shadow:"
 
     @staticmethod
     def extract_chat_history(json_string: str) -> List[ChatMessage]:
         """Converts a JSON string back into a list of ChatMessage objects."""
         list_of_dicts = json.loads(json_string)
         return [ChatMessage(**d) for d in list_of_dicts]
-    
+
     @staticmethod
     def serialize_chat_history(chat_history: List[ChatMessage]) -> str:
         """Converts a list of ChatMessage objects to a JSON string."""
@@ -32,15 +32,15 @@ class SessionManager:
         session_id = str(uuid.uuid4())
         session_key = f"{self.session_prefix}{session_id}"
         shadow_key = f"{self.shadow_prefix}{session_id}"
-        
+
         # Store session data as a JSON string
         payload = json.dumps(user_data)
-        
+
         # Volatile key (expires)
         await self.redis_client.set(session_key, payload, ex=self.session_ttl)
         # Shadow key (no TTL)
         await self.redis_client.set(shadow_key, payload)
-        
+
         return session_id
 
     async def get_session(self, session_id: str) -> dict:
@@ -56,7 +56,7 @@ class SessionManager:
                 obj = json.loads(obj)
             return obj
         return {}
-    
+
     async def delete_session(self, session_id: str):
         """Deletes a session."""
         session_key = f"{self.session_prefix}{session_id}"
@@ -68,23 +68,25 @@ class SessionManager:
         """Updates session data, overwriting existing keys."""
         session_key = f"{self.session_prefix}{session_id}"
         shadow_key = f"{self.shadow_prefix}{session_id}"
-        
+
         payload = json.dumps(new_data)
-        
+
         # Refresh volatile value + TTL
         await self.redis_client.set(session_key, payload, ex=self.session_ttl)
         # Update shadow copy
         await self.redis_client.set(shadow_key, payload)
 
+
 import asyncio
+
 
 # --- Example Usage ---
 async def wow():
     """An asynchronous function to demonstrate session management."""
     # 1. Connect to Redis and initialize the session manager
     # Use redis.asyncio to create an asynchronous client
-    redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
-    
+    redis_client = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
+
     # Initialize the session manager with a 1-hour session TTL
     session_manager = SessionManager(redis_client, session_ttl=3600)
 
@@ -102,10 +104,10 @@ async def wow():
     new_user_info = {"user_id": 123, "username": "alice", "roles": ["user", "admin"]}
     await session_manager.update_session(session_id, str(new_user_info))
     print("Session updated.")
-    
+
     updated_data = await session_manager.get_session(session_id)
     print(f"Updated session data: {updated_data}")
-    
+
     # # 5. Simulate storing and retrieving a chat history
     # chat_history: List[ChatMessage] = [
     #     ChatMessage(role="user", content="Hello there!"),
@@ -114,11 +116,11 @@ async def wow():
     # # Serialize the list of objects and update the session with it
     # chat_json = SessionManager.serialize_chat_history(chat_history)
     # await session_manager.update_session(session_id, {"chat_history": chat_json})
-    
+
     # # Retrieve the updated session
     # session_with_chat = await session_manager.get_session(session_id)
     # retrieved_chat_json = session_with_chat.get("history")
-    
+
     # if retrieved_chat_json:
     #     retrieved_chat_history = SessionManager.extract_chat_history(retrieved_chat_json)
     #     print("\nRetrieved and deserialized chat history:")
@@ -132,6 +134,7 @@ async def wow():
     # 7. Try to retrieve the deleted session (should return None)
     deleted_data = await session_manager.get_session(session_id)
     print(f"Attempt to retrieve deleted session: {deleted_data}")
+
 
 # Run the asynchronous main function
 if __name__ == "__main__":

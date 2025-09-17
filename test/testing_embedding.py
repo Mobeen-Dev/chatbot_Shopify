@@ -2,7 +2,9 @@ from Shopify import Shopify
 import json
 from config import settings
 import asyncio
+
 store = Shopify(settings.store, "ShopifyClient")
+
 
 async def get_order_via_OrderNumber(order_number: str):
     data = await store.fetch_order_by_name(order_number)
@@ -11,8 +13,6 @@ async def get_order_via_OrderNumber(order_number: str):
     # product = store.format_product(product)
     # print(product   )
     return Shopify.format_order_for_llm(data)
-
-
 
 
 # # Example usage
@@ -25,7 +25,6 @@ print(order_data)
 # print(len(data))
 # encrypted_data = '0'+data[3:6] + "*" *4 + data[-3:]
 # print(encrypted_data)
-
 
 
 # # Example usage

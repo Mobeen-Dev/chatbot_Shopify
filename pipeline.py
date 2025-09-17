@@ -15,27 +15,27 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 client = OpenAI(api_key=settings.openai_api_key)
 store = Shopify(settings.store)
 
-products = asyncio.run(store.fetch_all_products())
+products = asyncio.run(store.fetch_all_products(True))
 # print(products)
 
 
 def chunk_product_description(product, chunk_size: int = 500, chunk_overlap: int = 70):
     """
     Splits a product's description into chunks with metadata including product.id.
-    
+
     Args:
         product: An object or dict with 'id' and 'description' attributes/keys.
         chunk_size: Max size of each chunk.
         chunk_overlap: Overlap between chunks.
-        
+
     Returns:
         List of Document objects containing chunked description and metadata.
     """
-    
+
     # Ensure we can handle both dict and object input
     product_id = getattr(product, "id", None) or product.get("id")
     description = getattr(product, "description", None) or product.get("description")
-    
+
     if not description:
         return []
 
@@ -47,25 +47,22 @@ def chunk_product_description(product, chunk_size: int = 500, chunk_overlap: int
     )
 
     # Create initial document
-    base_doc = Document(
-        page_content=description,
-        metadata={"id": product_id}
-    )
+    base_doc = Document(page_content=description, metadata={"id": product_id})
 
     # Split into chunks
     chunks = description_splitter.split_documents([base_doc])
-    
+
     # Building Product Intro
-    variants = ''
+    variants = ""
     for option in product["options"]:
-      variants += f"{option["name"]} : {option["values"]}"
-    
+        variants += f"{option['name']} : {option['values']}"
+
     category = product["category"]
     if category:
-      category = category["fullName"]
-    
-    p_info = f" Product : {product["title"]} at url /{product["handle"]} .With variants {variants} Belongs to {category} \n "
-    
+        category = category["fullName"]
+
+    p_info = f" Product : {product['title']} at url /{product['handle']} .With variants {variants} Belongs to {category} \n "
+
     # Make sure metadata carries the product id
     added = False
     for chunk in chunks:
@@ -79,21 +76,19 @@ def chunk_product_description(product, chunk_size: int = 500, chunk_overlap: int
         chosen = random.choice(chunks)
         chosen.page_content = p_info + chosen.page_content
 
-
     return chunks
+
 
 def normalize(vectors: np.ndarray) -> np.ndarray:
     return vectors / np.linalg.norm(vectors, axis=1, keepdims=True)
+
 
 def save_chunks_to_faiss(chunks, index_path="faiss_index"):
     texts = [chunk.page_content for chunk in chunks]
     metadata = [chunk.metadata for chunk in chunks]
 
     # 1. Get embeddings from OpenAI
-    response = client.embeddings.create(
-        model="text-embedding-3-small",
-        input=texts
-    )
+    response = client.embeddings.create(model="text-embedding-3-small", input=texts)
 
     embeddings = np.array([e.embedding for e in response.data]).astype("float32")
 
@@ -103,7 +98,7 @@ def save_chunks_to_faiss(chunks, index_path="faiss_index"):
     # 3. Create FAISS index (Inner Product = cosine similarity after normalization)
     dim = embeddings.shape[1]
     index = faiss.IndexFlatIP(dim)
-    index.add(embeddings) # type: ignore
+    index.add(embeddings)  # type: ignore
 
     # 4. Save FAISS index
     faiss.write_index(index, index_path + ".index")
@@ -112,7 +107,10 @@ def save_chunks_to_faiss(chunks, index_path="faiss_index"):
     with open(index_path + "_meta.pkl", "wb") as f:
         pickle.dump(metadata, f)
 
-    print(f"✅ Saved {len(chunks)} chunks into FAISS (cosine similarity) at '{index_path}.index'")
+    print(
+        f"✅ Saved {len(chunks)} chunks into FAISS (cosine similarity) at '{index_path}.index'"
+    )
+
 
 def search_faiss(query, index_path="faiss_index", top_k=5):
     # 1. Load FAISS index
@@ -123,10 +121,11 @@ def search_faiss(query, index_path="faiss_index", top_k=5):
         metadata = pickle.load(f)
 
     # 3. Embed and normalize query
-    q_emb = client.embeddings.create(
-        model="text-embedding-3-small",
-        input=query
-    ).data[0].embedding
+    q_emb = (
+        client.embeddings.create(model="text-embedding-3-small", input=query)
+        .data[0]
+        .embedding
+    )
     q_emb = np.array([q_emb]).astype("float32")
     q_emb = normalize(q_emb)
 
@@ -135,12 +134,15 @@ def search_faiss(query, index_path="faiss_index", top_k=5):
 
     results = []
     for score, idx in zip(scores[0], indices[0]):
-        results.append({
-            "score": float(score),       # cosine similarity score
-            "metadata": metadata[idx],   # remap via saved metadata
-        })
+        results.append(
+            {
+                "score": float(score),  # cosine similarity score
+                "metadata": metadata[idx],  # remap via saved metadata
+            }
+        )
 
     return results
+
 
 def create_request_object(request_number, text_chunk):
     """
@@ -162,10 +164,10 @@ def create_request_object(request_number, text_chunk):
             "model": "text-embedding-3-small",
             "input": text_chunk,
             "encoding_format": "float",
-            
-            }
-        }
+        },
+    }
     return request_object
+
 
 def create_batch_jsonl(batch_num, data_folder, genres, updated_idx_start):
     """
@@ -177,19 +179,22 @@ def create_batch_jsonl(batch_num, data_folder, genres, updated_idx_start):
         job_titles (List): A list of job titles to include in the batch.
         updated_idx_start (int): The starting index for job titles.
     """
-
+    if genres == []:
+        return
     with open(f"{data_folder}/file_batch_{batch_num}.jsonl", "w") as f:
         for idx, genre in enumerate(genres):
-            
-            request_number = idx+1 + updated_idx_start
-            
+            request_number = idx + 1 + updated_idx_start
+
             genre_request_object = create_request_object(request_number, genre)
             f.write(json.dumps(genre_request_object) + "\n")
 
-def process_products_to_batches(products, 
-                                chunk_per_file=4000, 
-                                index_path="faiss_index",
-                                data_folder="embed_job_data"):
+
+def process_products_to_batches(
+    products,
+    chunk_per_file=4000,
+    index_path="faiss_index",
+    data_folder="embed_job_data",
+):
     """
     Processes a list of products by chunking their descriptions, saving metadata,
     and batching chunks into jsonl files.
@@ -204,7 +209,7 @@ def process_products_to_batches(products,
     chunks = []
     for product in products:
         chunks.extend(chunk_product_description(product))
-        
+
     print(f"Total products processed: {len(products)}")
     print(f"Total chunks created: {len(chunks)}")
 
@@ -228,11 +233,12 @@ def process_products_to_batches(products,
     batch_num = chunk_per_file if len(chunks) > chunk_per_file else len(chunks)
 
     new_beginning = 0
-    for batch_idx, num in enumerate(range(0, len(chunks)+1, batch_num)):
-        batch_genres = chunks[new_beginning:new_beginning + batch_num]
+    for batch_idx, num in enumerate(range(0, len(chunks) + 1, batch_num)):
+        batch_genres = chunks[new_beginning : new_beginning + batch_num]
         create_batch_jsonl(batch_idx, data_folder, batch_genres, updated_idx_start=num)
         print(f"{new_beginning = }\n{batch_num = }")
         new_beginning += batch_num
+
 
 def upload_batch_files_and_get_ids(folder_path, client):
     """
@@ -251,20 +257,30 @@ def upload_batch_files_and_get_ids(folder_path, client):
     # List all files in the folder
     for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
-        
+
+        # Skip if file is empty
+        if os.path.getsize(file_path) == 0:
+            print(f"Skipping empty file: {filename}")
+            continue
+
         # Make sure it is a file (skip directories)
         if os.path.isfile(file_path):
             print(f"Uploading file: {filename}")
             with open(file_path, "rb") as f:
-                batch_input_file = client.files.create(
-                    file=f,
-                    purpose="batch"
-                )
+                batch_input_file = client.files.create(file=f, purpose="batch")
                 uploaded_file_ids.append(batch_input_file.id)
+                print(batch_input_file.id)
 
     return uploaded_file_ids
 
-def create_batches_from_file_ids(file_ids, client, endpoint="/v1/chat/completions", completion_window="24h", metadata=None):
+
+def create_batches_from_file_ids(
+    file_ids,
+    client,
+    endpoint="/v1/chat/completions",
+    completion_window="24h",
+    metadata=None,
+):
     """
     Creates batch operations for each uploaded file ID.
 
@@ -289,23 +305,57 @@ def create_batches_from_file_ids(file_ids, client, endpoint="/v1/chat/completion
             input_file_id=file_id,
             endpoint=endpoint,
             completion_window=completion_window,
-            metadata=metadata
+            metadata=metadata,
         )
         batch_responses.append(batch_response)
 
     return batch_responses
 
+
+def batch_to_json(batch_obj):
+    """
+    Converts a single OpenAI Batch object to a JSON-serializable dictionary.
+    Uses model_dump() if available, otherwise falls back to __dict__.
+
+    Args:
+        batch_obj: An instance of openai.types.Batch
+
+    Returns:
+        dict: A JSON-serializable dictionary representation of the batch
+    """
+    if hasattr(batch_obj, "model_dump"):
+        return batch_obj.model_dump()
+    else:
+        # Shallow conversion fallback
+        return {k: v for k, v in batch_obj.__dict__.items() if not k.startswith("_")}
+
+
+def save_batches_as_json(batch_list, output_path="batch_responses.json"):
+    """
+    Converts a list of OpenAI Batch objects to JSON and saves to a file.
+
+    Args:
+        batch_list (list): List of openai.types.Batch objects
+        output_path (str): Output filename
+    """
+    batch_dicts = [batch_to_json(b) for b in batch_list]
+
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(batch_dicts, f, indent=2)
+
+    print(f"Saved {len(batch_dicts)} batches to {output_path}")
+
+
 # Example usage
 if __name__ == "__main__":
-    data_folder="embed_job_data"
-    process_products_to_batches(products, chunk_per_file=4000, index_path="faiss_index", data_folder=data_folder)
-    
+    data_folder = "embed_job_data"
+    process_products_to_batches(
+        products, chunk_per_file=280, index_path="faiss_index", data_folder=data_folder
+    )
+
     file_ids = upload_batch_files_and_get_ids(data_folder, client)
-    
+
     batch_responses = create_batches_from_file_ids(file_ids, client)
     print("Batch operations created:", batch_responses)
-    with open("batch_job_responses.json", 'w') as f:
-        json.dump(batch_responses, f, indent=2)
-    
-    
 
+    save_batches_as_json(batch_responses)

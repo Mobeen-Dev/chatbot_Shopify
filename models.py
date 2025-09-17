@@ -1,11 +1,19 @@
-import json 
+import json
 from pydantic import BaseModel, Field
 from dataclasses import dataclass, asdict
 from typing import Optional, List, Literal, Dict, Any, cast, Mapping, Tuple
-from openai.types.chat import ChatCompletionMessageToolCall, ChatCompletionMessageParam, ChatCompletionToolMessageParam,  ChatCompletionMessage, ChatCompletionSystemMessageParam
+from openai.types.chat import (
+    ChatCompletionMessageToolCall,
+    ChatCompletionMessageParam,
+    ChatCompletionToolMessageParam,
+    ChatCompletionMessage,
+    ChatCompletionSystemMessageParam,
+)
 import re
 
 Role = Literal["system", "user", "assistant", "tool", "function", "developer"]
+
+
 class ChatMessage(BaseModel):
     # role: Role
     role: str
@@ -14,43 +22,52 @@ class ChatMessage(BaseModel):
     tool_call_id: Optional[str] = None
     tool_calls: Optional[List[ChatCompletionMessageToolCall]] = None
 
+
 # Request schema
 class ChatRequest(BaseModel):
-    session_id: Optional[str] = None                            # Session ID for tracking conversation
-    message: str                                                # Client Asked Question
-    metadata : dict = Field(default_factory=dict)               # Extensible for AI cost tracking, cart links, product references, etc.
-    history: List[ChatMessage] = Field(default_factory=list)    # Chat History From Redis
-    n_history: List[ChatCompletionMessageParam] = Field(default_factory=list)    # Chat History From Redis
-    activity_record: str = ''
-    is_vector_review_prompt_added : bool = False
-    is_structural_output_prompt_added : bool = False
-    is_cart_instructions_added : bool = False
-    is_order_instructions_added : bool = False
-    
-    
+    session_id: Optional[str] = None  # Session ID for tracking conversation
+    message: str  # Client Asked Question
+    metadata: dict = Field(
+        default_factory=dict
+    )  # Extensible for AI cost tracking, cart links, product references, etc.
+    history: List[ChatMessage] = Field(default_factory=list)  # Chat History From Redis
+    n_history: List[ChatCompletionMessageParam] = Field(
+        default_factory=list
+    )  # Chat History From Redis
+    activity_record: str = ""
+    is_vector_review_prompt_added: bool = False
+    is_structural_output_prompt_added: bool = False
+    is_cart_instructions_added: bool = False
+    is_order_instructions_added: bool = False
+
     def added_total_tokens(self, usage_info):
-        previous_cost = self.metadata.get("tokens_usage",{})
-        new_cost_completion = previous_cost.get("completion_tokens", 0)+usage_info.completion_tokens
-        new_cost_prompt = previous_cost.get("prompt_tokens", 0)+usage_info.prompt_tokens
-        new_cost_total = previous_cost.get("total_tokens", 0)+usage_info.total_tokens
+        previous_cost = self.metadata.get("tokens_usage", {})
+        new_cost_completion = (
+            previous_cost.get("completion_tokens", 0) + usage_info.completion_tokens
+        )
+        new_cost_prompt = (
+            previous_cost.get("prompt_tokens", 0) + usage_info.prompt_tokens
+        )
+        new_cost_total = previous_cost.get("total_tokens", 0) + usage_info.total_tokens
         self.metadata["tokens_usage"] = {
             "completion_tokens": new_cost_completion,
-            "prompt_tokens":new_cost_prompt,
-            "total_tokens":new_cost_total
+            "prompt_tokens": new_cost_prompt,
+            "total_tokens": new_cost_total,
         }
 
-    def n_Serialize_chat_history(self, chat_history: List[ChatCompletionMessageParam]) -> str:
+    def n_Serialize_chat_history(
+        self, chat_history: List[ChatCompletionMessageParam]
+    ) -> str:
         """Converts a list of Chatmsg objects to a JSON string."""
-        list_of_dicts = []        
+        list_of_dicts = []
         for msg in chat_history:
-            
             if msg["role"] == "developer":
                 dict_msg = {
                     "role": "developer",
                     "content": msg["content"],
                 }
                 list_of_dicts.append(dict_msg)
-                
+
             elif msg["role"] == "system":
                 if msg["content"] != self.system_prompt:
                     continue  # Skip system prompts Except initial one
@@ -59,26 +76,26 @@ class ChatRequest(BaseModel):
                     "content": msg["content"],
                 }
                 list_of_dicts.append(dict_msg)
-                
+
             elif msg["role"] == "user":
                 dict_msg = {
                     "role": "user",
                     "content": msg["content"],
-                    "name": msg.get("name", 'Customer'),
+                    "name": msg.get("name", "Customer"),
                 }
                 list_of_dicts.append(dict_msg)
-                
+
             elif msg["role"] == "assistant":
-                dict_msg: Dict[str, Any] = {
-                "role": "assistant"
-                }
+                dict_msg: Dict[str, Any] = {"role": "assistant"}
 
                 # Optional fields
                 if "content" in msg and msg["content"] is not None:
                     dict_msg["content"] = msg["content"]
 
                 if "tool_calls" in msg and msg["tool_calls"]:
-                    dict_msg["tool_calls"] = [self.serialize_tool_call(tc) for tc in msg["tool_calls"]]
+                    dict_msg["tool_calls"] = [
+                        self.serialize_tool_call(tc) for tc in msg["tool_calls"]
+                    ]
 
                 if "function_call" in msg and msg["function_call"] is not None:
                     # Deprecated, include only if needed
@@ -93,9 +110,8 @@ class ChatRequest(BaseModel):
                 if "refusal" in msg and msg["refusal"] is not None:
                     dict_msg["refusal"] = msg["refusal"]
 
-                
                 list_of_dicts.append(dict_msg)
-                
+
             elif msg["role"] == "tool":
                 msg = self.serialize_tool_response(msg)
                 dict_msg = {
@@ -104,7 +120,7 @@ class ChatRequest(BaseModel):
                     "tool_call_id": msg["tool_call_id"],
                 }
                 list_of_dicts.append(dict_msg)
-                
+
             elif msg["role"] == "function":
                 dict_msg = {
                     "role": "function",
@@ -112,15 +128,16 @@ class ChatRequest(BaseModel):
                     "name": msg["name"],
                 }
                 list_of_dicts.append(dict_msg)
-                
+
             else:
                 list_of_dicts.append(dict(msg))
-        
-        
-        return json.dumps({"data":list_of_dicts, "metadata":self.metadata})
-    
+
+        return json.dumps({"data": list_of_dicts, "metadata": self.metadata})
+
     @staticmethod
-    def serialize_tool_response(msg: ChatCompletionToolMessageParam) -> ChatCompletionToolMessageParam:
+    def serialize_tool_response(
+        msg: ChatCompletionToolMessageParam,
+    ) -> ChatCompletionToolMessageParam:
         content = str(msg["content"]) or "No content provided"
         # msg["content"] = f"{content[:100]}....{content[-100:]}" if len(content) > 200 else content  // TODO Re-write hybrid Approach
         if content[:10] == "#VectorDB-":
@@ -137,43 +154,49 @@ class ChatRequest(BaseModel):
 
     def n_Deserialize_chat_history(self, obj: dict) -> List[Dict[str, Any]]:
         """Converts a JSON string from Redis back into a list of ChatCompletionMessageParam-like dicts."""
-        
-        chat_list = []        
+
+        chat_list = []
         self.metadata = obj.get("metadata", {})
-        
+
         for msg in obj.get("data", []):
             role = msg.get("role")
 
             if role == "developer":
-                chat_list.append({
-                    "role": "developer",
-                    "content": msg["content"],
-                    "name": msg.get("name"),
-                })
+                chat_list.append(
+                    {
+                        "role": "developer",
+                        "content": msg["content"],
+                        "name": msg.get("name"),
+                    }
+                )
 
             elif role == "system":
-                chat_list.append({
-                    "role": "system",
-                    "content": msg["content"],
-                })
+                chat_list.append(
+                    {
+                        "role": "system",
+                        "content": msg["content"],
+                    }
+                )
 
             elif role == "user":
-                chat_list.append({
-                    "role": "user",
-                    "content": msg["content"],
-                    "name": msg.get("name"),
-                })
+                chat_list.append(
+                    {
+                        "role": "user",
+                        "content": msg["content"],
+                        "name": msg.get("name"),
+                    }
+                )
 
             elif role == "assistant":
-                restored: dict[str, Any] = {
-                    "role": "assistant"
-                }
+                restored: dict[str, Any] = {"role": "assistant"}
 
                 if "content" in msg:
                     restored["content"] = msg["content"]
 
                 if "tool_calls" in msg:
-                    restored["tool_calls"] = [self.deserialize_tool_call(tc) for tc in msg["tool_calls"]]
+                    restored["tool_calls"] = [
+                        self.deserialize_tool_call(tc) for tc in msg["tool_calls"]
+                    ]
 
                 if "audio" in msg:
                     restored["audio"] = msg["audio"]
@@ -187,18 +210,18 @@ class ChatRequest(BaseModel):
                 chat_list.append(restored)
 
             elif role == "tool":
-                chat_list.append({
-                    "role": "tool",
-                    "content": msg["content"],
-                    "tool_call_id": msg["tool_call_id"]
-                })
+                chat_list.append(
+                    {
+                        "role": "tool",
+                        "content": msg["content"],
+                        "tool_call_id": msg["tool_call_id"],
+                    }
+                )
 
             elif role == "function":
-                chat_list.append({
-                    "role": "function",
-                    "content": msg["content"],
-                    "name": msg["name"]
-                })
+                chat_list.append(
+                    {"role": "function", "content": msg["content"], "name": msg["name"]}
+                )
 
             else:
                 # Fallback — trust the data if unknown role
@@ -207,18 +230,15 @@ class ChatRequest(BaseModel):
         return chat_list
 
     def serialize_function(self, function: Dict[str, Any]) -> Dict[str, Any]:
-        return {
-            "name": function["name"],
-            "arguments": function["arguments"]
-        }
+        return {"name": function["name"], "arguments": function["arguments"]}
 
     def serialize_tool_call(self, tool_call: Mapping[str, Any]) -> Dict[str, Any]:
         return {
             "id": tool_call["id"],
             "type": tool_call["type"],
-            "function": self.serialize_function(tool_call["function"])
+            "function": self.serialize_function(tool_call["function"]),
         }
-    
+
     def deserialize_tool_call(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
         return {
             "id": tool_call["id"],
@@ -226,131 +246,127 @@ class ChatRequest(BaseModel):
             "function": {
                 "name": tool_call["function"]["name"],
                 "arguments": tool_call["function"]["arguments"],
-            }
+            },
         }
 
     def load_history(self, session_data: Dict) -> None:
         self.n_history = cast(
-            List[ChatCompletionMessageParam], 
-            self.n_Deserialize_chat_history(session_data)
+            List[ChatCompletionMessageParam],
+            self.n_Deserialize_chat_history(session_data),
         )
-    
-    def append_msg(self,
-        role: Role, 
+
+    def append_msg(
+        self,
+        role: Role,
         content: Optional[str] = None,
         tool_calls: Optional[List[ChatCompletionMessageToolCall]] = None,
-        
         tool_call_id: Optional[str] = None,
-        function_name: Optional[str] = None ) -> None:
+        function_name: Optional[str] = None,
+    ) -> None:
         """Append a tool msg to the History Queue."""
-        
-        if tool_calls :
-            tool_msg = ChatMessage(
-                role=role,
-                tool_calls=tool_calls,
-                content=content
-            )
+
+        if tool_calls:
+            tool_msg = ChatMessage(role=role, tool_calls=tool_calls, content=content)
             self.history.append(tool_msg)
-            
-        elif tool_call_id and function_name :
+
+        elif tool_call_id and function_name:
             tool_msg = ChatMessage(
                 role=role,
-                tool_call_id=tool_call_id,                
+                tool_call_id=tool_call_id,
                 name=function_name,
-                content=content
+                content=content,
             )
             self.history.append(tool_msg)
         else:
-            msg = ChatMessage(
-                role=role,
-                content=content
-            )
+            msg = ChatMessage(role=role, content=content)
             self.history.append(msg)
-            
+
         return
 
     @staticmethod
-    def format_chat_msg(msg: ChatMessage): # -> ChatCompletionmsgParam
+    def format_chat_msg(msg: ChatMessage):  # -> ChatCompletionmsgParam
         base = {
             "role": msg.role,
             "content": msg.content,
         }
 
         if msg.role == "assistant" and hasattr(msg, "tool_calls") and msg.tool_calls:
-            base["tool_calls"] = msg.tool_calls  # Should be a List[ChatCompletionmsgToolCall]
+            base["tool_calls"] = (
+                msg.tool_calls
+            )  # Should be a List[ChatCompletionmsgToolCall]
             base["content"] = msg.content  # Must be null if tool_calls present
 
         elif msg.role == "tool":
-            base.update({
-                "tool_call_id": msg.tool_call_id,
-                "name": msg.name,
-            })
+            base.update(
+                {
+                    "tool_call_id": msg.tool_call_id,
+                    "name": msg.name,
+                }
+            )
 
         # return cast(ChatCompletionmsgParam, base)
         return base
-    
-    def append_tool_response(self, content:str, tool_call_id:str):
+
+    def append_tool_response(self, content: str, tool_call_id: str):
         tool_msg: ChatCompletionToolMessageParam = {
             "role": "tool",
             "content": content,
-            "tool_call_id": tool_call_id
+            "tool_call_id": tool_call_id,
         }
         self.n_history.append(tool_msg)
-    
+
     def append_vectorDb_prompt(self):
         if self.is_vector_review_prompt_added:
             return
-        
+
         tool_prompt: ChatCompletionSystemMessageParam = {
             "role": "system",
-            "content": self.vector_review_prompt
+            "content": self.vector_review_prompt,
         }
-        
+
         self.n_history.append(tool_prompt)
         self.is_vector_review_prompt_added = True
-        
+
     def append_stuctural_output_prompt(self):
         if self.is_structural_output_prompt_added:
             return
-        
+
         tool_prompt: ChatCompletionSystemMessageParam = {
             "role": "system",
-            "content": self.product_output_prompt
+            "content": self.product_output_prompt,
         }
-        
+
         self.n_history.append(tool_prompt)
         self.is_structural_output_prompt_added = True
-        
+
     def append_cart_output_prompt(self):
         if self.is_cart_instructions_added:
             return
-        
+
         tool_prompt: ChatCompletionSystemMessageParam = {
             "role": "system",
-            "content": self.cart_output_prompt
+            "content": self.cart_output_prompt,
         }
-        
+
         self.n_history.append(tool_prompt)
         self.is_cart_instructions_added = True
-    
+
     def append_order_output_prompt(self):
         if self.is_order_instructions_added:
             return
-        
+
         tool_prompt: ChatCompletionSystemMessageParam = {
             "role": "system",
-            "content": self.order_output_prompt
+            "content": self.order_output_prompt,
         }
-        
+
         self.n_history.append(tool_prompt)
         self.is_order_instructions_added = True
-    
-    
-    
+
     def append_message(self, data: dict[str, Any]):
         msg_dict = cast(ChatCompletionMessageParam, data)
         self.n_history.append(msg_dict)
-    
+
     @staticmethod
     def extract_json_objects(text: str) -> Tuple[List[dict[str, Any]], str]:
         _CURRENCY_SYMBOLS = "€£$₹"
@@ -363,12 +379,16 @@ class ChatRequest(BaseModel):
             rf"^\d+(?:,\d{{3}})*(?:\.\d+)?\s*(?:{_CURRENCY_CODE}|[{_CURRENCY_SYMBOLS}])$"
         )
         _price_range = re.compile(
-        rf"^\d+(?:,\d{{3}})*(?:\.\d+)?\s*-\s*\d+(?:,\d{{3}})*(?:\.\d+)?\s*(?:{_CURRENCY_CODE}|[{_CURRENCY_SYMBOLS}])$"
-    )
+            rf"^\d+(?:,\d{{3}})*(?:\.\d+)?\s*-\s*\d+(?:,\d{{3}})*(?:\.\d+)?\s*(?:{_CURRENCY_CODE}|[{_CURRENCY_SYMBOLS}])$"
+        )
 
         def _valid_price(s: str) -> bool:
             s = s.strip()
-            return bool(_price_leading.match(s) or _price_trailing.match(s) or _price_range.match(s))
+            return bool(
+                _price_leading.match(s)
+                or _price_trailing.match(s)
+                or _price_range.match(s)
+            )
 
         def _valid_product(obj: Any) -> bool:
             if not isinstance(obj, dict):
@@ -376,9 +396,14 @@ class ChatRequest(BaseModel):
             required = {"link", "imageurl", "title", "price", "description"}
             if not required.issubset(obj.keys()):
                 return False
-            if not all(isinstance(obj[k], str) and "\n" not in obj[k] for k in required):
+            if not all(
+                isinstance(obj[k], str) and "\n" not in obj[k] for k in required
+            ):
                 return False
-            if not (obj["link"].startswith("https://") and obj["imageurl"].startswith("https://")):
+            if not (
+                obj["link"].startswith("https://")
+                and obj["imageurl"].startswith("https://")
+            ):
                 return False
             if obj["price"].strip() and not _valid_price(obj["price"]):
                 return False
@@ -399,7 +424,9 @@ class ChatRequest(BaseModel):
                 return False
             if not obj["checkoutUrl"].startswith("https://"):
                 return False
-            if obj["subtotalAmount"].strip() and not _valid_price(obj["subtotalAmount"]):
+            if obj["subtotalAmount"].strip() and not _valid_price(
+                obj["subtotalAmount"]
+            ):
                 return False
             if not isinstance(obj["lineItems"], list):
                 return False
@@ -412,9 +439,15 @@ class ChatRequest(BaseModel):
             if not isinstance(obj, dict):
                 return False
             orderish_keys = {
-                "OrderID", "FinancialStatus", "FulfillmentStatus",
-                "CustomerName", "CustomerPhone", "CustomerEmail",
-                "Items", "ShippingAddress", "Total"
+                "OrderID",
+                "FinancialStatus",
+                "FulfillmentStatus",
+                "CustomerName",
+                "CustomerPhone",
+                "CustomerEmail",
+                "Items",
+                "ShippingAddress",
+                "Total",
             }
             return any(k in obj for k in orderish_keys)
 
@@ -513,19 +546,25 @@ class ChatRequest(BaseModel):
         cleaned_text = _remove_spans(intermediate, spans2).strip()
         cleaned_text = re.sub(r"\[\s*\]", "", cleaned_text)
         cleaned_text = re.sub(r"\[\s*(?:,\s*)*\]", "", cleaned_text)
-        cleaned_text = re.sub(r"```(?:json|product|cart|order)?\s*```", "", cleaned_text, flags=re.MULTILINE)
+        cleaned_text = re.sub(
+            r"```(?:json|product|cart|order)?\s*```",
+            "",
+            cleaned_text,
+            flags=re.MULTILINE,
+        )
 
         return results, cleaned_text.strip()
 
-
-
     def openai_msgs(self) -> List[ChatCompletionMessageParam]:
         """Return full OpenAI-compatible msg list including history and user input."""
-        
+
         if len(self.n_history) == 0:
-            chat = cast(ChatCompletionMessageParam, {"role": "system", "content": self.system_prompt})
+            chat = cast(
+                ChatCompletionMessageParam,
+                {"role": "system", "content": self.system_prompt},
+            )
             self.n_history.append(chat)
-            
+
         # for msg in history:
         #     messages.append(self.format_chat_msg(msg))
         # try:
@@ -535,47 +574,103 @@ class ChatRequest(BaseModel):
         # except IndexError:
         #     # If history is empty, we don't need to append the vector review prompt
         #     pass
-    
-        chat = cast(ChatCompletionMessageParam, {"role": "user", "content": self.message.strip()})
-        
+
+        chat = cast(
+            ChatCompletionMessageParam,
+            {"role": "user", "content": self.message.strip()},
+        )
+
         copy_history = self.n_history.copy()
         copy_history.append(chat)
         # print("\n\n*********\n",copy_history,"\n*****\n\n")
         return copy_history  # Return Last 10 messages 5 User and 5 Ai responses
-    
+
     @staticmethod
     def extract_chat_history(json_string) -> List[ChatMessage]:
         """Converts a JSON string back into a list of Chatmsg objects."""
         # list_of_dicts = json.loads(json_string)
         list_of_dicts = json_string.get("data", [])  # Handle both format
         return [ChatMessage(**d) for d in list_of_dicts]
-    
+
     @property
     def system_prompt(self) -> str:
         return """
             > You are a helpful assistant created by Digilog ([https://digilog.pk/](https://digilog.pk/)).
-            > Your role is to read and recommend products from the Digilog Store, providing responses in text only.
-            > You must not access, request, or process any personal data or confidential company information.
-            > If such information is requested, reply strictly with: **"Not eligible."**
+            >
+            > Your primary purpose is to provide **accurate, relevant, and helpful information exclusively about the Digilog Store**, its listed products, their features, specifications, pricing, availability, and usage. You must recommend products based on user queries and assist with navigation or product comparisons — all within the scope of the Digilog Store.
+            > The ideal conversation flow should follow this structure: **user query → product recommendation → add to cart.**
+            > **Do not respond to** any questions or engage in discussions unrelated to the Digilog Store or its product offerings. This includes political topics, health advice, trivia, or general knowledge questions. If a user asks something off-topic, do not improvise. Instead, politely redirect the conversation.
+            > **Always include a clickable product link in every product-related response**, regardless of where the product is mentioned. This ensures users can easily verify and access the product directly.
+            > Example response for off-topic questions:
+            > **“I'm here to assist you with products available on Digilog.pk. Let me know what you're looking for!”**
+            >
+            > You must not access, request, or process any personal data or confidential company information. If such information is requested, reply strictly with:
+            > **"Not eligible."**
+            >
+            > ### Limitations
+            >
+            > * Do not discuss politics, health, or non-product topics
+            > * Do not generate or explain trivia or general world knowledge
+            > * Do not give opinions on matters outside Digilog products
+            > * Do not make assumptions about user needs outside shopping context
+            >
+            > ### Fallback Logic
+            >
+            > If the user question is not related to the Digilog Store or its products:
+            >
+            > * Do not guess or fabricate answers
+            > * For Any task Beyond Digilog Website, straight reject the query
+            > * Politely redirect them back to store-related queries using the fallback message above
+            >
+            > ### Tone and Voice
+            >
+            > * Keep tone **professional, friendly, and concise**
+            > * Avoid slang, jokes, or overly casual phrasing
+            > * Stay informative, neutral, and helpful at all times
+            
         """.strip()
-        
+
     @property
     def vector_review_prompt(self) -> str:
         return """
-            Carefully examine the retrieved product data chunks from the vector database.
+            ### Product Matching Instructions - Vector Search Evaluation
 
-            Do NOT assume that the highest similarity score means the product is relevant.
-            Vector similarity can return partially related or misleading results, so you must:
+            Carefully evaluate the **retrieved product data chunks** from the vector database.
+            Do **not** rely solely on the **similarity score** — high scores may still return **irrelevant or misleading results**.
 
-            1. Fully understand the user's query and intent.
-            2. Critically evaluate each product chunk and determine if it directly addresses the user's needs.
-            3. Ignore or deprioritize chunks that are top-ranked but irrelevant to the query.
-            4. Once the best match is identified, use its `metadata.handle` field to fetch complete and up-to-date product data for a richer, more immersive response.
-            5. Use get_product_via_handle function on all relevant products to fetch their all data.
+            Follow these steps to ensure accurate and useful product recommendations:
 
-            Only recommend or describe products that you're confident are genuinely aligned with the user's goal.
+            ####  Step-by-Step Evaluation Process
+
+            1. **Understand the User's Intent**
+            Analyze the user's query deeply. Focus on **what the user actually wants** — not just keyword matches.
+
+            2. **Critically Review All Retrieved Chunks**
+            Examine each product data chunk to determine if it **truly matches** the user's intent.
+            ✘ Do not assume top-ranked chunks are always relevant.
+            ✔ Use logic, product context, and query alignment.
+
+            3. **Filter Out Irrelevant Chunks**
+            If a chunk is not directly useful to the query — **deprioritize or discard it**, even if it's top-ranked.
+
+            4. **Fetch Full Product Details for Relevant Matches**
+            Once relevant products are identified, use the product's `metadata.handle` to fetch **complete and up-to-date data** via the `get_product_via_handle()` function.
+
+            5. **Use Only Verified Product Data in Your Response**
+            Recommend or describe **only** the products you are confident meet the user's needs, based on full data retrieval — not just partial matches.
+
+            ### Do Not:
+
+            * Do not guess based on similarity scores alone
+            * Do not recommend irrelevant or loosely related products
+            * Do not skip data fetching for relevant matches
+            
+            ### Goal:
+
+            Deliver product recommendations that are **highly accurate, aligned with user intent**, and backed by complete product data.
+
         """.strip()
-    
+
     @property
     def product_output_prompt(self) -> str:
         return """
@@ -623,7 +718,7 @@ class ChatRequest(BaseModel):
             }
             ```
         """.strip()
-    
+
     @property
     def cart_output_prompt(self) -> str:
         return """
@@ -677,7 +772,7 @@ class ChatRequest(BaseModel):
             }
             ```
         """.strip()
-    
+
     @property
     def order_output_prompt(self) -> str:
         return """
@@ -745,6 +840,7 @@ class ChatRequest(BaseModel):
             ```
         """.strip()
 
+
 # Response schema
 class ChatResponse(BaseModel):
     reply: str | List[Dict[str, Any]]
@@ -754,18 +850,10 @@ class ChatResponse(BaseModel):
     cart_id: Optional[str] = None
 
 
-
-
-
-
-
 @dataclass
 class ProductEntry:
     have_single_variant: bool
-    variants: dict[str,dict[str, str]]
+    variants: dict[str, dict[str, str]]
     # "Large": {
     #    "vid": "gid://shopify/ProductVariant/40516000219222",
     # },
-
-
-

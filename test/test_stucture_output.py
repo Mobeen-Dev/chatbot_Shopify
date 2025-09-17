@@ -1,8 +1,14 @@
-import json 
+import json
 from pydantic import BaseModel, Field
 from dataclasses import dataclass, asdict
 from typing import Optional, List, Literal, Dict, Any, cast, Mapping, Tuple
-from openai.types.chat import ChatCompletionMessageToolCall, ChatCompletionMessageParam, ChatCompletionToolMessageParam,  ChatCompletionMessage, ChatCompletionSystemMessageParam
+from openai.types.chat import (
+    ChatCompletionMessageToolCall,
+    ChatCompletionMessageParam,
+    ChatCompletionToolMessageParam,
+    ChatCompletionMessage,
+    ChatCompletionSystemMessageParam,
+)
 import re
 
 
@@ -144,6 +150,7 @@ Thanks.
 
 gpt5_output = 'Here are great WiFi-ready microcontroller boards for IoT projects. Pick based on your performance needs, budget, and form factor preference.\n\n```product\n{\n"link": "https://digilog.pk/products/espressif-esp32-wroom-32d-development-board",\n"imageurl": "https://cdn.shopify.com/s/files/1/0559/7832/8150/files/Espressif_ESP32_WROOM_32D_Development_Board.webp?v=1735056350",\n"title": "Espressif Esp32 Wroom 32d Development Board Esp32d Esp 32d",\n"price": "1,199 PKR",\n"variants_options" : ["Default Title"],\n"description": "Dual‑core 240 MHz ESP32 with 802.11 b/g/n Wi‑Fi and Bluetooth (Classic + BLE) • 4MB flash, CP2102 USB‑UART, breadboard‑friendly headers • Rich peripherals: ADC, DAC, UART, SPI, I2C, PWM, touch, hall sensor • AWS FreeRTOS/ESP‑IDF/Arduino IDE support • Ideal for robust IoT, home automation, sensors, and gateways at a great value"\n}\n```\n\n```product\n{\n"link": "https://digilog.pk/products/raspberry-pi-pico-w",\n"imageurl": "https://cdn.shopify.com/s/files/1/0559/7832/8150/files/Raspberry_Pi_Pico_W_1_4807f6c2-75a5-4121-8ae9-4a90a7998461.webp?v=1735105109",\n"title": "Raspberry Pi Pico w",\n"price": "2,700 PKR",\n"variants_options" : ["Default Title"],\n"description": "RP2040 dual‑core 133 MHz with 2.4 GHz 802.11n Wi‑Fi (CYW43439) • 26 GPIO, 2MB flash, PIO, ADC, PWM • Compact, low‑power board ideal for sensors and automation • Program with MicroPython or C/C++ • Great for learning, quick prototyping, and Wi‑Fi‑enabled embedded tasks"\n}\n```\n\n```product\n{\n"link": "https://digilog.pk/products/nodemcu-v2-lua-esp8266-development-board-cp2102-in-pakistan",\n"imageurl": "https://cdn.shopify.com/s/files/1/0559/7832/8150/files/CP2102_NodeMcu_v2_ESP8266_Lua_ESP8266_WIFI_Development_Board_IoT_Development_Board_3b75fb14-0c10-433b-a550-1224bf7cb475.webp?v=1735049397",\n"title": "NodeMCU V2 Lua Wifi Iot Development Board Esp 12E Esp8266 In Pakistan",\n"price": "680 PKR",\n"variants_options" : ["Default Title"],\n"description": "Budget‑friendly ESP8266 Wi‑Fi board for simple IoT • 11 b/g/n Wi‑Fi, TCP/IP stack • Easy USB programming via CP2102; Arduino IDE and Lua supported • Breadboard‑friendly, onboard 3.3V regulator • Best for basic Wi‑Fi sensors, relays, and dashboards at ultra‑low cost"\n}\n```\n\n```product\n{\n"link": "https://digilog.pk/products/esp32-cam-wifi-bluetooth-camera-module-development-board-esp32-with-camera-module-ov2640-for-arduino",\n"imageurl": "https://cdn.shopify.com/s/files/1/0559/7832/8150/files/ESP32-CAM_WiFi___Bluetooth_Camera_Module_Development_Board_ESP32_With_Camera_Module_OV2640_islamabad_karachi_e0458bad-9c46-4dbf-850e-3e8bb74f848d.webp?v=1735050012",\n"title": "Esp32-cam Wifi + Bluetooth Camera Module Development Board Esp32 With Camera Module Ov2640 For Arduino",\n"price": "1,499 PKR",\n"variants_options" : ["Default Title"],\n"description": "ESP32 with Wi‑Fi + BLE and OV2640 camera for vision‑enabled IoT • Captures JPEG, supports TF card storage • Compact module for wireless streaming, surveillance, smart doorbells, and image‑based automation • Arduino/ESP‑IDF compatible for fast prototyping"\n}\n```'
 
+
 def extract_json_objects(text: str) -> Tuple[List[dict[str, Any]], str]:
     _CURRENCY_SYMBOLS = "€£$₹"
     _CURRENCY_CODE = r"[A-Z]{2,5}"
@@ -155,12 +162,14 @@ def extract_json_objects(text: str) -> Tuple[List[dict[str, Any]], str]:
         rf"^\d+(?:,\d{{3}})*(?:\.\d+)?\s*(?:{_CURRENCY_CODE}|[{_CURRENCY_SYMBOLS}])$"
     )
     _price_range = re.compile(
-    rf"^\d+(?:,\d{{3}})*(?:\.\d+)?\s*-\s*\d+(?:,\d{{3}})*(?:\.\d+)?\s*(?:{_CURRENCY_CODE}|[{_CURRENCY_SYMBOLS}])$"
-)
+        rf"^\d+(?:,\d{{3}})*(?:\.\d+)?\s*-\s*\d+(?:,\d{{3}})*(?:\.\d+)?\s*(?:{_CURRENCY_CODE}|[{_CURRENCY_SYMBOLS}])$"
+    )
 
     def _valid_price(s: str) -> bool:
         s = s.strip()
-        return bool(_price_leading.match(s) or _price_trailing.match(s) or _price_range.match(s))
+        return bool(
+            _price_leading.match(s) or _price_trailing.match(s) or _price_range.match(s)
+        )
 
     def _valid_product(obj: Any) -> bool:
         if not isinstance(obj, dict):
@@ -170,7 +179,10 @@ def extract_json_objects(text: str) -> Tuple[List[dict[str, Any]], str]:
             return False
         if not all(isinstance(obj[k], str) and "\n" not in obj[k] for k in required):
             return False
-        if not (obj["link"].startswith("https://") and obj["imageurl"].startswith("https://")):
+        if not (
+            obj["link"].startswith("https://")
+            and obj["imageurl"].startswith("https://")
+        ):
             return False
         if obj["price"].strip() and not _valid_price(obj["price"]):
             return False
@@ -204,9 +216,15 @@ def extract_json_objects(text: str) -> Tuple[List[dict[str, Any]], str]:
         if not isinstance(obj, dict):
             return False
         orderish_keys = {
-            "OrderID", "FinancialStatus", "FulfillmentStatus",
-            "CustomerName", "CustomerPhone", "CustomerEmail",
-            "Items", "ShippingAddress", "Total"
+            "OrderID",
+            "FinancialStatus",
+            "FulfillmentStatus",
+            "CustomerName",
+            "CustomerPhone",
+            "CustomerEmail",
+            "Items",
+            "ShippingAddress",
+            "Total",
         }
         return any(k in obj for k in orderish_keys)
 
@@ -305,10 +323,11 @@ def extract_json_objects(text: str) -> Tuple[List[dict[str, Any]], str]:
     cleaned_text = _remove_spans(intermediate, spans2).strip()
     cleaned_text = re.sub(r"\[\s*\]", "", cleaned_text)
     cleaned_text = re.sub(r"\[\s*(?:,\s*)*\]", "", cleaned_text)
-    cleaned_text = re.sub(r"```(?:json|product|cart|order)?\s*```", "", cleaned_text, flags=re.MULTILINE)
+    cleaned_text = re.sub(
+        r"```(?:json|product|cart|order)?\s*```", "", cleaned_text, flags=re.MULTILINE
+    )
 
     return results, cleaned_text.strip()
-
 
 
 wow = """
@@ -333,12 +352,3 @@ stucture_output, reply = extract_json_objects(str(wwow))
 print("stucture_output", stucture_output)
 print("\n---- cleaned ----\n")
 print("reply", reply)
-
-
-
-
-
-
-
-
-

@@ -1,41 +1,40 @@
 {{ 'styles.css' | asset_url | stylesheet_tag }}
 
-
 <body>
-    <!-- Chat Container -->
-    <div id="chat-container">
-        <!-- Chat Window -->
-        <div id="chat-window">
-            <!-- Chat Header -->
-            <div id="chat-header">
-                <h3>Product Assistant</h3>
-                <span class="chat-icon" id="minimize-chat">remove</span>
-            </div>
-            
-            <!-- Chat Messages -->
-            <div id="chat-messages">
-                <div class="message bot-message">
-                    Hi there! I'm your product assistant. Ask me about our products, and I'll show you some options.
-                </div>
-            </div>
-            
-            <!-- Chat Input Container -->
-            <div id="chat-input-container">
-                <textarea id="chat-input" placeholder="Type a message..."></textarea>
-                <button id="send-button">
-                    <span class="chat-icon">send</span>
-                </button>
-            </div>
+  <!-- Chat Container -->
+  <div id="chat-container">
+    <!-- Chat Window -->
+    <div id="chat-window">
+      <!-- Chat Header -->
+      <div id="chat-header">
+        <h3>Product Assistant</h3>
+        <span class="chat-icon" id="minimize-chat">remove</span>
+      </div>
+
+      <!-- Chat Messages -->
+      <div id="chat-messages">
+        <div class="message bot-message">
+          Hi there! I'm your product assistant. Ask me about our products, and I'll show you some options.
         </div>
-        
-        <!-- Chat Toggle Button -->
-        <div id="chat-toggle">
-            {% comment %} <span class="material-icons">chat</span> {% endcomment %}
-            <span class="chat-icon">chat</span>
-        </div>
+      </div>
+
+      <!-- Chat Input Container -->
+      <div id="chat-input-container">
+        <textarea id="chat-input" placeholder="Type a message..."></textarea>
+        <button id="send-button">
+          <span class="chat-icon">send</span>
+        </button>
+      </div>
     </div>
 
-    <script>
+    <!-- Chat Toggle Button -->
+    <div id="chat-toggle">
+      {% comment %} <span class="material-icons">chat</span> {% endcomment %}
+      <span class="chat-icon">chat</span>
+    </div>
+  </div>
+
+  <script>
 
         // Load Material Icons font inline without external dependencies
         (function() {
@@ -104,6 +103,8 @@
                     retryDelay: 1000,            // Base delay between retries (ms)
                     debounceDelay: 300,          // Debounce delay for input (ms)
                     apiEndpoint: '{{  block.settings.server_url }}',
+                    {% comment %} apiEndpoint: 'http://127.0.0.1:8000/async-chat', {% endcomment %}
+                    
                     maxConcurrentRequests: 2     // Limit concurrent API requests
                 };
                 
@@ -979,8 +980,7 @@
                 return new Promise(resolve => setTimeout(resolve, ms));
             }
         }
-        
-    </script>   
+  </script>
 </body>
 
 {% schema %}
@@ -1017,4 +1017,3 @@
   ]
 }
 {% endschema %}
-
