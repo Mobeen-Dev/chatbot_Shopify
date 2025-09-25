@@ -50,7 +50,7 @@ data_dict:dict
 with open("data.pkl", 'rb') as f:
     data_dict = pickle.load(f)
 
-matches = search_faiss("Microcontroller with built-in Wi-Fi cheap", "openai_embeddings", 10)
+matches = search_faiss("Microcontroller with built-in Wi-Fi cheap", "openai_embeddingsL2", 10)
 
 for match in matches:
     # print(match)
@@ -60,19 +60,16 @@ for match in matches:
 
 
 sys.exit()
-
-
-
 # CONFIG
 FOLDER_PATH = 'embed_job_output'  # <- change this
 EMBEDDING_DIM = 1536  # depending on the model used
 
-def return_index(value:str) -> int:
-    return int(value.split('-')[1])
-
 all_embeddings = []
 all_indexes = []
 
+def return_index(value:str) -> int:
+    return int(value.split('-')[1])
+  
 # Step 1: Process each .jsonl file
 for filename in os.listdir(FOLDER_PATH):
     if filename.endswith('.jsonl'):
@@ -83,7 +80,7 @@ for filename in os.listdir(FOLDER_PATH):
                     data = json.loads(line)
                     entries = data['response']['body']['data']
                     for entry in entries:
-                        
+                      
                         embedding = entry['embedding']
                         all_embeddings.append(embedding)
                         
@@ -97,18 +94,14 @@ for filename in os.listdir(FOLDER_PATH):
 embedding_matrix = np.array(all_embeddings).astype('float32')
 
 # Normalize embeddings for cosine similarity (if using IndexFlatIP)
-faiss.normalize_L2(embedding_matrix)
-
-# Your custom IDs (must be int64s)
+# faiss.normalize_L2(embedding_matrix)
 all_indexes = np.array(all_indexes, dtype='int64')
-
 # Step 3: Create FAISS index
-base_index = faiss.IndexFlatIP(EMBEDDING_DIM)
+base_index = faiss.IndexFlatL2(EMBEDDING_DIM)
 index = faiss.IndexIDMap(base_index)  # Wrap with IDMap
 # index.add(embedding_matrix) # type: ignore
 index.add_with_ids(embedding_matrix, all_indexes)  # type: ignore
-
 print(f"✅ Loaded {index.ntotal} embeddings into FAISS index.")
 
 # Optional: Save FAISS index to disk
-faiss.write_index(index, "openai_embeddings.index")
+faiss.write_index(index, "openai_embeddingsL2.index")

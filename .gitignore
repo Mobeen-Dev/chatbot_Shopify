@@ -28,3 +28,12 @@ app.log
 !/ShopifyExtension/ai-chatbot/extensions/chatbot/assets
 !/ShopifyExtension/ai-chatbot/extensions/chatbot/blocks
 embed_job_data
+/embed_job_out
+embed_job_output
+batch_response.json
+output.jsonl
+emb_job_out/*
+
+bucket/app.log
+batch_responses.json
+openai_embeddings.index

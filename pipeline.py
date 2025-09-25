@@ -1,10 +1,15 @@
 import os
+import sys
+import time
 import json
 import faiss
 import pickle
+import openai
 import random
 import asyncio
+import requests
 import numpy as np
+from typing import List
 from openai import OpenAI
 from Shopify import Shopify
 from config import settings
@@ -79,10 +84,6 @@ def chunk_product_description(product, chunk_size: int = 500, chunk_overlap: int
     return chunks
 
 
-def normalize(vectors: np.ndarray) -> np.ndarray:
-    return vectors / np.linalg.norm(vectors, axis=1, keepdims=True)
-
-
 def save_chunks_to_faiss(chunks, index_path="faiss_index"):
     texts = [chunk.page_content for chunk in chunks]
     metadata = [chunk.metadata for chunk in chunks]
@@ -93,7 +94,7 @@ def save_chunks_to_faiss(chunks, index_path="faiss_index"):
     embeddings = np.array([e.embedding for e in response.data]).astype("float32")
 
     # 2. Normalize for cosine similarity
-    embeddings = normalize(embeddings)
+    faiss.normalize_L2(embeddings)
 
     # 3. Create FAISS index (Inner Product = cosine similarity after normalization)
     dim = embeddings.shape[1]
@@ -127,7 +128,7 @@ def search_faiss(query, index_path="faiss_index", top_k=5):
         .embedding
     )
     q_emb = np.array([q_emb]).astype("float32")
-    q_emb = normalize(q_emb)
+    faiss.normalize_L2(q_emb)
 
     # 4. Search
     scores, indices = index.search(q_emb, top_k)
@@ -171,20 +172,24 @@ def create_request_object(request_number, text_chunk):
 
 def create_batch_jsonl(batch_num, data_folder, genres, updated_idx_start):
     """
-    Creates a JSONL file containing a batch of job title requests.
+    Creates a JSONL file containing a batch of genre requests.
 
     Args:
         batch_num (int): The batch number.
-        job_titles_folder (str): The folder to save the JSONL file.
-        job_titles (List): A list of job titles to include in the batch.
-        updated_idx_start (int): The starting index for job titles.
+        data_folder (str): The folder to save the JSONL file.
+        genres (List): A list of genres to include in the batch.
+        updated_idx_start (int): The starting index for request numbering.
     """
-    if genres == []:
+    if not genres:
         return
-    with open(f"{data_folder}/file_batch_{batch_num}.jsonl", "w") as f:
-        for idx, genre in enumerate(genres):
-            request_number = idx + 1 + updated_idx_start
 
+    # Ensure the folder exists
+    os.makedirs(data_folder, exist_ok=True)
+
+    file_path = os.path.join(data_folder, f"file_batch_{batch_num}.jsonl")
+    with open(file_path, "w", encoding="utf-8") as f:
+        for idx, genre in enumerate(genres):
+            request_number = updated_idx_start + idx + 1
             genre_request_object = create_request_object(request_number, genre)
             f.write(json.dumps(genre_request_object) + "\n")
 
@@ -230,46 +235,80 @@ def process_products_to_batches(
     else:
         os.mkdir(data_folder)
 
-    batch_num = chunk_per_file if len(chunks) > chunk_per_file else len(chunks)
+    batch_num = min(len(chunks), chunk_per_file)
 
-    new_beginning = 0
-    for batch_idx, num in enumerate(range(0, len(chunks) + 1, batch_num)):
-        batch_genres = chunks[new_beginning : new_beginning + batch_num]
-        create_batch_jsonl(batch_idx, data_folder, batch_genres, updated_idx_start=num)
-        print(f"{new_beginning = }\n{batch_num = }")
-        new_beginning += batch_num
+    for batch_idx, start_idx in enumerate(range(0, len(chunks), batch_num)):
+        batch_genres = chunks[start_idx : start_idx + batch_num]
+        create_batch_jsonl(batch_idx, data_folder, batch_genres, updated_idx_start=start_idx)
+        print(f"{start_idx = }\n{batch_num = }")
 
-
-def upload_batch_files_and_get_ids(folder_path, client):
+def upload_batch_files_and_get_ids(
+    folder_path, client, max_retries=5, initial_backoff=1
+):
     """
-    Uploads all files in the specified folder to the API and returns a list of file IDs.
+    Uploads all files in the specified folder to the API and returns a list of file IDs,
+    handling rate limits and network errors with retries.
 
     Args:
         folder_path (str): Path to the folder containing batch files to upload.
         client: The API client object with a .files.create() method.
+        max_retries (int): Maximum number of retries per file.
+        initial_backoff (int): Initial backoff delay in seconds.
 
     Returns:
-        List[str]: List of uploaded file IDs.
+        List[str]: List of successfully uploaded file IDs.
     """
 
     uploaded_file_ids = []
 
-    # List all files in the folder
     for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
 
-        # Skip if file is empty
+        # Skip empty files
         if os.path.getsize(file_path) == 0:
             print(f"Skipping empty file: {filename}")
             continue
 
-        # Make sure it is a file (skip directories)
-        if os.path.isfile(file_path):
-            print(f"Uploading file: {filename}")
-            with open(file_path, "rb") as f:
-                batch_input_file = client.files.create(file=f, purpose="batch")
-                uploaded_file_ids.append(batch_input_file.id)
-                print(batch_input_file.id)
+        # Skip non-files (directories, etc.)
+        if not os.path.isfile(file_path):
+            continue
+
+        print(f"Uploading file: {filename}")
+
+        retries = 0
+        backoff = initial_backoff
+
+        while retries < max_retries:
+            try:
+                with open(file_path, "rb") as f:
+                    batch_input_file = client.files.create(file=f, purpose="batch")
+                    uploaded_file_ids.append(batch_input_file.id)
+                    print(f"Uploaded {filename} -> ID: {batch_input_file.id}")
+                    break  # Success, exit retry loop
+
+            except openai.RateLimitError:
+                print(
+                    f"Rate limit exceeded while uploading {filename}. Retrying in {backoff} seconds..."
+                )
+            except (
+                requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout,
+                openai.APIConnectionError,
+            ) as e:
+                print(
+                    f"Network error while uploading {filename}: {e}. Retrying in {backoff} seconds..."
+                )
+            except Exception as e:
+                print(f"Unexpected error while uploading {filename}: {e}")
+                break  # Skip file on unhandled error unless you want to retry everything
+
+            # Wait and retry
+            time.sleep(backoff)
+            retries += 1
+            backoff *= 2  # Exponential backoff
+
+        else:
+            print(f"Failed to upload {filename} after {max_retries} retries.")
 
     return uploaded_file_ids
 
@@ -277,9 +316,11 @@ def upload_batch_files_and_get_ids(folder_path, client):
 def create_batches_from_file_ids(
     file_ids,
     client,
-    endpoint="/v1/chat/completions",
+    endpoint="/v1/embeddings",
     completion_window="24h",
     metadata=None,
+    max_retries=2,
+    initial_backoff=5,
 ):
     """
     Creates batch operations for each uploaded file ID.
@@ -301,13 +342,42 @@ def create_batches_from_file_ids(
 
     for file_id in file_ids:
         print(f"Creating batch for file ID: {file_id}")
-        batch_response = client.batches.create(
-            input_file_id=file_id,
-            endpoint=endpoint,
-            completion_window=completion_window,
-            metadata=metadata,
-        )
-        batch_responses.append(batch_response)
+
+        retries = 0
+        backoff = initial_backoff
+
+        while retries < max_retries:
+            try:
+                batch_response = client.batches.create(
+                    input_file_id=file_id,
+                    endpoint=endpoint,
+                    completion_window=completion_window,
+                    metadata=metadata,
+                )
+                batch_responses.append(batch_response)
+                break  # Success, break out of retry loop
+
+            except openai.RateLimitError:
+                print(f"Rate limit exceeded. Retrying in {backoff} seconds...")
+            except (
+                requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout,
+                openai.APIConnectionError,
+            ) as e:
+                print(f"Network error: {e}. Retrying in {backoff} seconds...")
+            except Exception as e:
+                print(f"Unhandled error for file ID {file_id}: {e}")
+                break  # Optional: break if you don’t want to retry on unexpected errors
+
+            # Wait and retry
+            time.sleep(backoff)
+            retries += 1
+            backoff *= 2  # Exponential backoff
+
+        else:
+            print(
+                f"Failed to create batch for file ID {file_id} after {max_retries} retries."
+            )
 
     return batch_responses
 
@@ -346,14 +416,74 @@ def save_batches_as_json(batch_list, output_path="batch_responses.json"):
     print(f"Saved {len(batch_dicts)} batches to {output_path}")
 
 
+def return_output_file_ids(batch_file: str = "batch_responses.json") -> List:
+    output_file_ids = []
+
+    with open(batch_file, "r") as f:
+        data = json.load(f)
+        if not data:
+            return []
+        for obj in data:
+            try:
+                batch = client.batches.retrieve(obj["id"])
+                # print(batch)
+                output_file_ids.append(batch.output_file_id)
+
+            except KeyError as e:
+                pass
+
+    return output_file_ids
+
+
+def clean_folder(folder_path):
+    if not os.path.exists(folder_path):
+        return  # Nothing to clean
+
+    for item in os.listdir(folder_path):
+        item_path = os.path.join(folder_path, item)
+
+        if os.path.isfile(item_path) or os.path.islink(item_path):
+            os.remove(item_path)  # Remove file or symbolic link
+
+
+def save_embeddings_file(output_file_ids: List, folder_path):
+    clean_folder(folder_path)
+    os.makedirs(folder_path, exist_ok=True)
+
+    for index, output_file_id in enumerate(output_file_ids):
+        # output_file = client.files.retrieve(str(output_file_id))
+        # print(output_file)
+        content = None
+        try:
+            content = client.files.content(str(output_file_id))
+        except Exception as e:
+            continue
+        binary_data = content.read()
+
+        # Now save it to a local file
+        with open(f"{folder_path}/output_{index}.jsonl", "wb") as f:
+            f.write(binary_data)
+
+
 # Example usage
 if __name__ == "__main__":
     data_folder = "embed_job_data"
+    output_folder = "embed_job_output"
+
+    sys.exit()
+
+    output_file_ids = return_output_file_ids()
+    save_embeddings_file(output_file_ids, output_folder)
+
+    sys.exit()
+
     process_products_to_batches(
-        products, chunk_per_file=280, index_path="faiss_index", data_folder=data_folder
+        products, chunk_per_file=1500, index_path="faiss_index", data_folder=data_folder
     )
 
     file_ids = upload_batch_files_and_get_ids(data_folder, client)
+
+    sys.exit()
 
     batch_responses = create_batches_from_file_ids(file_ids, client)
     print("Batch operations created:", batch_responses)
