@@ -3,6 +3,7 @@ import json
 from typing import List, Dict, Any, Union
 from config import settings, embeddind_model, order_prefix
 from logger import get_logger
+from database import vectorDB
 from wrapper_chroma import ChromaRetriever
 from Shopify import Shopify
 
@@ -12,9 +13,8 @@ class Controller:
     Controller class for handling product-related operations.
     This class interacts with the vector store and product store to fetch product data.
     """
-
     def __init__(self):
-        self.vector_store = ChromaRetriever()
+        self.vector_store = vectorDB()
         self.store = Shopify(settings.store, "ShopifyClient")
         self.logger = get_logger("MCP - Controller")
         
@@ -115,6 +115,7 @@ class Controller:
                 raise ReferenceError
         if vector_db_flag:
             chat_request.append_vectorDb_prompt()
+            chat_request.append_stuctural_output_prompt()
         if shopify_flag:
             chat_request.append_stuctural_output_prompt()
         if cart_flag:
@@ -130,10 +131,10 @@ class Controller:
         Function for fetching product data based on a query.
         This interact with a Comapany Vector database.
         """
-        if top_k < 5:
+        if top_k < 5 and top_k > 2:
             top_k += 3
-        results = await self.vector_store.query_chroma(query=query, top_k=top_k)
-        results = json.dumps(results)
+        results = await self.vector_store.query(query=query, top_k=top_k)
+        results = json.dumps(results, indent=2)
         results = "#VectorDB-"+results  # Added Identifier for future Actions
         return results 
 

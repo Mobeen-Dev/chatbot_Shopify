@@ -22,6 +22,23 @@ class ChatMessage(BaseModel):
     tool_call_id: Optional[str] = None
     tool_calls: Optional[List[ChatCompletionMessageToolCall]] = None
 
+# Response schema
+class ChatResponse(BaseModel):
+    reply: str | List[Dict[str, Any]]
+    history: list = Field(default_factory=list)
+    stuctural_data: List[dict[str, Any]] = []
+    session_id: Optional[str] = None
+    cart_id: Optional[str] = None
+
+
+@dataclass
+class ProductEntry:
+    have_single_variant: bool
+    variants: dict[str, dict[str, str]]
+    # "Large": {
+    #    "vid": "gid://shopify/ProductVariant/40516000219222",
+    # },
+
 
 # Request schema
 class ChatRequest(BaseModel):
@@ -653,8 +670,8 @@ class ChatRequest(BaseModel):
             3. **Filter Out Irrelevant Chunks**
             If a chunk is not directly useful to the query — **deprioritize or discard it**, even if it's top-ranked.
 
-            4. **Fetch Full Product Details for Relevant Matches**
-            Once relevant products are identified, use the product's `metadata.handle` to fetch **complete and up-to-date data** via the `get_product_via_handle()` function.
+            4. Structured Response with Product Details from Relevant Matches
+            Once relevant products are identified, the assistant must use the provided product list to construct a well-structured response that effectively addresses and satisfies the user's query.
 
             5. **Use Only Verified Product Data in Your Response**
             Recommend or describe **only** the products you are confident meet the user's needs, based on full data retrieval — not just partial matches.
@@ -676,7 +693,6 @@ class ChatRequest(BaseModel):
         return """
             > All structured outputs must be wrapped in fenced code blocks.  
             > Use exactly ```product for product outputs.  
-            > Do NOT use ```json or any other label.  
             > You must provide product details **only** in the following JSON structure.
             > **Every field is mandatory.**
             > **No extra fields, no changes to key names, no formatting outside JSON.**
@@ -724,7 +740,6 @@ class ChatRequest(BaseModel):
         return """
             > All structured outputs must be wrapped in fenced code blocks.  
             > Use exactly ```cart for cart outputs.  
-            > Do NOT use ```json or any other label.  
             > You must provide cart details **only** in the following JSON structure.
             > **Every field is mandatory.**
             > **No extra fields, no changes to key names, no formatting outside JSON.**
@@ -777,7 +792,7 @@ class ChatRequest(BaseModel):
     def order_output_prompt(self) -> str:
         return """
             > All structured outputs must be wrapped in fenced code blocks.  
-            > Use exactly  ```json for order outputs.  
+            > Use exactly ```json for order outputs.  
             > You must provide order details **only** in the following JSON structure.
             > **Every field is mandatory.**
             > **No extra fields, no changes to key names, no formatting outside JSON.**
@@ -841,19 +856,3 @@ class ChatRequest(BaseModel):
         """.strip()
 
 
-# Response schema
-class ChatResponse(BaseModel):
-    reply: str | List[Dict[str, Any]]
-    history: list = Field(default_factory=list)
-    stuctural_data: List[dict[str, Any]] = []
-    session_id: Optional[str] = None
-    cart_id: Optional[str] = None
-
-
-@dataclass
-class ProductEntry:
-    have_single_variant: bool
-    variants: dict[str, dict[str, str]]
-    # "Large": {
-    #    "vid": "gid://shopify/ProductVariant/40516000219222",
-    # },

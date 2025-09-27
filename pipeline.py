@@ -8,6 +8,7 @@ import openai
 import random
 import asyncio
 import requests
+import argparse
 import numpy as np
 from typing import List
 from openai import OpenAI
@@ -15,14 +16,6 @@ from Shopify import Shopify
 from config import settings
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-
-
-client = OpenAI(api_key=settings.openai_api_key)
-store = Shopify(settings.store)
-
-products = asyncio.run(store.fetch_all_products(True))
-# print(products)
-
 
 def chunk_product_description(product, chunk_size: int = 500, chunk_overlap: int = 70):
     """
@@ -194,7 +187,7 @@ def create_batch_jsonl(batch_num, data_folder, genres, updated_idx_start):
             f.write(json.dumps(genre_request_object) + "\n")
 
 
-def process_products_to_batches(
+def process_and_save_products_into_batches(
     products,
     chunk_per_file=4000,
     index_path="faiss_index",
@@ -239,8 +232,11 @@ def process_products_to_batches(
 
     for batch_idx, start_idx in enumerate(range(0, len(chunks), batch_num)):
         batch_genres = chunks[start_idx : start_idx + batch_num]
-        create_batch_jsonl(batch_idx, data_folder, batch_genres, updated_idx_start=start_idx)
+        create_batch_jsonl(
+            batch_idx, data_folder, batch_genres, updated_idx_start=start_idx
+        )
         print(f"{start_idx = }\n{batch_num = }")
+
 
 def upload_batch_files_and_get_ids(
     folder_path, client, max_retries=5, initial_backoff=1
@@ -465,27 +461,65 @@ def save_embeddings_file(output_file_ids: List, folder_path):
             f.write(binary_data)
 
 
-# Example usage
-if __name__ == "__main__":
-    data_folder = "embed_job_data"
-    output_folder = "embed_job_output"
+def pipeline(products, client):
+    parser = argparse.ArgumentParser(description="Vector Database Pipeline")
 
-    sys.exit()
-
-    output_file_ids = return_output_file_ids()
-    save_embeddings_file(output_file_ids, output_folder)
-
-    sys.exit()
-
-    process_products_to_batches(
-        products, chunk_per_file=1500, index_path="faiss_index", data_folder=data_folder
+    parser.add_argument(
+        "--chunk_products",
+        action="store_true",
+        help="Chunk product list into JSONL files",
+    )
+    parser.add_argument(
+        "--upload_chunks",
+        action="store_true",
+        help="Upload JSONL chunks to OpenAI server",
+    )
+    parser.add_argument(
+        "--start_embedding_job",
+        action="store_true",
+        help="Start batch embedding job on uploaded files",
+    )
+    parser.add_argument(
+        "--download_embeddings",
+        action="store_true",
+        help="Download embedding results from server",
     )
 
-    file_ids = upload_batch_files_and_get_ids(data_folder, client)
+    args = parser.parse_args()
 
-    sys.exit()
+    prepare_data = args.chunk_products
+    new_job = prepare_data and args.upload_chunks and args.start_embedding_job
+    finish_open_job = args.download_embeddings
 
-    batch_responses = create_batches_from_file_ids(file_ids, client)
-    print("Batch operations created:", batch_responses)
+    output_folder = "embed_job_output"
+    data_folder = "embed_job_data"
 
-    save_batches_as_json(batch_responses)
+    if prepare_data:
+        process_and_save_products_into_batches(
+            products,
+            chunk_per_file=1500,
+            index_path="faiss_index",
+            data_folder=data_folder,
+        )
+
+        if new_job:
+            
+            file_ids = upload_batch_files_and_get_ids(data_folder, client)
+            batch_responses = create_batches_from_file_ids(file_ids, client)
+            print("Batch operations created:", batch_responses)
+            save_batches_as_json(batch_responses)
+
+    if finish_open_job:
+        output_file_ids = return_output_file_ids()
+        save_embeddings_file(output_file_ids, output_folder)
+
+
+# Example usage
+if __name__ == "__main__":
+    
+    store = Shopify(settings.store)
+    products = asyncio.run(store.fetch_all_products(True))
+
+    client = OpenAI(api_key=settings.openai_api_key)
+
+    pipeline(products, client)

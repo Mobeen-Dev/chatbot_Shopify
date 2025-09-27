@@ -37,3 +37,4 @@ emb_job_out/*
 bucket/app.log
 batch_responses.json
 openai_embeddings.index
+*.index

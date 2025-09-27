@@ -1,820 +1,117 @@
 [
     {
-        "id": "8190611915030",
-        "options": [{"name": "Title", "values": ["Default Title"]}],
-        "title": "Ir2184 Mosfet Driver Ic 8 Pin Dip",
-        "handle": "ir2184-mosfet-driver-ic-8-pin-dip",
-        "vendor": "China",
-        "status": "ACTIVE",
-        "productType": "",
-        "description": "The IR2184(4)(S) are high voltage, high speed power MOSFET and IGBT drivers with dependent high and low side referenced output channels. Proprietary HVIC and latch immune CMOS technologies enable ruggedized monolithic construction. The logic input is compatible with standard CMOS or LSTTL output, down to 3.3V logic. The output drivers feature a high pulse current buffer stage designed for minimum driver cross-conduction. The floating channel can be used to drive an N-channel power MOSFET or IGBT in the high side configuration which operates up to 600 volts. Floating channel designed for bootstrap operation Fully operational to +600V Tolerant to negative transient voltage dV/dt immune Gate drive supply range from 10 to 20V Undervoltage lockout for both channels 3.3V and 5V input logic compatible Matched propagation delay for both channels Logic and power ground +/- 5V offset Lower di/dt gate driver for better noise immunity Output source/sink current capability 1.4A/1.8A Also available LEAD-FREE (PbF)",
-        "category": {
-            "fullName": "Electronics > Circuit Boards & Components > Semiconductors > Integrated Circuits & Chips"
-        },
-        "priceRangeV2": {
-            "minVariantPrice": {"amount": "450.0", "currencyCode": "PKR"},
-            "maxVariantPrice": {"amount": "450.0", "currencyCode": "PKR"},
-        },
-        "totalInventory": 0,
-        "media": {
-            "edges": [
-                {
-                    "node": {
-                        "image": {
-                            "id": "gid://shopify/ImageSource/38107293286678",
-                            "altText": "Ir2184 Mosfet Driver Ic 8 Pin Dip",
-                            "url": "https://cdn.shopify.com/s/files/1/0744/0764/1366/files/ir2184.webp?v=1758025424",
-                            "width": 640,
-                            "height": 640,
-                        }
-                    }
-                }
-            ]
-        },
-        "variants": {
-            "pageInfo": {
-                "hasNextPage": False,
-                "endCursor": "eyJsYXN0X2lkIjo0NDQ4NjQ5MDU4NzQxNCwibGFzdF92YWx1ZSI6MX0=",
+        "score": 0.5911985635757446,
+        "content": {
+            "title": "OV2640 Esp32-cam Wifi + Bluetooth Camera Module Development Board Esp32 With Camera Module Ov2640 For Arduino",
+            "handle": "esp32-cam-wifi-bluetooth-camera-module-development-board-esp32-with-camera-module-ov2640-for-arduino",
+            "description": 'ESP32-CAM is a WIFI+ Bluetooth dual-mode development board that uses PCB on-board antennas and cores based on ESP32 chips. It can work independently as a minimum system.ESP integrates WiFi, traditional Bluetooth, and BLE Beacon, with 2 high-performance 32-bit LX6 CPUs, 7-stage pipeline architecture, main frequency adjustment range 80MHz to 240MHz, on-chip sensor, Hall sensor, temperature sensor, etc. Fully compliant with WiFi 802.11b/g/n/e/i and Bluetooth 4.2 standards, it can be used as a master mode to build an independent network controller, or as a slave to other hosts MCUs to add networking capabilities to existing devices.ESP32-CAM can be widely used in various IoT applications. It is suitable for home smart devices, industrial wireless control, wireless monitoring, QR wireless identification, wireless positioning system signals, and other IoT applications. It is an ideal solution for IoT applications. Features: Ultra-small 802.11b/g/n Wi-Fi + BT/BLE SoC module Low-power dual-core 32-bit CPU for application processors Up to 240MHz, up to 600 DMIPS Built-in 520 KB SRAM, external 4M PSRAM Supports interfaces such as UART/SPI/I2C/PWM/ADC/DAC Support OV2640 and OV7670 cameras with built-in flash Support for images WiFI upload Support TF card Support multiple sleep modes Embedded Lwip and FreeRTOS Support STA/AP/STA+AP working mode Support Smart Config/AirKiss One-click distribution network Support for serial local upgrade and remote firmware upgrade (FOTA) Support secondary development Product Specifications: Module model ESP32-CAM Package DIP-16 Size 27*40.5*4.5(±0.2)mm SPI Flash default 32Mbit RAM internal520KB+external 4M PSRAM Bluetooth bluetooth4.2BR/EDR and BLE standards Wi-Fi 802.11 b/g/n/e/i Support interface UART, SPI, I2C, PWM Support TF card Maximum support 4G IO port 9 Serial port rate default 115200 bps Image output format JPEG (only supported by OV2640), BMP, GRAYSCALE Spectrum range 2412 ~ 2484MHz Antenna form onboard PCB antenna, gain 2dBi Transmit power 802.11b: 17±2 dBm (@11Mbps)802.11g: 14±2 dBm (@54Mbps)802.11n: 13±2 dBm (@MCS7) Receiving sensitivity CCK, 1 Mbps : -90dBmCCK, 11 Mbps: -85dBm6 Mbps (1/2 BPSK): -88dBm54 Mbps (3/4 64-QAM): -70dBmMCS7 (65 Mbps, 72.2 Mbps): -67dBm Power consumption Turn off the flash: 180mA@5VTurn on the flash and adjust the brightness to the maximum: 310mA@5VDeep-sleep: The lowest power consumption can reach 6mA@5VModern-sleep: up to 20mA@5VLight-sleep: up to 6.7mA@5V Security WPA/WPA2/WPA2-Enterprise/WPS Power supply range 5V Operating temperature -20 °C ~ 85 °C Storage environment -40 °C ~ 90 °C, < 90%RH ESP32-CAM Picture Output Format Rate: QQVGA QVGA VGA SVGA JPEG 6 7 7 8 BMP 9 9 - - GRAYSCALE 9 8 - - Package Include: 1 x ESP32-CAM Module #include "esp_camera.h" #include // // WARNING!!! PSRAM IC required for UXGA resolution and high JPEG quality // Ensure ESP32 Wrover Module or other board with PSRAM is selected // Partial images will be transmitted if image exceeds buffer size // // You must select partition scheme from the board menu that has at least 3MB APP space. // Face Recognition is DISABLED for ESP32 and ESP32-S2, because it takes up from 15 // seconds to process single frame. Face Detection is ENABLED if PSRAM is enabled as well // =================== // Select camera model // =================== //#define CAMERA_MODEL_WROVER_KIT // Has PSRAM //#define CAMERA_MODEL_ESP_EYE // Has PSRAM //#define CAMERA_MODEL_ESP32S3_EYE // Has PSRAM //#define CAMERA_MODEL_M5STACK_PSRAM // Has PSRAM //#define CAMERA_MODEL_M5STACK_V2_PSRAM // M5Camera version B Has PSRAM //#define CAMERA_MODEL_M5STACK_WIDE // Has PSRAM //#define CAMERA_MODEL_M5STACK_ESP32CAM // No PSRAM //#define CAMERA_MODEL_M5STACK_UNITCAM // No PSRAM //#define CAMERA_MODEL_M5STACK_CAMS3_UNIT // Has PSRAM #define CAMERA_MODEL_AI_THINKER // Has PSRAM //#define CAMERA_MODEL_TTGO_T_JOURNAL // No PSRAM //#define CAMERA_MODEL_XIAO_ESP32S3 // Has PSRAM // ** Espressif Internal Boards ** //#define CAMERA_MODEL_ESP32_CAM_BOARD //#define CAMERA_MODEL_ESP32S2_CAM_BOARD //#define CAMERA_MODEL_ESP32S3_CAM_LCD //#define CAMERA_MODEL_DFRobot_FireBeetle2_ESP32S3 // Has PSRAM //#define CAMERA_MODEL_DFRobot_Romeo_ESP32S3 // Has PSRAM #include "camera_pins.h" // =========================== // Enter your WiFi credentials // =========================== const char *ssid = "Digilog"; const char *password = "DIGILOGPK"; void startCameraServer(); void setupLedFlash(int pin); void setup() { Serial.begin(115200); Serial.setDebugOutput(true); Serial.println(); camera_config_t config; config.ledc_channel = LEDC_CHANNEL_0; config.ledc_timer = LEDC_TIMER_0; config.pin_d0 = Y2_GPIO_NUM; config.pin_d1 = Y3_GPIO_NUM; config.pin_d2 = Y4_GPIO_NUM; config.pin_d3 = Y5_GPIO_NUM; config.pin_d4 = Y6_GPIO_NUM; config.pin_d5 = Y7_GPIO_NUM; config.pin_d6 = Y8_GPIO_NUM; config.pin_d7 = Y9_GPIO_NUM; config.pin_xclk = XCLK_GPIO_NUM; config.pin_pclk = PCLK_GPIO_NUM; config.pin_vsync = VSYNC_GPIO_NUM; config.pin_href = HREF_GPIO_NUM; config.pin_sccb_sda = SIOD_GPIO_NUM; config.pin_sccb_scl = SIOC_GPIO_NUM; config.pin_pwdn = PWDN_GPIO_NUM; config.pin_reset = RESET_GPIO_NUM; config.xclk_freq_hz = 20000000; config.frame_size = FRAMESIZE_UXGA; config.pixel_format = PIXFORMAT_JPEG; // for streaming //config.pixel_format = PIXFORMAT_RGB565; // for face detection/recognition config.grab_mode = CAMERA_GRAB_WHEN_EMPTY; config.fb_location = CAMERA_FB_IN_PSRAM; config.jpeg_quality = 12; config.fb_count = 1; // if PSRAM IC present, init with UXGA resolution and higher JPEG quality // for larger pre-allocated frame buffer. if (config.pixel_format == PIXFORMAT_JPEG) { if (psramFound()) { config.jpeg_quality = 10; config.fb_count = 2; config.grab_mode = CAMERA_GRAB_LATEST; } else { // Limit the frame size when PSRAM is not available config.frame_size = FRAMESIZE_SVGA; config.fb_location = CAMERA_FB_IN_DRAM; } } else { // Best option for face detection/recognition config.frame_size = FRAMESIZE_240X240; #if CONFIG_IDF_TARGET_ESP32S3 config.fb_count = 2; #endif } #if defined(CAMERA_MODEL_ESP_EYE) pinMode(13, INPUT_PULLUP); pinMode(14, INPUT_PULLUP); #endif // camera init esp_err_t err = esp_camera_init(&config); if (err != ESP_OK) { Serial.printf("Camera init failed with error 0x%x", err); return; } sensor_t *s = esp_camera_sensor_get(); // initial sensors are flipped vertically and colors are a bit saturated if (s->id.PID == OV3660_PID) { s->set_vflip(s, 1); // flip it back s->set_brightness(s, 1); // up the brightness just a bit s->set_saturation(s, -2); // lower the saturation } // drop down frame size for higher initial frame rate if (config.pixel_format == PIXFORMAT_JPEG) { s->set_framesize(s, FRAMESIZE_QVGA); } #if defined(CAMERA_MODEL_M5STACK_WIDE) || defined(CAMERA_MODEL_M5STACK_ESP32CAM) s->set_vflip(s, 1); s->set_hmirror(s, 1); #endif #if defined(CAMERA_MODEL_ESP32S3_EYE) s->set_vflip(s, 1); #endif // Setup LED FLash if LED pin is defined in camera_pins.h #if defined(LED_GPIO_NUM) setupLedFlash(LED_GPIO_NUM); #endif WiFi.begin(ssid, password); WiFi.setSleep(false); Serial.print("WiFi connecting"); while (WiFi.status() != WL_CONNECTED) { delay(500); Serial.print("."); } Serial.println(""); Serial.println("WiFi connected"); startCameraServer(); Serial.print("Camera Ready! Use \'http://"); Serial.print(WiFi.localIP()); Serial.println("\' to connect"); } void loop() { // Do nothing. Everything is done in another task by the web server delay(10000); }',
+            "vendor": "Digilog Electronics",
+            "productType": "",
+            "priceRange": {
+                "CurrencyCode": "PKR",
+                "max_price": "1499.0",
+                "min_price": "1499.0",
             },
-            "edges": [
-                {
-                    "node": {
-                        "id": "gid://shopify/ProductVariant/44486490587414",
-                        "title": "Default Title",
-                        "sku": "b660",
-                        "taxable": False,
-                        "price": "450.00",
-                        "compareAtPrice": None,
-                        "inventoryQuantity": 0,
-                        "availableForSale": False,
-                        "barcode": None,
-                        "createdAt": "2023-04-06T18:43:04Z",
-                        "updatedAt": "2024-05-27T13:39:47Z",
-                        "inventoryPolicy": "DENY",
-                        "inventoryItem": {
-                            "id": "gid://shopify/InventoryItem/46585879462166",
-                            "tracked": True,
-                            "measurement": {
-                                "weight": {"value": 0.0001, "unit": "KILOGRAMS"}
-                            },
-                            "unitCost": None,
-                            "countryCodeOfOrigin": None,
-                            "harmonizedSystemCode": None,
-                            "requiresShipping": True,
-                        },
-                        "image": None,
-                    }
-                }
-            ],
+            "totalInventory": 122,
+            "image_url": "https://cdn.shopify.com/s/files/1/0744/0764/1366/files/ESP32-CAM_WiFi___Bluetooth_Camera_Module_Development_Board_ESP32_With_Camera_Module_OV2640_islamabad_karachi_e0458bad-9c46-4dbf-850e-3e8bb74f848d.webp?v=1758068336",
+            "variants_options": ["Default Title"],
         },
-        "admin_graphql_api_id": "gid://shopify/Product/8190611915030",
+        "metadata": {
+            "Handle": "esp32-cam-wifi-bluetooth-camera-module-development-board-esp32-with-camera-module-ov2640-for-arduino",
+            "Score": 0.591,
+            "Query": "Microcontroller with built-in Wi-Fi cheap",
+        },
     },
     {
-        "id": "8190612144406",
-        "options": [{"name": "Title", "values": ["Default Title"]}],
-        "title": "1502ad 0-1.5a 0-15v Dc Variable Power Supply For Lab",
-        "handle": "1502ad-0-1-5a-0-15v-dc-variable-power-supply-for-lab",
-        "vendor": "Digilog Electronics",
-        "status": "ACTIVE",
-        "productType": "",
-        "description": "The Dc Variable Power Supply is specially designed for communication devices, with high-precision DC voltage power supply with cut-off protection, which has fast protection speed, timely protection for overload and short circuit of the load, that cut-off output. It is widely used in cell phone maintenance / computer maintenance, LED testing and aging, motor manufacturing, PCB manufacturing, battery, DC fan, etc. It is a good choice for school, laboratory and production line. Specification of Dc Variable Power Supply: Name: Strengthened Edition Digital display DC voltage regulator maintenance power supply Material: Iron shell Size: approx.191mmx121mmx135mm Rated voltage:220-240V/AC ,50HZ Output voltage:0——15V（V） Output current:0——1.5A（A） Working humidity:30%-90% Display: Analog Version: strengthened Edition Storage conditions:-20℃-40℃ Package Included: 1 x Power Supply With Power Cable1 x Test Leads",
-        "category": {"fullName": "Uncategorized"},
-        "priceRangeV2": {
-            "minVariantPrice": {"amount": "4800.0", "currencyCode": "PKR"},
-            "maxVariantPrice": {"amount": "4800.0", "currencyCode": "PKR"},
-        },
-        "totalInventory": 0,
-        "media": {
-            "edges": [
-                {
-                    "node": {
-                        "image": {
-                            "id": "gid://shopify/ImageSource/38107295645974",
-                            "altText": "1502ad 0 - 1.5a 0 - 15v Dc Variable Power Supply For Lab",
-                            "url": "https://cdn.shopify.com/s/files/1/0744/0764/1366/files/WhatsApp_Image_2023-04-04_at_4.02.27_PM-removebg-preview_result_3926792a-d441-4a7b-bb0b-0138cdbc6fd8.webp?v=1758025432",
-                            "width": 700,
-                            "height": 700,
-                        }
-                    }
-                }
-            ]
-        },
-        "variants": {
-            "pageInfo": {
-                "hasNextPage": False,
-                "endCursor": "eyJsYXN0X2lkIjo0NDQ4NjQ5MTI3NTU0MiwibGFzdF92YWx1ZSI6MX0=",
+        "score": 0.5833530426025391,
+        "content": {
+            "title": "Esp8266 Ch340 Lolin Nodemcu V3 Wifi Development Board Iot Development Board In Pakistan",
+            "handle": "esp8266-ch340-lolin-nodemcu-wifi-development-board-pakistan",
+            "description": "The All new NodeMcu V3 Lua CH340 Wifi Dev. Board is a fast leading edge low-cost WiFi technology. NodeMcu V3 Is Modern high-level mature LUA based technology. It is an integrated unit with all available resources on board. It is super simple to complement your existing Arduino projects or any development board that has I/O pins available. Modern Internet development tools such as Node.js can take advantage of the NodeMCU with the built-in API to put your idea on the fast track immediately. NodeMCU is built based on the mature ESP8266 technology to take advantage of the abundant resources available on the web. NodeMCU has ESP-12 based serial WiFi integrated onboard to provide GPIO, PWM, ADC, I2C, and 1-WIRE resources at your fingertips, built-in USB-TTL serial with super reliable industrial strength CH340 for superior stability on all supported platforms. This module is one of the cheapest available wifi-modules in the market. V3 or Version3 is the latest version of this module. Arduino-like hardware IO – Advanced API for hardware IO, which can dramatically reduce the redundant work for configuring and manipulating hardware. Code like Arduino, but interactively in Lua script. Nodejs style network API Event-driven API for network applications, which facilitates developers writing code running on a 5mm5mm sized MCU in Nodejs style. Greatly speed up your IOT application developing process. Development Kit The Development Kit based on ESP12-X , integrates GPIO, PWM, IIC, 1-Wire and ADC all on one board. Power your development in the fastest way combination with NodeMCU Firmware! The NodeMcu is an open-source firmware and development kit that helps you to prototype your IoT product with few Lua script lines. The Development Kit based on esp12x series, integrated GPIO, PWM, IIC, 1- Wire and ADC all in one board. Features Of Nodemcu V3: Uses CH340G instead of CP2102. Wireless 802.11 b/g/n standard WiFi at 2.4GHz, support WPA / WPA2 security mode Support STA/AP/STA + AP three operating modes Built-in TCP/IP protocol stack to support multiple TCP Client connections (5 MAX) Support UART / GPIO data communication interface Remote firmware upgrade (OTA) Support Smart Link Smart Networking Don’t need to download resetting A great set of tools to develop NODEMCU Lowest cost WI-FI FOR Arduino like hardware IO Greatly speed up your IOT application developing process Open-source, Interactive, Programmable, Low cost, Simple, Smart, WI-FI enabled WI-FI MCU ESP12E integrated and easy to the prototyping development kit. We provide the best platform for IoT application development at the lowest cost. NodeMCU has built-in USB-TTL serial with super reliable industrial strength CH340G for superior stability on all supported platforms. Advanced API for hardware IO, which can dramatically reduce the redundant work for configuring and manipulating hardware. Event-driven API for network applications, which facilitates developers writing code running on a 5mm*5mm sized MCU in Nodejs style. Get NodeMCU V3 LoLin at low price in Karachi, Lahore, Islamabad, Rawalpindi, Peshawar, Multan, Quetta, Faisalabad, Abbottabad, Taxila, Rahim Yar Khan, Mardan, Jamshoro, Sialkot and all over Pakistan. Best NodeMCU V3 LoLin Package Includes : 1 x NodeMcu V3 Lua CH340 Wifi Dev. Board",
+            "vendor": "China",
+            "productType": "",
+            "priceRange": {
+                "CurrencyCode": "PKR",
+                "max_price": "600.0",
+                "min_price": "600.0",
             },
-            "edges": [
-                {
-                    "node": {
-                        "id": "gid://shopify/ProductVariant/44486491275542",
-                        "title": "Default Title",
-                        "sku": "Xkrt214",
-                        "taxable": False,
-                        "price": "4800.00",
-                        "compareAtPrice": None,
-                        "inventoryQuantity": 0,
-                        "availableForSale": True,
-                        "barcode": "",
-                        "createdAt": "2023-04-06T18:43:18Z",
-                        "updatedAt": "2024-11-28T18:58:40Z",
-                        "inventoryPolicy": "CONTINUE",
-                        "inventoryItem": {
-                            "id": "gid://shopify/InventoryItem/46585880150294",
-                            "tracked": True,
-                            "measurement": {
-                                "weight": {"value": 0.88, "unit": "KILOGRAMS"}
-                            },
-                            "unitCost": {"amount": "4100.0", "currencyCode": "PKR"},
-                            "countryCodeOfOrigin": None,
-                            "harmonizedSystemCode": None,
-                            "requiresShipping": True,
-                        },
-                        "image": None,
-                    }
-                }
-            ],
+            "totalInventory": 406,
+            "image_url": "https://cdn.shopify.com/s/files/1/0744/0764/1366/files/CH340_NodeMcu_ESP8266_V3_Lua_ESP8266_WIFI_Development_Board_IoT_Development_Board_in_pakistan_8xab-33_ea8c411f-27b3-42df-aa6e-8f78203e98ed.webp?v=1758069839",
+            "variants_options": ["Default Title"],
         },
-        "admin_graphql_api_id": "gid://shopify/Product/8190612144406",
+        "metadata": {
+            "Handle": "esp8266-ch340-lolin-nodemcu-wifi-development-board-pakistan",
+            "Score": 0.583,
+            "Query": "Microcontroller with built-in Wi-Fi cheap",
+        },
     },
     {
-        "id": "8190612308246",
-        "options": [{"name": "Title", "values": ["Default Title"]}],
-        "title": "SC Size 5000mah 1.2v Ni mh Rechargeable Battery",
-        "handle": "sc-ni-co-c-size-5000mah-1-2v-ni-mh-rechargeable-battery",
-        "vendor": "China",
-        "status": "ACTIVE",
-        "productType": "",
-        "description": "Introducing our Ni-Co SC Size 5000mAh 1.2V Ni-MH Rechargeable Battery, the perfect choice for powering up your high-drain devices. This battery is specifically designed to provide long-lasting and reliable performance for your electronic gadgets, toys, and other appliances. Made from high-quality materials, this rechargeable battery is built to last and is an environmentally friendly alternative to disposable batteries. With a capacity of 5000mAh, it provides extended runtime, ensuring that your devices stay powered up for longer periods. This battery is rechargeable, so you can use it multiple times and save money in the long run. It has a low self-discharge rate, which means it can hold its charge for extended periods, even when not in use. Additionally, it can be charged using any Ni-MH battery charger, making it a versatile and convenient choice. Our Ni-Co SC Size 5000mAh 1.2V Ni-Co Rechargeable Battery is an excellent investment for anyone who uses high-drain devices frequently. It is easy to use, cost-effective, and environmentally friendly. Get your hands on this rechargeable battery today and enjoy reliable, long-lasting performance.",
-        "category": {"fullName": "Uncategorized"},
-        "priceRangeV2": {
-            "minVariantPrice": {"amount": "350.0", "currencyCode": "PKR"},
-            "maxVariantPrice": {"amount": "350.0", "currencyCode": "PKR"},
-        },
-        "totalInventory": 7,
-        "media": {
-            "edges": [
-                {
-                    "node": {
-                        "image": {
-                            "id": "gid://shopify/ImageSource/38107299479830",
-                            "altText": "Sc Ni-co c Size 5000mah 1.2v Ni-mh Rechargeable Battery",
-                            "url": "https://cdn.shopify.com/s/files/1/0744/0764/1366/files/SCNi-CoCSize5000mAh1.2VNi-MHRechargeableBattery.webp?v=1758025446",
-                            "width": 868,
-                            "height": 868,
-                        }
-                    }
-                }
-            ]
-        },
-        "variants": {
-            "pageInfo": {
-                "hasNextPage": False,
-                "endCursor": "eyJsYXN0X2lkIjo0NDQ4NjQ5MTUwNDkxOCwibGFzdF92YWx1ZSI6MX0=",
+        "score": 0.5540176033973694,
+        "content": {
+            "title": "ESP32 C3 Mini Development Board with 2.4GHz Wi-Fi, Bluetooth 5 in Pakistan",
+            "handle": "esp32-c3-mini-development-board-with-2-4ghz-wi-fi-bluetooth-5-in-pakistan",
+            "description": "ESP32-C3-Zero (without pin header) and ESP32-C3-Zero-M (with pin header) are tiny in size with castellated holes, making them easy to integrate into other host boards. ESP32-C3-Zero comes with an onboard Type-C USB connector, which exposes most of the unused pins in a small form factor. It adopts ESP32-C3FH4 as a System-on-Chip (SoC) that integrates low-power WiFi and BLE5 with 4MB Flash. In addition, there is a hardware encryption accelerator, RNG, HMAC, and Digital Signature modules to meet the safety requirements of IoT and provide peripheral interfaces. Moreover, its low-power working mode supports most application scenarios such as IoT, mobile devices, wearable electronic devices, and smart homes. Features Low-power SoC equipped with RISC-V 32-bit single-core processor, up to 160MHz main frequency. Supports 2.4GHz Wi-Fi (802.11 b/g/n) and Bluetooth® 5 (LE). 400KB of SRAM and 384KB ROM, and 4MB of onboard Flash memory. Castellated module and onboard ceramic antenna, allow soldering direct to carrier boards. Supports flexible clock, module power supply independent setting, and other controls to realize low power consumption in different scenarios. Integrated with USB serial port full-speed controller, 15 × GPIO pins allow flexible configuring pin functions. 3 × SPI, 1 × I2C, 2 × UART, 1 × I2S, 2 × ADC, etc. Hardware Description When using ESP32-C3-Zero with daughterboards, please avoid covering the ceramic antenna with PCB boards, metal, or plastic components. In ESP32-C3-Zero, GPIO12 to GPIO17 pins are not exposed; these pins are used for stacking the 4MB Flash. ESP32-C3-Zero uses GPIO10 to connect with WS2812 RGB LED. Please refer to the documentation link for WS2812 specifications. ESP32-C3-Zero does not employ a USB to UART chip. When flashing firmware, press and hold the BOOT button (GPIO9) and then connect the Type-C cable. The \"TX\" and \"RX\" markings on the board indicate the default UART0 pins for ESP32-C3-Zero. Specifically, TX is GPIO21, and RX is GPIO20. Hardware Connection Press the BOOT (GPIO9) key before connecting the Type-C cable each time download the firmware. Input 3.7V~6V for the castellated hole with 5V silkscreen when connecting the external power. Dimensions ESP32-C3 Mini Development Board, Based on ESP32-C3FH4 Single-core Processor, 160MHz Running Frequency, 2.4GHz Wi-Fi & Bluetooth 5 ESP32-C3-Zero Development Board Based on ESP32-C3FH4, onboard multi-function GPIO pins Castellated Module, Suitable For SMD Applications Board specifications Low-power SoC equipped with RISC-V 32-bit single-core processor, up to 160MHz main frequency Supports 2.4GHz Wi-Fi (802.11 b/g/n) and Bluetooth® 5 (LE) 400KB of SRAM and 384KB ROM, and 4MB of onboard Flash memory Castellated module and onboard ceramic antenna, allows soldering direct to carrier boards Supports flexible clock, module power supply independent setting, and other controls to realize low power consumption in different scenarios Integrated with USB serial port full-speed controller, 15 × GPIO pins allows flexibly configuring pin functions 3 × SPI, 1 × I2C, 2 × UART, 1 × I2S, 2 × ADC, etc. Version Options ESP32-C3-Zerowithout pinheader ESP32-C3-Zero-Mwith pre-soldered header Support C/C++, MicroPython Comprehensive SDK, Dev Resources, Tutorials To Help You Easily Get Started What's On Board USB Type-C Port BOOT buttonPress it and then press the RESET button to enter download mode RESET button WS2812 RGB LED ME6217C33M5GLow dropout regulator, 800mA output (Max.) ESP32-C3FH4 single-core processorup to 160MHz operating frequency 2.4G ceramic antenna Pin definition Product Show outline dimensions Resources & Services Wiki: www.waveshare.com/wiki/ESP32-C3-Zero Environment Setting The software framework for ESP32 series development boards is completed, and you can use CircuitPython, MicroPython, and C/C++ (Arduino, ESP-IDF) for rapid prototyping of product development. Here's a brief introduction to these three development approaches: CircuitPython is a programming language designed to simplify coding tests and learning on low-cost microcontroller boards. It is an open-source derivative of the MicroPython programming language, primarily aimed at students and beginners. CircuitPython development and maintenance are supported by Adafruit Industries. You can refer to development documentation for CircuitPython-related applications development. The GitHub library for CircuitPython allows for recompilation for custom development. MicroPython is an efficient implementation of the Python 3 programming language. It includes a small subset of the Python standard library and has been optimized to run on microcontrollers and resource-constrained environments. You can refer to development documentation for MicroPython-related application development. The GitHub library for MicroPython allows for recompilation for custom development. The official libraries and support from Espressif Systems for C/C++ development make it convenient for rapid installation. For Windows 10 system: Users can select Arduino Or Visual Studio Code (ESP-IDF) as their Integrated Development Environment (IDE). Mac and Linux operating system users can refer to the official instructions. Additionally, you can find development manuals for ESP32 series Arduino and ESP-IDF development to assist you in the process. Arduino 1. Download and install Arduino IDE.2. Install ESP32 on the Arduino IDE as shown below, and you can refer to this link. Fill in the following link in the Additional Boards Manager URLs section of the Settings interface under File -> Preferences and save. https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json Search esp32 on Board Manager to install, and restart Arduino IDE to take effect. 3. ESP32-C3-Zero does not have USB to UART chip mounted, you need to use the USB of ESP32-C3 as the download interface and Log print interface, and you need to enable USB CDC when using Arduino IDE. MicroPython 1. Download and install the latest Thonny, open Thonny IDE -> Configure interpreter..., as shown below: 2. Press the BOOT key on the board, connect it to the USB cable, find the device manager or the corresponding COM port, and download or run the demo. For more details, you can see #Hardware Connection. 3. Select the ESP32 series online MPY firmware to download according to the following steps. The Flash content of the development board will be cleared before downloading, and the whole download process lasts about 1 minute. 4. Download the local firmware using flash_download_tool according to the following figure. You can choose either step 3 or step 4, but we recommend to choose step 4. 5. Please refer to MicroPython Documentation and Release Note to program. Sample Demo Please refer to arduino-esp32 for Arduino sample demo or File -> examples on the Arduino IDE. Please refer to MicroPython development documentation and sample demo for mpy example. Resource Document Schematic MicroPython development documentation ESP32 Arduino Core's documentation arduino-esp32 ESP-IDF esp32-c3 programming guide Demo Sample demo Software Sscom serial port assistant Thonny Python IDE Arduino IDE Datasheet ESP32-C3 Datasheet WS2812B FAQ Question:Can the ESP32-C3-Zero be powered via pins? Answer: You can use 5V pins and then supply it with 5V. Question:How to burn ESP32-C3-Zero with hardware debugging, is it just plugging in the type C port and connecting it to the computer? Answer: That's right. If the burn fails, press and hold the boot button to connect to the computer and then release it. Question:Does ESP32-C3-Zero support ipv6? Answer: ESP32-C3 has ipv6 sample demo, it can support ipv6.",
+            "vendor": "Digilog.pk",
+            "productType": "",
+            "priceRange": {
+                "CurrencyCode": "PKR",
+                "max_price": "1250.0",
+                "min_price": "1250.0",
             },
-            "edges": [
-                {
-                    "node": {
-                        "id": "gid://shopify/ProductVariant/44486491504918",
-                        "title": "Default Title",
-                        "sku": "B595",
-                        "taxable": False,
-                        "price": "350.00",
-                        "compareAtPrice": None,
-                        "inventoryQuantity": 7,
-                        "availableForSale": True,
-                        "barcode": "",
-                        "createdAt": "2023-04-06T18:43:25Z",
-                        "updatedAt": "2025-09-16T14:59:50Z",
-                        "inventoryPolicy": "CONTINUE",
-                        "inventoryItem": {
-                            "id": "gid://shopify/InventoryItem/46585880379670",
-                            "tracked": True,
-                            "measurement": {
-                                "weight": {"value": 0.044, "unit": "KILOGRAMS"}
-                            },
-                            "unitCost": {"amount": "300.0", "currencyCode": "PKR"},
-                            "countryCodeOfOrigin": None,
-                            "harmonizedSystemCode": None,
-                            "requiresShipping": True,
-                        },
-                        "image": None,
-                    }
-                }
-            ],
+            "totalInventory": 92,
+            "image_url": "https://cdn.shopify.com/s/files/1/0744/0764/1366/files/esp32-c3-mini-development-board-2-4ghz-wi-fi-bluetooth-5-pakistan-396.webp?v=1758098579",
+            "variants_options": ["Default Title"],
         },
-        "admin_graphql_api_id": "gid://shopify/Product/8190612308246",
+        "metadata": {
+            "Handle": "esp32-c3-mini-development-board-with-2-4ghz-wi-fi-bluetooth-5-in-pakistan",
+            "Score": 0.554,
+            "Query": "Microcontroller with built-in Wi-Fi cheap",
+        },
     },
     {
-        "id": "8190612406550",
-        "options": [{"name": "Title", "values": ["Default Title"]}],
-        "title": "15 Ohm 50 Watts Resistor",
-        "handle": "15-ohm-50-watts-resistor",
-        "vendor": "Digilog Electronics",
-        "status": "ACTIVE",
-        "productType": "",
-        "description": "This 15 Ohm 50 Watts Resistor is built for heavy-duty applications, capable of handling up to 50 watts of power with a resistance of 15 ohms. Its robust construction makes it ideal for tasks like: Dimming LED lights: This resistor can safely handle the high currents involved in LED dimming, providing precise control over light brightness. Overload protection: In various circuits, it can act as a safety measure, dissipating excess power and preventing damage to other components. Current limiting: By limiting the current flow, this resistor can protect sensitive devices and ensure stable operation. Voltage divider circuits: This resistor can be used to create voltage dividers, splitting a higher voltage into two lower voltages. Key features of 15 Ohm 50 Watts Resistor: High power handling: 50 watts continuous power dissipation. Low tolerance: ±5% tolerance for accurate resistance values. Wirewound construction: Durable and reliable for long-term use. Aluminum housing: Provides efficient heat dissipation. Compact size: Easy to integrate into various circuits. Additional details: Resistance value: 15 ohms Tolerance: ±5% Power rating: 50 watts Mounting type: Through-hole Material: Aluminum housing Dimensions: (Please provide dimensions if available) Applications: LED lighting circuits Power supplies Audio amplifiers Industrial automation Laboratory equipment",
-        "category": {"fullName": "Electronics > Circuit Boards & Components"},
-        "priceRangeV2": {
-            "minVariantPrice": {"amount": "450.0", "currencyCode": "PKR"},
-            "maxVariantPrice": {"amount": "450.0", "currencyCode": "PKR"},
-        },
-        "totalInventory": 0,
-        "media": {
-            "edges": [
-                {
-                    "node": {
-                        "image": {
-                            "id": "gid://shopify/ImageSource/38107301183766",
-                            "altText": "15 Ohm 50 Watts Resistor",
-                            "url": "https://cdn.shopify.com/s/files/1/0744/0764/1366/files/15_ohm_50_Watts_Resistor.webp?v=1758025462",
-                            "width": 1024,
-                            "height": 1024,
-                        }
-                    }
-                }
-            ]
-        },
-        "variants": {
-            "pageInfo": {
-                "hasNextPage": False,
-                "endCursor": "eyJsYXN0X2lkIjo0NDQ4NjQ5MTYwMzIyMiwibGFzdF92YWx1ZSI6MX0=",
+        "score": 0.5536060333251953,
+        "content": {
+            "title": "NodeMCU V2 Lua Wifi Iot Development Board Esp 12E Esp8266 In Pakistan",
+            "handle": "nodemcu-v2-lua-esp8266-development-board-cp2102-in-pakistan",
+            "description": "The All-new NodeMcu v2 ESP8266 Lua ESP8266 WIFI IoT Development Board is a fast leading edge low-cost WiFi technology. Modern high-level mature LUA based technology. This IoT development board is an integrated unit with all available resources on board. This wifi IoT board is super simple to complement your existing Arduino projects or any development board that has I/O pins available. Features Of ESP8266 IoT Board: 11 b/g/n Wi-Fi Direct (P2P), soft-AP Integrated TCP/IP protocol stack Open-source, Interactive, Programmable, Low cost, Simple, Smart, WI-FI enabled Arduino-like hardware IO Integrated low power 32-bit CPU Advanced API for hardware IO, which can dramatically reduce the redundant work for configuring and manipulating hardware. Code like Arduino, but interactively in Lua script. Nodejs style network API Event-driven API for network applications, which facilitates developers writing code running on a 5mm*5mm sized MCU in Nodejs style. Greatly speed up your IOT application developing process. Lowest cost WI-FI Less than WI-FI MCU ESP8266 integrated and easy to prototyping development kit. We provide the best platform for IoT application development at the lowest cost. Integrated TR switch, balun, LNA, power amplifier and matching network Integrated PLL, regulators, DCXO and power management units Onboard USB to serial chip to easily program and upload codes from the Arduino IDE Embeds logic level converter circuits Has onboard 3.3V regulator to ensure enough power to function as your go-to WiFi chip! Easy access to the GPIO pins for easy prototyping Easy to use breadboard friendly form factor Voltage Regulator / Converter, excellent DC to DC conversion, super-efficient Specifications Of Best NodeMcu v2 Lua ESP8266 WIFI IoT Board: Processor: ESP-12E Self-powered: 3.0 to 3.6 V USB bus-powered: 4.0 to 5.25 V Example Applications: Upgrade of RS-232 legacy devices to USB Cellular phone USB interface cable PDA USB interface cable USB to RS-232 serial adapter Package Includes: 1 x ESP8266 12E Lua Nodemcu V2 WIFI Dev Board Best Online Shopping Website for NodeMcu v2 Lua ESP8266 WIFI IoT Development Board CP2102 in cheap price in Karachi Lahore Islamabad Rawalpindi Sukkur Peshawar Multan Quetta Faisalabad and all over Pakistan. Lahore, Karachi, Peshawar, Quetta, Multan, Bhakkar, Chitral, Ghotki, Hyderabad, Jhelum, Lodhran, Dunya Pur, Kahror Pakka, Bahawalpur, Ahmadpur East, Hasilpur, Khairpur Tamewali, Yazman, Rahim Yar Khan, Liaquatpur, Sadiqabad, Dera Ghazi Khan, Kot Chutta, Taunsa Sharif, Layyah, Fateh Pur, Chowk Azam, Bahawalnagar, Haroon Abad, Minchinabad, CHISHTIAN, Fort Abbas, Faqeer Wali, Muzaffargarh, Qasba Gujrat, Ali Pur, Jatoi, KOT ADDU, Rajanpur, Jampur, Chiniot, Bhawana, Lalian, Faisalabad, KHURRIANWALA, Jaranwala, Chak Jhumra, Samundri, Tandlianwala, Shah Kot, Jhang, Rodu Sultan, 18 HAZARI, AHMEDPUR SIAL, Mandi Shah Jewana, Shorkot, Shorkot Cantt, Toba Tek Singh, Gojra, Kamalia, Pir Mahal, Gujranwala, Rahiwali, NOWSHERA VIRKAN, Kamoke, Wazirabad, Kalaske, Gujrat, Jalalpur Jattan, Lala Musa, Kharian, Kharian Cantt, Sarai Alamgir, Hafizabad, Pindi Bhattian, Mandi Bahauddin, Phalia, Malakwal, Narowal, Shakargarh, Zafarwal, Sialkot, Daska, Pasroor, Sambrial, Kasur, Chunian, Kot Radha Kishan, Pattoki, Raiwind, Nankana Sahib, MORE KHUNDA, Bucheki, Sangla Hill, Manawala, Sheikhupura, Farooqabad, Muridke, Safdarabad, Sharak Pur, Khanewal, Jahanian, Kabir Wala, Mian Channu, MULTAN, JALALPUR PIRWALA, Shujabad, Vehari, GARHA MORE, Gaggo Mandi, Burewala, MAILSI, Pindi Gheb, Attock, Fateh Jang, Hassan Abdal, Jand, Chakwal, Choa Saiden Shah, Kallar Kahar, TALAGANG, Jhelum, Dina, PIND DADAN KHAN, Sohawa, Kahuta, Rawalpindi (Lalkurti), Rawalpindi (Khanna Pull), Daultala, Gujar Khan, KALLAR SYEDAN, Murree, TAXILA, Okara, Basi Pur, Okara Cantt, Depalpur, Renala Khurd, Qaboola, Pakpattan, Arifwala, Sahiwal, Chichawatni, Bhakkar, Darya Khan, Kaloor Kot, JAUHARABAD, Noorpur Thal, Quaidabad, NAUSHERA, Isa Khel, Much, Mianwali, Piplan, BHALWAL, BHERA, KOT MOMIN, Sargodha, Shahpur, SILLANWALI, BADIN, MATLI, Sujawal, Mirpur Bathoro, Mirpur Sakro, THATTA, Dadu, Khairpur Nathan Shah, MEHAR, Jamshoro, Sehwan, Kotri, New Saeedabad, Matiari, Hala, Tando Allah Yar, Tando Muhammad Khan, Larkana, Jacobabad, KASHMORE, Kandhkot, RATODERO, Qambar-Shahdadkot, Nasirabad, SHAHDADKOT, Shikarpur, Khanpur, Mirpur Khas, Digri, Jhudo, Kot Ghulam Muhammad, Sanghar, KHIPRO, Shahdadpur, Sinjhoro, TANDO ADAM, Chachro, ISLAMKOT, MITHI, Umerkot, Kunri, Pithoro, SUKKUR, DAHARKI, Mirpur Mathelo, Khairpur, Gambat, Thari Mirwah, Pano Aqil, Thari Mirwah, ROHRI, Naushahro Feroze, Mehrab Pur, MORO, Kandiaro, Daulatpur, Daur, NAWABSHAH, SAKRAND, Mirpur Azad Kashmir,",
+            "vendor": "China",
+            "productType": "",
+            "priceRange": {
+                "CurrencyCode": "PKR",
+                "max_price": "680.0",
+                "min_price": "680.0",
             },
-            "edges": [
-                {
-                    "node": {
-                        "id": "gid://shopify/ProductVariant/44486491603222",
-                        "title": "Default Title",
-                        "sku": "b716,nst",
-                        "taxable": False,
-                        "price": "450.00",
-                        "compareAtPrice": None,
-                        "inventoryQuantity": 0,
-                        "availableForSale": False,
-                        "barcode": None,
-                        "createdAt": "2023-04-06T18:43:28Z",
-                        "updatedAt": "2025-05-31T07:27:29Z",
-                        "inventoryPolicy": "DENY",
-                        "inventoryItem": {
-                            "id": "gid://shopify/InventoryItem/46585880477974",
-                            "tracked": True,
-                            "measurement": {"weight": {"value": 30.0, "unit": "GRAMS"}},
-                            "unitCost": {"amount": "350.0", "currencyCode": "PKR"},
-                            "countryCodeOfOrigin": None,
-                            "harmonizedSystemCode": None,
-                            "requiresShipping": True,
-                        },
-                        "image": None,
-                    }
-                }
-            ],
+            "totalInventory": 276,
+            "image_url": "https://cdn.shopify.com/s/files/1/0744/0764/1366/files/CP2102_NodeMcu_v2_ESP8266_Lua_ESP8266_WIFI_Development_Board_IoT_Development_Board_3b75fb14-0c10-433b-a550-1224bf7cb475.webp?v=1758069394",
+            "variants_options": ["Default Title"],
         },
-        "admin_graphql_api_id": "gid://shopify/Product/8190612406550",
+        "metadata": {
+            "Handle": "nodemcu-v2-lua-esp8266-development-board-cp2102-in-pakistan",
+            "Score": 0.554,
+            "Query": "Microcontroller with built-in Wi-Fi cheap",
+        },
     },
     {
-        "id": "8190612930838",
-        "options": [{"name": "Title", "values": ["Default Title"]}],
-        "title": "Fake/ Copy / Clone W1209 Temperature Controller In Pakistan",
-        "handle": "fake-copy-clone-w1209-temperature-controller-in-pakistan",
-        "vendor": "China",
-        "status": "DRAFT",
-        "productType": "",
-        "description": "Best Online Shopping website for W1209 Temperature Controller Incubation Thermostat. Here you get W1209 Temperature Controller at a reasonable price in Karachi, Lahore, Islamabad, Rawalpindi, Peshawar, Multan, Faisalabad and all over Pakistan. You can intelligently control power to most types of electrical device based on the temperature sensed by the included high accuracy NTC temperature sensor. Although this Temperature controller module has an embedded microcontroller no programming knowledge is required. 3 tactile switches allow for configuring various parameters including on & off trigger temperatures. The onboard relay can switch up to a maximum of 240V AC at 5A or 14V DC at 10A. The current temperature is displayed in degrees Centigrade via its 3 digit seven segment display and the current relay state by an onboard LED. Specifications Of W1209 Temperature Controller:- Temperature Control Range: Minus 50 to 110 C Resolution at -9.9 to 99.9: 0.1 C Resolution at all other temperatures: 1 C Measurement Accuracy: 0.1 C Control Accuracy: 0.1 C Refresh Rate: 0.5 Seconds Input Power (DC): 12V Measuring Inputs: NTC (10K 0.5%) Waterproof Sensor: 0.5M Output: 1 Channel Relay Output, Capacity: 10A Best Online Shopping website for W1209 Temperature Controller Incubation Thermostat. Here you get W1209 Temperature Controller Thermostat at a reasonable price in Karachi, Lahore, Islamabad, Rawalpindi, Peshawar, Multan, Faisalabad and all over Pakistan. Package Includes In W1209 Temperature Controller: 1x w1209 temperature controller 1x temperature prob",
-        "category": None,
-        "priceRangeV2": {
-            "minVariantPrice": {"amount": "280.0", "currencyCode": "PKR"},
-            "maxVariantPrice": {"amount": "280.0", "currencyCode": "PKR"},
-        },
-        "totalInventory": 0,
-        "media": {
-            "edges": [
-                {
-                    "node": {
-                        "image": {
-                            "id": "gid://shopify/ImageSource/35522445541654",
-                            "altText": "Fake/ Copy / Clone W1209 Temperature Controller In Pakistan",
-                            "url": "https://cdn.shopify.com/s/files/1/0744/0764/1366/files/Fake_Copy__Clone_W1209_Temperature_Controller_In_Pakistan_2d19fd1c-4d70-49cf-af88-b7556bbe968d.jpg?v=1758025463",
-                            "width": 800,
-                            "height": 800,
-                        }
-                    }
-                }
-            ]
-        },
-        "variants": {
-            "pageInfo": {
-                "hasNextPage": False,
-                "endCursor": "eyJsYXN0X2lkIjo0NDQ4NjQ5MjM1Njg4NiwibGFzdF92YWx1ZSI6MX0=",
+        "score": 0.5501034259796143,
+        "content": {
+            "title": "Arduino Mkr1000 Wifi Board Module",
+            "handle": "arduino-mkr1000-wifi-board-module-in-pakistan",
+            "description": "Arduino WiFi Board MKR1000 is a powerful board that combines the functionality of the Zero and the Wi-Fi Shield. It is the ideal solution for makers wanting to design IoT projects with minimal previous experience in networking. Arduino MKR1000 has been designed to offer a practical and cost-effective solution for makers seeking to add Wi-Fi connectivity to their projects with minimal previous experience in networking. This WiFi board is based on the Atmel ATSAMW25 SoC (System on Chip), that is part of the SmartConnect family of Atmel Wireless devices, specifically designed for IoT projects and devices. The ATSAMW25 is composed of three main blocks: SAMD21 Cortex-M0+ 32bit low power ARM MCU WINC1500 low power 2.4GHz IEEE® 802.11 b/g/n Wi-Fi ECC508 CryptoAuthentication The ATSAMW25 includes also a single 1x1 stream PCB Antenna. The design includes a Li-Po charging circuit that allows the Arduino/Genuino MKR1000 to run on battery power or external 5V, charging the Li-Po battery while running on external power. Switching from one source to the other is done automatically. A good 32-bit computational power similar to the Zero board, the usual rich set of I/O interfaces, low power Wi-Fi with a Cryptochip for secure communication, and the ease of use of the Arduino Software (IDE) for code development and programming. All these features make this board the preferred choice for the emerging IoT battery-powered projects in a compact form factor. The USB port can be used to supply power (5V) to the board. This Arduino board is able to run with or without the Li-Po battery connected and has limited power consumption. The MKR1000 Wifi module supports certificate SHA-256. Warning: Unlike most Arduino & Genuino boards, the MKR1000 runs at 3.3V. The maximum voltage that the I/O pins can tolerate is 3.3V. Applying voltages higher than 3.3V to any I/O pin could damage the board. While output to 5V digital devices is possible, bidirectional communication with 5V devices needs proper level shifting. Features Of Arduino WiFi Board Module MKR100: Based on: Atmel ATSAMW25 SoC Operating Voltage: 3.3V USB Input Voltage (recommended): 5V Digital I/O Pins: 8 PWM Digital I/O Pins: 4 Analog Input Pins: 6 Analog Output Pins: 1 Flash Memory: 256Kb SRAM: 32Kb Clock Speed: 48Mhz WiFi, Encryption Chip, LiPo Battery Charger Specifications Of Arduino MKR1000 Board: Microcontroller: SAMD21 Cortex-M0+ 32bit low power ARM MCU Board Power Supply (USB/VIN): 5V Supported Battery(*): Li-Po single cell, 3.7V, 700mAh minimum Circuit Operating Voltage: 3.3V Digital I/O Pins: 8 PWM Pins: 12 (0, 1, 2, 3, 4, 5, 6, 7, 8, 10, A3 - or 18 -, A4 -or 19) UART: 1 SPI: 1 I2C: 1 Analog Input Pins: 7 (ADC 8/10/12 bit) Analog Output Pins: 1 (DAC 10 bit) External Interrupts: 8 (0, 1, 4, 5, 6, 7, 8, A1 -or 16-, A2 - or 17) DC Current per I/O Pin: 7 mA Flash Memory: 256 KB SRAM: 32 KB EEPROM: No Clock Speed: 32.768 kHz (RTC), 48 MHz LED BUILTIN: 6 Full-Speed USB Device and embedded Host: Yes Length: 61.5 mm Width: 25 mm Weight: 32 gr. Package Includes: 1 x Arduino MKR1000 WiFi Best Online Shopping website for Arduino MKR1000 WiFi Board Module in cheap price in Karachi, Lahore, Islamabad, Rawalpindi, Peshawar, Multan, Quetta, Faisalabad and all over Pakistan.",
+            "vendor": "Arduino",
+            "productType": "",
+            "priceRange": {
+                "CurrencyCode": "PKR",
+                "max_price": "5500.0",
+                "min_price": "5500.0",
             },
-            "edges": [
-                {
-                    "node": {
-                        "id": "gid://shopify/ProductVariant/44486492356886",
-                        "title": "Default Title",
-                        "sku": "",
-                        "taxable": False,
-                        "price": "280.00",
-                        "compareAtPrice": None,
-                        "inventoryQuantity": 0,
-                        "availableForSale": False,
-                        "barcode": None,
-                        "createdAt": "2023-04-06T18:44:12Z",
-                        "updatedAt": "2024-02-24T04:10:35Z",
-                        "inventoryPolicy": "DENY",
-                        "inventoryItem": {
-                            "id": "gid://shopify/InventoryItem/46585881231638",
-                            "tracked": True,
-                            "measurement": {
-                                "weight": {"value": 0.0, "unit": "KILOGRAMS"}
-                            },
-                            "unitCost": None,
-                            "countryCodeOfOrigin": None,
-                            "harmonizedSystemCode": None,
-                            "requiresShipping": True,
-                        },
-                        "image": None,
-                    }
-                }
-            ],
+            "totalInventory": 0,
+            "image_url": "https://cdn.shopify.com/s/files/1/0744/0764/1366/files/Arduino_MKR1000_WiFi_Board_Module_In_Lahore_Karachi_Islamabad_Peshawar_Quetta_Mardan_Multan_Sibbi_Hyderabad_Faisalabad_Rawalpindi_Pakistan__1.webp?v=1758055919",
+            "variants_options": ["Default Title"],
         },
-        "admin_graphql_api_id": "gid://shopify/Product/8190612930838",
-    },
-    {
-        "id": "8190613160214",
-        "options": [{"name": "Title", "values": ["Default Title"]}],
-        "title": "Sua-2000a Original Suoer 12v 2000w Inverter Modified Sine Wave Solar Power Usb 12v Dc To 220vac In Pakistan",
-        "handle": "sua-2000a-original-suoer-12v-2000w-inverter-modified-sine-wave-solar-power-usb-12v-dc-to-220vac-in-pakistan",
-        "vendor": "SUOER",
-        "status": "ACTIVE",
-        "productType": "",
-        "description": "The Sua-2000C is a powerful and reliable solar power inverter and charger designed to provide uninterrupted power during load shedding. With its pure sine wave output, 2000W capacity, and built-in charger, this inverter is the ideal solution for households and businesses in Pakistan. Key Features: Pure Sine Wave Output: Safely power sensitive appliances like laptops and TVs. 2000W Power Capacity: Run multiple essential devices during power outages. Built-in Charger: Conveniently recharge from the grid when solar power is unavailable. Easy Installation: Get your backup power system up and running quickly. Reliable Suoer Brand: Trust in a reputable name in the power electronics industry. Upgrade your home or business with the Sua-2000C Solar Power Inverter and Charger and enjoy uninterrupted power during load shedding.",
-        "category": {"fullName": "Uncategorized"},
-        "priceRangeV2": {
-            "minVariantPrice": {"amount": "10000.0", "currencyCode": "PKR"},
-            "maxVariantPrice": {"amount": "10000.0", "currencyCode": "PKR"},
+        "metadata": {
+            "Handle": "arduino-mkr1000-wifi-board-module-in-pakistan",
+            "Score": 0.55,
+            "Query": "Microcontroller with built-in Wi-Fi cheap",
         },
-        "totalInventory": 0,
-        "media": {
-            "edges": [
-                {
-                    "node": {
-                        "image": {
-                            "id": "gid://shopify/ImageSource/38107302134038",
-                            "altText": "Sua - 2000a Original Suoer 12v 2000w Inverter Modified Sine",
-                            "url": "https://cdn.shopify.com/s/files/1/0744/0764/1366/files/SUA-2000A_Original_Suoer_2000W_Inverter_Modified_Sine_Wave_Solar_Power_USB_12V_DC_to_220VAC_in_Pakistan_1_9skv-e0_c1c7adc6-0232-497f-9684-aa011d96cdcc.webp?v=1758025473",
-                            "width": 1000,
-                            "height": 1000,
-                        }
-                    }
-                }
-            ]
-        },
-        "variants": {
-            "pageInfo": {
-                "hasNextPage": False,
-                "endCursor": "eyJsYXN0X2lkIjo0NDQ4NjQ5MjY4NDU2NiwibGFzdF92YWx1ZSI6MX0=",
-            },
-            "edges": [
-                {
-                    "node": {
-                        "id": "gid://shopify/ProductVariant/44486492684566",
-                        "title": "Default Title",
-                        "sku": "NST",
-                        "taxable": False,
-                        "price": "10000.00",
-                        "compareAtPrice": None,
-                        "inventoryQuantity": 0,
-                        "availableForSale": False,
-                        "barcode": None,
-                        "createdAt": "2023-04-06T18:44:25Z",
-                        "updatedAt": "2024-06-03T11:07:45Z",
-                        "inventoryPolicy": "DENY",
-                        "inventoryItem": {
-                            "id": "gid://shopify/InventoryItem/46585881559318",
-                            "tracked": True,
-                            "measurement": {
-                                "weight": {"value": 0.0, "unit": "KILOGRAMS"}
-                            },
-                            "unitCost": None,
-                            "countryCodeOfOrigin": "CN",
-                            "harmonizedSystemCode": None,
-                            "requiresShipping": True,
-                        },
-                        "image": None,
-                    }
-                }
-            ],
-        },
-        "admin_graphql_api_id": "gid://shopify/Product/8190613160214",
-    },
-    {
-        "id": "8190614208790",
-        "options": [{"name": "Title", "values": ["Default Title"]}],
-        "title": "Teensy 4.1 Usb Arm Cortex-m7 At 600mhz Teensy41 Dev-16771",
-        "handle": "teensy-4-1-usb-arm-cortex-m7-at-600mhz-teensy41-dev-16771",
-        "vendor": "Digilog Electronics",
-        "status": "ACTIVE",
-        "productType": "",
-        "description": "The Teensy 4.1 is a high-performance microcontroller development board that offers exceptional speed, versatility, and a wide range of features. Powered by an ARM Cortex-M7 processor running at 600 MHz, the Teensy 4.1 delivers incredible processing power for demanding applications. Key Features: Powerful Processor: ARM Cortex-M7 at 600 MHz for lightning-fast performance. Expanded Peripherals: Includes Ethernet, USB host, SD card, and more for versatile connectivity. Large Memory: Teensy 4.1 has 8MB flash memory and 1MB RAM for ample storage and processing capabilities. Arduino IDE Compatibility: Easily program using the familiar Arduino environment. Versatile Applications: Ideal for IoT, robotics, audio processing, and more. Upgrade your microcontroller projects with the Teensy 4.1 Development Board and experience unmatched performance and versatility.",
-        "category": None,
-        "priceRangeV2": {
-            "minVariantPrice": {"amount": "12000.0", "currencyCode": "PKR"},
-            "maxVariantPrice": {"amount": "12000.0", "currencyCode": "PKR"},
-        },
-        "totalInventory": 0,
-        "media": {
-            "edges": [
-                {
-                    "node": {
-                        "image": {
-                            "id": "gid://shopify/ImageSource/38107303870742",
-                            "altText": "Teensy 4.1 Usb Arm Cortex-m7 At 600mhz Teensy41 Dev-16771",
-                            "url": "https://cdn.shopify.com/s/files/1/0744/0764/1366/files/Teensy_4.1_USB_ARM_Cortex-M7_At_600MHz_TEENSY41_DEV-16771_1.webp?v=1758025480",
-                            "width": 600,
-                            "height": 600,
-                        }
-                    }
-                }
-            ]
-        },
-        "variants": {
-            "pageInfo": {
-                "hasNextPage": False,
-                "endCursor": "eyJsYXN0X2lkIjo0NDQ4NjQ5ODM1MzQzMCwibGFzdF92YWx1ZSI6MX0=",
-            },
-            "edges": [
-                {
-                    "node": {
-                        "id": "gid://shopify/ProductVariant/44486498353430",
-                        "title": "Default Title",
-                        "sku": "B836",
-                        "taxable": False,
-                        "price": "12000.00",
-                        "compareAtPrice": None,
-                        "inventoryQuantity": 0,
-                        "availableForSale": False,
-                        "barcode": None,
-                        "createdAt": "2023-04-06T18:45:42Z",
-                        "updatedAt": "2023-10-27T16:06:47Z",
-                        "inventoryPolicy": "DENY",
-                        "inventoryItem": {
-                            "id": "gid://shopify/InventoryItem/46585887228182",
-                            "tracked": True,
-                            "measurement": {
-                                "weight": {"value": 0.0, "unit": "KILOGRAMS"}
-                            },
-                            "unitCost": None,
-                            "countryCodeOfOrigin": None,
-                            "harmonizedSystemCode": None,
-                            "requiresShipping": True,
-                        },
-                        "image": None,
-                    }
-                }
-            ],
-        },
-        "admin_graphql_api_id": "gid://shopify/Product/8190614208790",
-    },
-    {
-        "id": "8190614307094",
-        "options": [{"name": "Title", "values": ["Default Title"]}],
-        "title": "Texas Instruments Msp-exp430fr6989 Dev Kit, Launchpad, Msp430fr6989 Mcu, Energytrace",
-        "handle": "texas-instruments-msp-exp430fr6989-dev-kit-launchpad-msp430fr6989-mcu-energytrace",
-        "vendor": "Digilog Electronics",
-        "status": "ACTIVE",
-        "productType": "",
-        "description": "The MSP-EXP430FR6989 LaunchPad Development Kit is a powerful and versatile tool for developing ultra-low-power applications. With its embedded FRAM, on-board emulation, and extensive features, this kit provides a comprehensive platform for your projects. Key Features: Ultra-Low Power Consumption: Ideal for battery-powered and energy-constrained applications. Embedded FRAM: Offers high endurance and fast write access for efficient data storage. On-Board Emulation: Enables easy programming, debugging, and energy measurement. 320-Segment LCD Support: Visualize data and create custom interfaces. BoosterPack Compatibility: Expand functionality with various add-on modules. Free Development Tools: Utilize Code Composer Studio (CCS) and IAR Embedded Workbench for efficient development. Applications: IoT Devices: Create energy-efficient IoT solutions. Wearable Technology: Develop low-power wearable devices. Medical Devices: Design battery-powered medical equipment. Industrial Automation: Implement energy-efficient automation systems. Relevant Resources: MSP Debuggers User's Guide (Rev. I) MSP430FR6989 LaunchPad Development Kit (MSP-EXP430FR6989) User's Guide (Rev. A) Manufacturer's Online Links The Texas Instruments of this product is priced at £12.85 and ships from Farnell element14 in Europe, Newark element14 in North America ($17.99), and element14 in Asia (S$31.60); details are available at http://www.element14.com/community/docs/DOC-74652. https://www.element14.com/news/new-launchpad-development-kit-msp-exp430fr6989-available-from-element14-for-ti-ultra-low-power-mcu/",
-        "category": {"fullName": "Electronics"},
-        "priceRangeV2": {
-            "minVariantPrice": {"amount": "6000.0", "currencyCode": "PKR"},
-            "maxVariantPrice": {"amount": "6000.0", "currencyCode": "PKR"},
-        },
-        "totalInventory": 0,
-        "media": {
-            "edges": [
-                {
-                    "node": {
-                        "image": {
-                            "id": "gid://shopify/ImageSource/38107306197270",
-                            "altText": "Texas Instruments Msp-exp430fr6989 Dev Kit Launchpad",
-                            "url": "https://cdn.shopify.com/s/files/1/0744/0764/1366/files/MSP-EXP430FR6989_-_MSP430FR6989_LaunchPad_Development_Kit_1_fbc34837-44a9-4792-b9df-1c24735a7fc2.webp?v=1758025502",
-                            "width": 1024,
-                            "height": 1024,
-                        }
-                    }
-                }
-            ]
-        },
-        "variants": {
-            "pageInfo": {
-                "hasNextPage": False,
-                "endCursor": "eyJsYXN0X2lkIjo0NDQ4NjQ5ODQ4NDUwMiwibGFzdF92YWx1ZSI6MX0=",
-            },
-            "edges": [
-                {
-                    "node": {
-                        "id": "gid://shopify/ProductVariant/44486498484502",
-                        "title": "Default Title",
-                        "sku": "b274",
-                        "taxable": False,
-                        "price": "6000.00",
-                        "compareAtPrice": None,
-                        "inventoryQuantity": 0,
-                        "availableForSale": False,
-                        "barcode": None,
-                        "createdAt": "2023-04-06T18:45:48Z",
-                        "updatedAt": "2023-10-27T16:06:47Z",
-                        "inventoryPolicy": "DENY",
-                        "inventoryItem": {
-                            "id": "gid://shopify/InventoryItem/46585887359254",
-                            "tracked": True,
-                            "measurement": {
-                                "weight": {"value": 0.0, "unit": "KILOGRAMS"}
-                            },
-                            "unitCost": None,
-                            "countryCodeOfOrigin": None,
-                            "harmonizedSystemCode": None,
-                            "requiresShipping": True,
-                        },
-                        "image": None,
-                    }
-                }
-            ],
-        },
-        "admin_graphql_api_id": "gid://shopify/Product/8190614307094",
-    },
-    {
-        "id": "8190614503702",
-        "options": [{"name": "Title", "values": ["Default Title"]}],
-        "title": "Discontinued Product: 80 Eggs Rolling Tray For Incubator With 220v Motor",
-        "handle": "imported-80-eggs-rolling-tray-for-incubator-with-220v-motor",
-        "vendor": "Digilog Electronics",
-        "status": "ACTIVE",
-        "productType": "",
-        "description": "Description Imported 80 Eggs Tray Introduction: Eggs must be turned at least 2-3 times daily during the incubation period. Many experts say if you can turn them 4-5 times a day it is even better. Do not turn eggs during the last three days with before hatching. The embryos are moving into hatching position and need no turning. Keep the incubator closed during hatching to maintain proper temperature and humidity. If you are using an automatic egg turner, then that will take care of the turning for you. Just be sure to remove them from the turner and lay them on the floor of the incubator (most come with a wire floor) three days before hatch. If you do not have an automatic egg turner, the eggs are set in the incubator horizontally with the large end slightly elevated. This is the way eggs naturally settle when placed on their sides. This enables the embryo to remain oriented in a proper position for hatching. Never set eggs with the small end upward. When the eggs are turned by hand, it may be helpful to place an “X” on one side of each egg and an “O” on the other side, using a pencil. This serves as an aide to determine whether all eggs are turned. When turning, be sure your hands are free of all greasy or dusty substances. Eggs soiled with oils suffer from reduced hatchability. Take extra precautions when turning eggs during the first week of incubation. The developing embryos have delicate blood vessels that rupture easily when severely jarred or shaken, so take care to handle the eggs carefully. Turn the eggs until three days before they are due to hatch. Related Products to Imported 80 Eggs Tray: Material: ABS & Nylon Color: Blue Size:18.15inch x 18.5inch Motor: 220V-240V(1.5-2r/min) Temperature Adjust Accuracy：±0.1° Features of Imported 80 Eggs Tray For all kinds of eggs Chicken eggs：1-64 Dove eggs：1-80 Goose eggs：1-28 Duck eggs：1-48 Brand New and high quality. Made of plastic material,durable and environmental protection. Suitable for chicken, duck, goose, pigeon, quail. Help accelerate hatching eggs as soon as possible. Incubator essential for accessories. Easy to disassembly and assembly,do not worry about operating. Enjoy your shopping time. Package included: 1 X Egg Tray",
-        "category": {"fullName": "Uncategorized"},
-        "priceRangeV2": {
-            "minVariantPrice": {"amount": "1800.0", "currencyCode": "PKR"},
-            "maxVariantPrice": {"amount": "1800.0", "currencyCode": "PKR"},
-        },
-        "totalInventory": 0,
-        "media": {
-            "edges": [
-                {
-                    "node": {
-                        "image": {
-                            "id": "gid://shopify/ImageSource/38107307409686",
-                            "altText": "80 Eggs Rolling Tray For Incubator With 220v Motor",
-                            "url": "https://cdn.shopify.com/s/files/1/0744/0764/1366/files/50-Eggs-80-Bird-Eggs-Automatic-Rotary-Egg-Turner-Eggs-Incubator-Roller-Tray-For-Bird-Egg_result_0a834adf-b60d-4fb0-9485-0cf3ae57c9b6.webp?v=1758025506",
-                            "width": 700,
-                            "height": 700,
-                        }
-                    }
-                }
-            ]
-        },
-        "variants": {
-            "pageInfo": {
-                "hasNextPage": False,
-                "endCursor": "eyJsYXN0X2lkIjo0NDQ4NjQ5ODcxMzg3OCwibGFzdF92YWx1ZSI6MX0=",
-            },
-            "edges": [
-                {
-                    "node": {
-                        "id": "gid://shopify/ProductVariant/44486498713878",
-                        "title": "Default Title",
-                        "sku": "krt166",
-                        "taxable": False,
-                        "price": "1800.00",
-                        "compareAtPrice": None,
-                        "inventoryQuantity": 0,
-                        "availableForSale": False,
-                        "barcode": "",
-                        "createdAt": "2023-04-06T18:46:00Z",
-                        "updatedAt": "2024-10-29T09:25:40Z",
-                        "inventoryPolicy": "DENY",
-                        "inventoryItem": {
-                            "id": "gid://shopify/InventoryItem/46585887588630",
-                            "tracked": True,
-                            "measurement": {
-                                "weight": {"value": 1.044, "unit": "KILOGRAMS"}
-                            },
-                            "unitCost": None,
-                            "countryCodeOfOrigin": None,
-                            "harmonizedSystemCode": None,
-                            "requiresShipping": True,
-                        },
-                        "image": None,
-                    }
-                }
-            ],
-        },
-        "admin_graphql_api_id": "gid://shopify/Product/8190614503702",
-    },
-    {
-        "id": "8190614667542",
-        "options": [{"name": "Title", "values": ["Default Title"]}],
-        "title": "1a Fast Blow Fuse 1 Amp 250v Glass Fuse 6x30mm",
-        "handle": "1a-fast-blow-fuse-1-amp-250v-glass-fuse-6x30mm",
-        "vendor": "Digilog Electronics",
-        "status": "ACTIVE",
-        "productType": "",
-        "description": "This 1a Fast Blow Fuse a small, cylindrical glass fuse with a diameter of 6mm and a length of 30mm. Although It is rated for 1 amp at 250 volts, which means that it will safely interrupt a current of up to 1 amp without blowing. However it is a fast-blow fuse, which means that it will blow quickly in the event of a short circuit or overload, protecting your electrical equipment from damage. Features of 1a Fast Blow Fuse: Fast-blow characteristic for quick protection against overcurrents Glass body for easy visual indication of blown fuse 6mm x 30mm size for compatibility with a wide range of equipment 1 amp rating for suitable for low-power applications 250-volt rating for safe use in most household appliances Here are some of the applications for this fuse: General purpose protection in electronic circuits Protection of transformers and power supplies Protection of motors and other appliances Use in automotive and also marine electrical systems Here are some things to keep in mind when using this fuse: Always replace a blown fuse with the same type and rating. Never use a higher-rated fuse than the equipment is designed for. If you are unsure about the correct fuse to use, consult a qualified electrician. Package includes : 1 x 1a Fast Blow Fuse 1 Amp 250v Glass Fuse 6x30mm Buy this product at Pakistan best online shopping store digilog.pk at cheap price. We deliver in Gujranwala ,Karachi, Lahore, Islamabad , Rawalpindi , Multan, Quetta , Faisalabad and all over the Pakistan.",
-        "category": {
-            "fullName": "Electronics > Circuit Boards & Components > Passive Circuit Components"
-        },
-        "priceRangeV2": {
-            "minVariantPrice": {"amount": "10.0", "currencyCode": "PKR"},
-            "maxVariantPrice": {"amount": "10.0", "currencyCode": "PKR"},
-        },
-        "totalInventory": 3,
-        "media": {
-            "edges": [
-                {
-                    "node": {
-                        "image": {
-                            "id": "gid://shopify/ImageSource/38107309408534",
-                            "altText": "1a Fast Blow Fuse 1 Amp 250v Glass 6x30mm",
-                            "url": "https://cdn.shopify.com/s/files/1/0744/0764/1366/files/1A_Fast_Blow_Fuse_1_Amp_250V_Glass_Fuse_6x30mm.webp?v=1758025514",
-                            "width": 1024,
-                            "height": 1024,
-                        }
-                    }
-                }
-            ]
-        },
-        "variants": {
-            "pageInfo": {
-                "hasNextPage": False,
-                "endCursor": "eyJsYXN0X2lkIjo0NDQ4NjQ5ODg0NDk1MCwibGFzdF92YWx1ZSI6MX0=",
-            },
-            "edges": [
-                {
-                    "node": {
-                        "id": "gid://shopify/ProductVariant/44486498844950",
-                        "title": "Default Title",
-                        "sku": "nst,b793",
-                        "taxable": False,
-                        "price": "10.00",
-                        "compareAtPrice": None,
-                        "inventoryQuantity": 3,
-                        "availableForSale": True,
-                        "barcode": "",
-                        "createdAt": "2023-04-06T18:46:05Z",
-                        "updatedAt": "2025-09-12T05:35:39Z",
-                        "inventoryPolicy": "CONTINUE",
-                        "inventoryItem": {
-                            "id": "gid://shopify/InventoryItem/46585887719702",
-                            "tracked": True,
-                            "measurement": {
-                                "weight": {"value": 0.01, "unit": "KILOGRAMS"}
-                            },
-                            "unitCost": {"amount": "3.0", "currencyCode": "PKR"},
-                            "countryCodeOfOrigin": None,
-                            "harmonizedSystemCode": None,
-                            "requiresShipping": True,
-                        },
-                        "image": None,
-                    }
-                }
-            ],
-        },
-        "admin_graphql_api_id": "gid://shopify/Product/8190614667542",
-    },
-    {
-        "id": "8190614733078",
-        "options": [{"name": "Title", "values": ["Default Title"]}],
-        "title": "Eprom 25020 Memory Chip Erasable Programmable Read Eprom 25020 Sop8 25020 Tssop8",
-        "handle": "eprom-25020-memory-chip-erasable-programmable-read-eprom-25020-sop8-25020-tssop8",
-        "vendor": "Digilog Electronics",
-        "status": "ACTIVE",
-        "productType": "",
-        "description": "EPROM 25020 Memory Chip: Erasable, Programmable, Readable Unleash the power of persistent data storage with the EPROM 25020! This versatile memory chip offers a unique combination of features: Erasable and Programmable: Unlike traditional ROMs, the EPROM 25020 allows you to erase and rewrite its data countless times, making it ideal for prototyping, development, and applications requiring flexible data storage. High-Density Storage: With a capacity of 256,000 bits (32KB), the 25020 packs a punch in a compact package, perfect for space-constrained applications. Fast Read Speeds: Access your data quickly and efficiently with read speeds of up to 20MHz, ensuring smooth operation in demanding applications. Wide Operating Voltage: The EPROM 25020 works seamlessly with a range of voltages from 2.7V to 5.5V, making it compatible with a variety of devices and systems. Compact and Robust: Available in both SOP8 and TSSOP8 packages, the 25020 is small and sturdy, ideal for embedded systems and harsh environments. This package includes: 1x EPROM 25020 memory chip Ideal Applications: Embedded systems programming Microcontroller development Data logging and acquisition Industrial control systems Medical equipment FPGA configuration With its exceptional features and versatile functionality, the EPROM 25020 is a valuable asset for any engineer or hobbyist looking for a reliable and flexible data storage solution.",
-        "category": {"fullName": "Uncategorized"},
-        "priceRangeV2": {
-            "minVariantPrice": {"amount": "250.0", "currencyCode": "PKR"},
-            "maxVariantPrice": {"amount": "250.0", "currencyCode": "PKR"},
-        },
-        "totalInventory": 2,
-        "media": {
-            "edges": [
-                {
-                    "node": {
-                        "image": {
-                            "id": "gid://shopify/ImageSource/38107310096662",
-                            "altText": "Eprom 25020 Memory Chip Erasable Programmable Read Sop8",
-                            "url": "https://cdn.shopify.com/s/files/1/0744/0764/1366/files/EPROM_25020_memory_chip_erasable_programmable_read_EPROM_25020_SOP8_25020_TSSOP8.webp?v=1758025516",
-                            "width": 1024,
-                            "height": 1024,
-                        }
-                    }
-                }
-            ]
-        },
-        "variants": {
-            "pageInfo": {
-                "hasNextPage": False,
-                "endCursor": "eyJsYXN0X2lkIjo0NDQ4NjQ5ODkxMDQ4NiwibGFzdF92YWx1ZSI6MX0=",
-            },
-            "edges": [
-                {
-                    "node": {
-                        "id": "gid://shopify/ProductVariant/44486498910486",
-                        "title": "Default Title",
-                        "sku": "new,b759",
-                        "taxable": False,
-                        "price": "250.00",
-                        "compareAtPrice": None,
-                        "inventoryQuantity": 2,
-                        "availableForSale": True,
-                        "barcode": None,
-                        "createdAt": "2023-04-06T18:46:08Z",
-                        "updatedAt": "2025-08-03T14:44:30Z",
-                        "inventoryPolicy": "CONTINUE",
-                        "inventoryItem": {
-                            "id": "gid://shopify/InventoryItem/46585887785238",
-                            "tracked": True,
-                            "measurement": {
-                                "weight": {"value": 0.0001, "unit": "KILOGRAMS"}
-                            },
-                            "unitCost": {"amount": "150.0", "currencyCode": "PKR"},
-                            "countryCodeOfOrigin": None,
-                            "harmonizedSystemCode": None,
-                            "requiresShipping": True,
-                        },
-                        "image": None,
-                    }
-                }
-            ],
-        },
-        "admin_graphql_api_id": "gid://shopify/Product/8190614733078",
-    },
-    {
-        "id": "8190614995222",
-        "options": [{"name": "Title", "values": ["Default Title"]}],
-        "title": "Large 10mm White Led Crystal",
-        "handle": "large-10mm-white-led-crystal",
-        "vendor": "Digilog Electronics",
-        "status": "ACTIVE",
-        "productType": "",
-        "description": "10mm White LED: Dimensions: 10mm Transparent Round LED Size (Diameter) : 10mm (F5) Colour: White Light Colour (ElectroStatic-Discharge) ESD=3000V (Operation Temperature Range) Topr= -25C ~ +80C (Storage Temperature Rage) Tstg= -40C ~ +100C (Soldering Temperature) Tsol= 260C (5sec) What is an LED? by Tyler Cooper Who doesn’t love LEDs? They are bright and blinky, or soft and elegant. They’re festive! They’re colorful! They’re everywhere and they’re a lot of fun. We love LEDs when we write tutorials because most of electronics hackery is hidden in chips, or goes very fast and we can’t see or sense it without expensive equipment. But LEDs are easy to see for everyone – this way we can visually identify what is going on inside our microcontroller. Lets begin with an anatomy lesson…The Parts of an LED! LEDs are so common, they come in dozens of different shapes and sizes. The LEDs you are most likely to use are the through hole LEDs with two legs. There are lots of LEDs that are small and hard to solder but these are easy to use with a breadboard because they have long wires we can stick in. The clear or clear-ish bulb is what protects the light emitter (thats where the magic happens). In fact, the first two letters of LED stand for Light Emitting. A really nice thing about LEDs is that they are very simple. Unlike some chips that have dozens of pins with names and special uses, LEDs have only two wires. One wire is the anode (positive) and another is the cathode (negative). The two wires have different names because LEDs only work in one direction and we need to keep track of which pin is which. One goes to the positive voltage and the other goes to the negative voltage. Electronic parts that only work in ‘one direction’ like this are called Diodes, thats what the last letter of LED stands for. The longer lead goes to the more-positive voltage Current goes in one direction, from the anode (positive) to the cathode (negative) LEDs that are ‘backwards’ won’t work – but they won’t break either It’s all a little confusing – we often have to think about which is which. So to make it easy, there’s only one thing you need to remember and that’s the LED wont light up if you put it in backwards. If you’re ever having LED problems where they are not lighting, just flip it around. Its very hard to damage an LED by putting it in backwards so don’t be scared if you do If it helps, refer back to these photos and diagrams or print them out for your reference All the different sizes and colors 10mm LEDs! Green, Red, White (in a clear case) and InfraRed (in a bluish case) One of the best things about modern LEDs is all the colors they come in. It used to be that LEDs were only red or maybe yellow and orange, which is why early electronics from the 70s and 80s only had red LEDs. The color emitted from an LED has to do with what type of material they are made of. So red, for example, is made with Gallium Arsenide. Since then, scientists have experimented with many other materials and figured out how to make other colors such as green and White, as well as violet and white. (You can see a massive table of all the different materials used to make LEDs in the wikipedia page ) When we first started making electronics in the late 90’s, we bought some 5mm White LEDs and they were $3 each. Now you can get easily a dozen LEDs for that price. Life is good!",
-        "category": None,
-        "priceRangeV2": {
-            "minVariantPrice": {"amount": "10.0", "currencyCode": "PKR"},
-            "maxVariantPrice": {"amount": "10.0", "currencyCode": "PKR"},
-        },
-        "totalInventory": 14,
-        "media": {
-            "edges": [
-                {
-                    "node": {
-                        "image": {
-                            "id": "gid://shopify/ImageSource/38107310588182",
-                            "altText": "Large 10mm White Led Crystal",
-                            "url": "https://cdn.shopify.com/s/files/1/0744/0764/1366/files/10mm_High-Brightness_White_LED.webp?v=1758025526",
-                            "width": 600,
-                            "height": 600,
-                        }
-                    }
-                }
-            ]
-        },
-        "variants": {
-            "pageInfo": {
-                "hasNextPage": False,
-                "endCursor": "eyJsYXN0X2lkIjo0NDQ4NjQ5OTIzODE2NiwibGFzdF92YWx1ZSI6MX0=",
-            },
-            "edges": [
-                {
-                    "node": {
-                        "id": "gid://shopify/ProductVariant/44486499238166",
-                        "title": "Default Title",
-                        "sku": "New,b111",
-                        "taxable": False,
-                        "price": "10.00",
-                        "compareAtPrice": None,
-                        "inventoryQuantity": 14,
-                        "availableForSale": True,
-                        "barcode": "",
-                        "createdAt": "2023-04-06T18:46:22Z",
-                        "updatedAt": "2025-09-17T07:01:35Z",
-                        "inventoryPolicy": "CONTINUE",
-                        "inventoryItem": {
-                            "id": "gid://shopify/InventoryItem/46585888112918",
-                            "tracked": True,
-                            "measurement": {
-                                "weight": {"value": 0.001, "unit": "KILOGRAMS"}
-                            },
-                            "unitCost": {"amount": "7.0", "currencyCode": "PKR"},
-                            "countryCodeOfOrigin": None,
-                            "harmonizedSystemCode": None,
-                            "requiresShipping": True,
-                        },
-                        "image": None,
-                    }
-                }
-            ],
-        },
-        "admin_graphql_api_id": "gid://shopify/Product/8190614995222",
     },
 ]
