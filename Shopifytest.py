@@ -36,14 +36,14 @@ async def test():
   # return await store.create_cart(list_q)
   id = await store.create_cart(list_q)
   id = id["id"]
-  data = await store.addCartLineItems(id, [{ "quantity": 8,  "handle": "red-snowboard", "variant":"Yellow / Pealed"}, { "quantity": 9,  "handle": "anycubic-full-metal-i3-mega-3d-printer-with-ultrabase-heatbed-and-3-5-inch-touch-screen", "variant":"Default Title"}])
+  data = await store.addCartLineItems(id, [{ "quantity": 1,  "handle": "esp8266-ch340-lolin-nodemcu-wifi-development-board-pakistan", "variant":"Default Title"}  ])
   data = data["checkoutUrl"]
-  print()
+  print("Passed addCartLineItems")
   print(data,"\n\n")
-  data = await store.updateCartLineItems(id,[{ "handle": "anycubic-full-metal-i3-mega-3d-printer-with-ultrabase-heatbed-and-3-5-inch-touch-screen", "variant":"Default Title", "quantity": 128}])
+  data = await store.updateCartLineItems(id,[{  "handle": "red-snowboard", "variant":"Yellow / Pealed", "quantity": 128}])
   data = data["checkoutUrl"]
   print(data,"\n\n")
-  return await store.removeCartLineItems(id,[{ "handle": "anycubic-full-metal-i3-mega-3d-printer-with-ultrabase-heatbed-and-3-5-inch-touch-screen", "variant":"Default Title"}])
+  return await store.removeCartLineItems(id,[{"handle": "red-snowboard", "variant":"Yellow / Pealed"}])
 try:
   print(asyncio.run(test()))
 except Exception as e:

@@ -151,6 +151,9 @@ class ChatRequest(BaseModel):
 
         return json.dumps({"data": list_of_dicts, "metadata": self.metadata})
 
+    def parse_into_json_prompt(self):
+        pass
+
     @staticmethod
     def serialize_tool_response(
         msg: ChatCompletionToolMessageParam,

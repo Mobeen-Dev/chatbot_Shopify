@@ -41,13 +41,14 @@ async def generate_mapping():
     with open("bucket/products.pkl", "wb") as f:
         pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-if __name__ == "__main__":
-    asyncio.run(generate_mapping())
+# if __name__ == "__main__":
+#     asyncio.run(generate_mapping())
+
 # load
 with open("bucket/products.pkl", "rb") as f:
     dataw = pickle.load(f)
     print(len(dataw))
-    print((dataw["high-quality-s2d0s05-n960-display-ic-for-samsung-n960"]))
+    print((dataw["esp8266-ch340-lolin-nodemcu-wifi-development-board-pakistan"]))
     print("\n\n\n\n")
     print((dataw["red-snowboard"]))
 

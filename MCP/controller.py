@@ -24,11 +24,12 @@ class Controller:
         shopify_flag = False
         cart_flag = False
         order_flag = False
-    
         for tool_call in tool_calls:
             function_name = tool_call.function.name
             arguments = json.loads(tool_call.function.arguments)
-
+            
+            self.logger.info(f"\nFunction to Execute : {function_name} parameters : {arguments}\n")
+            
             if function_name == "get_products_data":
                 chat_request.activity_record += " -> get_products_data"
                 

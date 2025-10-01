@@ -9,7 +9,7 @@ from openai import AsyncOpenAI
 from openai import OpenAI
 from config import settings, llm_model
 from logger import get_logger
-
+from guardrails import parse_query_into_json_prompt
 # from opneai_tools import tools_list
 from MCP import tools_list
 from MCP import Controller
@@ -19,7 +19,7 @@ from openai.types.chat import ChatCompletion
 from threading import Thread
 from persistant_storage import store_session_in_db
 from contextlib import asynccontextmanager
-
+import json
 # @ App level reference for 3rd Party Services
 # redis_client = None
 session_manager: SessionManager
@@ -132,10 +132,11 @@ async def async_chat_endpoint(chat_request: ChatRequest):
             raise HTTPException(status_code=404, detail="Session not found.")
         # print(f"\n $$$ Session data retrieved chat_request.n_history: \n{chat_request.n_history}\n\n\n\n\n\n\n")
     try:
+        await parse_into_json_prompt(chat_request)
         response = None
         async with AsyncOpenAI(
             api_key=settings.openai_api_key,
-            http_client=DefaultAioHttpClient(timeout=600),
+            http_client=DefaultAioHttpClient(timeout=200),
         ) as client:
             messages = chat_request.openai_msgs()
             response = await process_with_tools(client, chat_request, tools_list)
@@ -148,7 +149,7 @@ async def async_chat_endpoint(chat_request: ChatRequest):
 
             logger.info(chat_request)
 
-            logger.info(f"\n\n\n\n\nOpenAI response: {response}\n\n\n\n\n\n")
+            logger.info(f"\n\nOpenAI response: {response}\n\n")
             # logger.info(f"\n\n History choices: {messages}")
 
             reply = str(response.choices[0].message.content).strip()
@@ -212,6 +213,27 @@ async def process_with_tools(client, chat_request, tools_list) -> ChatCompletion
         chat_request = await mcp_controller.function_execution(
             chat_request, assistant_message.tool_calls
         )
+
+
+async def parse_into_json_prompt(chat_request:ChatRequest):
+    flag_categories = [
+        # "DataQuery",
+        # "ProductInfo",
+        # "OrderFetch",
+        # "CartFunctionality",
+        # "ProductRelatedIntent",
+        # "ProjectsDetails",
+        "AnyMisleadingQuery",
+        "RANDOM",
+        "SystemAbuse",
+    ]
+
+    response = await parse_query_into_json_prompt(chat_request.message)
+    if response.get("category") in flag_categories :
+        chat_request.metadata.setdefault("flags", []).append(response["category"])
+
+        chat_request.message = json.dumps(response)
+    return
 
 
 if __name__ == "__main__":
