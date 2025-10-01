@@ -423,8 +423,10 @@ class Shopify:
         result = await self.send_storefront_mutation(mutation, variables)
 
         cart = result.get("data", {}).get("cartLinesAdd", {}).get("cart", {})
-        # print(cart,"\n\n")
-        return self.format_cart(cart, pretify_line_items=True)
+        print("CART \n",result,"\n\n")
+        if cart:
+          return self.format_cart(cart, pretify_line_items=True)
+        return result
 
     async def removeCartLineItems(self, cartId: str, lineItems: List[dict[str, str]]):
         cart = await self.query_cart(cartId, True)
@@ -1757,6 +1759,9 @@ class Shopify:
     def format_cart(
         self, cart: dict, line_items_dict: bool = False, pretify_line_items=False
     ) -> dict:
+        print()
+        print(cart)
+        print()
         """
         Function to format the cart data into a specific structure.
         """
@@ -1804,32 +1809,36 @@ class Shopify:
                 ]
 
         try:
-            # cart = _cart.get("data",{}).get("cartCreate",{}).get("cart",{})
-            amount = cart["cost"]["subtotalAmount"]
-            line_items = cart.get("lines", {}).get("edges", [])
-            dilevery_methods = (
-                cart.get("buyerIdentity", {})
-                .get("preferences", {})
-                .get("delivery", {})
-                .get("deliveryMethod", [])
-            )
+          amount = (
+              cart.get("cost", {})
+                  .get("subtotalAmount", {"amount": "0.00", "currencyCode": "USD"})
+          )
+          line_items = cart.get("lines", {}).get("edges", [])
 
-            return {
-                "id": cart.get("id", ""),
-                "checkoutUrl": cart.get("checkoutUrl", ""),
-                "createdAt": cart.get("createdAt", ""),
-                "updatedAt": cart.get("updatedAt", ""),
-                "lineItems": return_lineItems(line_items),
-                "subtotalAmount": f"{amount['amount']} {amount['currencyCode']}",
-                "deliveryMethod": dilevery_methods[0],
-                "userErrors": cart.get("userErrors"),
-            }
-        except Exception:
+          preferences = cart.get("buyerIdentity", {}).get("preferences") or {}
+          delivery_methods = (
+              preferences.get("delivery", {}).get("deliveryMethod", [])
+          )
+          delivery_method = delivery_methods[0] if delivery_methods else "Select On Checkout"
+
+          return {
+              "id": cart.get("id", ""),
+              "checkoutUrl": cart.get("checkoutUrl", ""),
+              "createdAt": cart.get("createdAt", ""),
+              "updatedAt": cart.get("updatedAt", ""),
+              "lineItems": return_lineItems(line_items),
+              "subtotalAmount": f"{amount['amount']} {amount['currencyCode']}",
+              "deliveryMethod": delivery_method,
+              "userErrors": cart.get("userErrors", []),
+          }
+        except Exception as e:
             return {
                 "state": "Error Arrise",
-                "server_response": cart,
-                "info": "The server returned an empty response because the ID you provided is incorrect. Please check the ID and try again.",
+                "server_response": cart if "cart" in locals() else None,
+                "error": str(e),
+                "info": "The server returned an empty response because the ID you provided is incorrect. Please check the ID",
             }
+
 
     def parse_into_query_params(self, product: dict, child_p_id: str = ""):
         # product = await fetch_product(product_gid)
