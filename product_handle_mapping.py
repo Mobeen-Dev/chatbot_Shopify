@@ -18,28 +18,31 @@ async def test():
 
 # print(asyncio.run(test()))
 
-# products = asyncio.run(test())
-# data : dict[str,ProductEntry] = {}
+async def generate_mapping():
+    products = await test()
+    data : dict[str,ProductEntry] = {}
 
-# for product in products:
-#   handle = product.get("handle","404")
-#   variants = product.get("variants",{}).get("nodes",[])
+    for product in products:
+        handle = product.get("handle","404")
+        variants = product.get("variants",{}).get("nodes",[])
 
-#   variant_count  = len(variants)
-#   is_single_variant = variant_count==1
-#   var = {}
-#   for v in variants:
-#     var[v["title"]] = {"vid": v["id"]}
-#   data[handle] = ProductEntry(
-#     have_single_variant= is_single_variant,
-#     variants=var,
-#   )
+        variant_count  = len(variants)
+        is_single_variant = variant_count==1
+        var = {}
+        for v in variants:
+            var[v["title"]] = {"vid": v["id"]}
+        data[handle] = ProductEntry(
+            have_single_variant= is_single_variant,
+            variants=var,
+        )
 
 
-# # save
-# with open("bucket/products.pkl", "wb") as f:
-#     pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
+    # save
+    with open("bucket/products.pkl", "wb") as f:
+        pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
 
+if __name__ == "__main__":
+    asyncio.run(generate_mapping())
 # load
 with open("bucket/products.pkl", "rb") as f:
     dataw = pickle.load(f)
