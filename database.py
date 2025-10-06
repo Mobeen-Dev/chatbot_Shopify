@@ -98,7 +98,7 @@ class vectorDB:
 
 if __name__ == "__main__":
     store = vectorDB()
-    user_query = "Microcontroller with built-in Wi-Fi cheap"
+    user_query = "Do you have MICRO CONTROLLER like arduino?"
     matches = asyncio.run(store.query(query=user_query, top_k=5))
     print(matches)
     # for i, match in enumerate(matches):

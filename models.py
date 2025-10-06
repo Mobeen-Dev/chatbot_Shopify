@@ -1,12 +1,11 @@
 import json
 from pydantic import BaseModel, Field
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from typing import Optional, List, Literal, Dict, Any, cast, Mapping, Tuple
 from openai.types.chat import (
     ChatCompletionMessageToolCall,
     ChatCompletionMessageParam,
     ChatCompletionToolMessageParam,
-    ChatCompletionMessage,
     ChatCompletionSystemMessageParam,
 )
 import re
@@ -43,6 +42,7 @@ class ProductEntry:
 # Request schema
 class ChatRequest(BaseModel):
     session_id: Optional[str] = None  # Session ID for tracking conversation
+    ip_address: Optional[str] = None  # Session ID for tracking conversation
     message: str  # Client Asked Question
     metadata: dict = Field(
         default_factory=dict
@@ -624,7 +624,7 @@ class ChatRequest(BaseModel):
             > Example response for off-topic questions:
             > **“I'm here to assist you with products available on Digilog.pk. Let me know what you're looking for!”**
             >
-            > You must not access, request, or process any personal data or confidential company information. If such information is requested, reply strictly with:
+            > You must not access, request, or process any personal data or confidential company information. If such information is requested out of scope of regular customer like analytics bulk order data, reply strictly with:
             > **"Not eligible."**
             >
             > ### Limitations
@@ -647,8 +647,33 @@ class ChatRequest(BaseModel):
             > * Keep tone **professional, friendly, and concise**
             > * Avoid slang, jokes, or overly casual phrasing
             > * Stay informative, neutral, and helpful at all times
+            >
+            > ### Function Calling Procedures
             
-        """.strip()
+            1. **Default Function → `get_products_data`**
+
+            * Always use `get_products_data` as the **primary retrieval source**.
+            * It queries the vector DB with all products aligned to Shopify API data.
+            * This function should handle most cases — from product searches, comparisons, availability checks, and recommendations.
+            * You can call it multiple times with slightly different query variations.
+            * If results seem too narrow or incomplete, **increase the parameter `k`** to expand recall and improve results.
+
+            2. **Special Case → `get_product_via_handle`**
+
+            * Only use this function when the user explicitly provides a **direct product link/handle**.
+            * If the user does not provide a link, **do not use** this function.
+            * This ensures efficient lookups without unnecessary API calls.
+
+            3. **Query Handling Rules**
+
+            * If the query is about a product, always try `get_products_data` first unless a handle/link is provided.
+            * Do not mix up the two functions — each has a clear use case.
+            * For vague or incomplete queries, re-run `get_products_data` with adjusted query text or a higher `k`.
+            * Never invent, guess, or hallucinate product data — rely only on function outputs.
+
+
+
+            """.strip()
 
     @property
     def vector_review_prompt(self) -> str:
@@ -657,6 +682,16 @@ class ChatRequest(BaseModel):
 
             Carefully evaluate the **retrieved product data chunks** from the vector database.
             Do **not** rely solely on the **similarity score** — high scores may still return **irrelevant or misleading results**.
+
+            Ensure **complete success** of user requirements by:
+
+            * Identifying what fully satisfies the user query.
+            * Shaping the output so the answer is complete.
+            * If the query involves a bundle:
+
+            * Return the bundle if available.
+            * If no bundle exists, provide a full list of related products.
+            * Always include follow-up questions if results are incomplete, guiding the user to a complete product list.
 
             Follow these steps to ensure accurate and useful product recommendations:
 

@@ -132,7 +132,7 @@ async def async_chat_endpoint(chat_request: ChatRequest):
             raise HTTPException(status_code=404, detail="Session not found.")
         # print(f"\n $$$ Session data retrieved chat_request.n_history: \n{chat_request.n_history}\n\n\n\n\n\n\n")
     try:
-        await parse_into_json_prompt(chat_request)
+        normal_query = await parse_into_json_prompt(chat_request)
         response = None
         async with AsyncOpenAI(
             api_key=settings.openai_api_key,
@@ -233,7 +233,8 @@ async def parse_into_json_prompt(chat_request:ChatRequest):
         chat_request.metadata.setdefault("flags", []).append(response["category"])
 
         chat_request.message = json.dumps(response)
-    return
+        return False
+    return True
 
 
 if __name__ == "__main__":

@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Prompts Guardrails Editor</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa4b2;--accent:#38bdf8}
+    body{font-family:Inter,Segoe UI,Roboto,system-ui,Arial;background:linear-gradient(180deg,#071028 0%, #041022 100%);color:#e6eef6;margin:0;padding:20px}
+    .wrap{max-width:1100px;margin:0 auto}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    header h1{font-size:18px;margin:0}
+    header .meta{font-size:13px;color:var(--muted)}
+    .panel{background:var(--card);border-radius:10px;padding:14px;box-shadow:0 6px 20px rgba(2,6,23,0.6)}
+    textarea{width:100%;height:60vh;background:#071124;color:#eef5ff;border:1px solid rgba(255,255,255,0.04);padding:12px;border-radius:6px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:13px;resize:vertical}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button{background:transparent;border:1px solid rgba(255,255,255,0.08);color:#e6eef6;padding:8px 12px;border-radius:8px;cursor:pointer}
+    button.primary{background:var(--accent);border:0;color:#022;box-shadow:0 6px 16px rgba(56,189,248,0.12)}
+    .status{margin-left:8px;font-size:13px;color:var(--muted)}
+    .row{display:flex;align-items:center;gap:12px}
+    .small{font-size:12px;color:var(--muted)}
+    .hint{font-size:12px;color:var(--muted);margin-top:8px}
+    .footer{margin-top:12px;display:flex;justify-content:space-between;align-items:center}
+    .danger{border-color:#f43f5e}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Prompts — Guardrails Editor</h1>
+      <div class="meta">Endpoint: <code>/prompts/guardrails</code></div>
+    </header>
+
+    <div class="panel" id="panel">
+      <div class="row">
+        <div>
+          <div class="small">Current prompt (YAML)</div>
+          <div class="hint">This editor fetches the YAML from <code>/prompts/guardrails</code> and saves back using a <code>PUT</code> request with a plain-text body. It also attempts optional YAML validation (requires internet to load js-yaml). </div>
+        </div>
+        <div style="margin-left:auto" id="lastModified">—</div>
+      </div>
+
+      <textarea id="editor" spellcheck="false" placeholder="# loading..."></textarea>
+
+      <div class="controls">
+        <button id="saveBtn" class="primary">Save (PUT)</button>
+        <button id="backupBtn">Download Backup</button>
+        <button id="reloadBtn">Reload from Server</button>
+        <button id="rawViewBtn">View Raw Response</button>
+        <label style="display:flex;align-items:center;gap:8px;margin-left:8px"><input type="checkbox" id="validateYaml"> Validate YAML</label>
+        <div class="status" id="status">Idle</div>
+      </div>
+
+      <div class="footer">
+        <div class="small">Tip: Keep this file under version control (git) for history. The editor will not create extra server-side versions.</div>
+        <div class="small" id="serverInfo"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configuration
+    const endpoint = '/prompts/guardrails';
+
+    // UI refs
+    const editor = document.getElementById('editor');
+    const saveBtn = document.getElementById('saveBtn');
+    const reloadBtn = document.getElementById('reloadBtn');
+    const backupBtn = document.getElementById('backupBtn');
+    const rawViewBtn = document.getElementById('rawViewBtn');
+    const statusEl = document.getElementById('status');
+    const lastModifiedEl = document.getElementById('lastModified');
+    const serverInfoEl = document.getElementById('serverInfo');
+    const validateCheckbox = document.getElementById('validateYaml');
+
+    let lastFetchedRaw = null;
+
+    function setStatus(msg, isError=false) {
+      statusEl.textContent = msg;
+      statusEl.style.color = isError ? '#ffb4b4' : '';
+    }
+
+    async function fetchPrompt() {
+      setStatus('Fetching...');
+      try {
+        const res = await fetch(endpoint, { cache: 'no-store' });
+        lastFetchedRaw = await res.text();
+        // try to show Last-Modified header if available
+        const lm = res.headers.get('Last-Modified') || res.headers.get('last-modified');
+        lastModifiedEl.textContent = lm ? `Last-Modified: ${lm}` : '';
+        serverInfoEl.textContent = `HTTP ${res.status} ${res.statusText}`;
+        editor.value = lastFetchedRaw;
+        setStatus('Loaded');
+      } catch (err) {
+        console.error(err);
+        setStatus('Failed to fetch: '+err.message, true);
+      }
+    }
+
+    async function savePrompt() {
+      const text = editor.value;
+      if (!text || text.trim().length === 0) {
+        if (!confirm('Editor is empty. Do you want to save an empty file?')) return;
+      }
+
+      if (validateCheckbox.checked && window.jsyaml) {
+        try {
+          // Try parse to validate YAML
+          window.jsyaml.load(text);
+        } catch (e) {
+          const proceed = confirm('YAML validation failed:\n' + e.message + '\n\nSave anyway?');
+          if (!proceed) return;
+        }
+      }
+
+      setStatus('Saving...');
+      saveBtn.disabled = true;
+      try {
+        const res = await fetch(endpoint, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8'
+          },
+          body: text
+        });
+
+        const textRes = await res.text();
+        if (!res.ok) {
+          console.error('Save failed', res.status, textRes);
+          setStatus('Save failed: ' + res.status + ' ' + res.statusText, true);
+          alert('Save failed: ' + res.status + '\n' + textRes);
+        } else {
+          setStatus('Saved');
+          lastFetchedRaw = text;
+          // update Last-Modified if server returned it
+          const lm = res.headers.get('Last-Modified') || res.headers.get('last-modified');
+          lastModifiedEl.textContent = lm ? `Last-Modified: ${lm}` : '';
+        }
+      } catch (err) {
+        console.error(err);
+        setStatus('Save error: ' + err.message, true);
+        alert('Save error: ' + err.message);
+      } finally {
+        saveBtn.disabled = false;
+      }
+    }
+
+    function downloadBackup() {
+      const blob = new Blob([editor.value || ''], { type: 'text/yaml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const now = new Date().toISOString().replace(/[:.]/g,'-');
+      a.download = `guardrails-backup-${now}.yaml`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setStatus('Backup downloaded');
+    }
+
+    function viewRawResponse() {
+      if (lastFetchedRaw === null) {
+        alert('No response cached. Reload first.');
+        return;
+      }
+      const w = window.open('', '_blank');
+      w.document.write('<pre style="white-space:pre-wrap;word-break:break-word">' +
+        escapeHtml(lastFetchedRaw) + '</pre>');
+      w.document.title = 'Raw: /prompts/guardrails';
+    }
+
+    function escapeHtml(s){
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // Bind events
+    saveBtn.addEventListener('click', savePrompt);
+    reloadBtn.addEventListener('click', fetchPrompt);
+    backupBtn.addEventListener('click', downloadBackup);
+    rawViewBtn.addEventListener('click', viewRawResponse);
+
+    // Try to load js-yaml for optional validation (fallback silently if unavailable)
+    (function loadJsYaml(){
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js';
+      script.onload = () => console.log('js-yaml loaded for validation');
+      script.onerror = () => console.log('js-yaml failed to load (validation disabled)');
+      document.head.appendChild(script);
+    })();
+
+    // Initial fetch
+    fetchPrompt();
+  </script>
+</body>
+</html>

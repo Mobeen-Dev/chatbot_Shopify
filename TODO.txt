@@ -26,6 +26,10 @@ Phase #3 ✅
 
     Redirect to Different Pages
 
+Things to Search On:
+    Moderation
+    Our omni-moderation models are made available free of charge ✌️
+
 Closing Musts:
   GuardRails
   Working Mechanism
