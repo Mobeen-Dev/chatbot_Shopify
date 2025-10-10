@@ -1,66 +1,474 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Prompts Guardrails Editor</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompts — {{endpoint}} Editor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <style>
-    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa4b2;--accent:#38bdf8}
-    body{font-family:Inter,Segoe UI,Roboto,system-ui,Arial;background:linear-gradient(180deg,#071028 0%, #041022 100%);color:#e6eef6;margin:0;padding:20px}
-    .wrap{max-width:1100px;margin:0 auto}
-    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-    header h1{font-size:18px;margin:0}
-    header .meta{font-size:13px;color:var(--muted)}
-    .panel{background:var(--card);border-radius:10px;padding:14px;box-shadow:0 6px 20px rgba(2,6,23,0.6)}
-    textarea{width:100%;height:60vh;background:#071124;color:#eef5ff;border:1px solid rgba(255,255,255,0.04);padding:12px;border-radius:6px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:13px;resize:vertical}
-    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-    button{background:transparent;border:1px solid rgba(255,255,255,0.08);color:#e6eef6;padding:8px 12px;border-radius:8px;cursor:pointer}
-    button.primary{background:var(--accent);border:0;color:#022;box-shadow:0 6px 16px rgba(56,189,248,0.12)}
-    .status{margin-left:8px;font-size:13px;color:var(--muted)}
-    .row{display:flex;align-items:center;gap:12px}
-    .small{font-size:12px;color:var(--muted)}
-    .hint{font-size:12px;color:var(--muted);margin-top:8px}
-    .footer{margin-top:12px;display:flex;justify-content:space-between;align-items:center}
-    .danger{border-color:#f43f5e}
+    :root {
+      /* Light theme colors - Material 3 */
+      --md-sys-color-primary: #6750A4;
+      --md-sys-color-on-primary: #FFFFFF;
+      --md-sys-color-primary-container: #EADDFF;
+      --md-sys-color-on-primary-container: #21005D;
+      --md-sys-color-secondary: #625B71;
+      --md-sys-color-on-secondary: #FFFFFF;
+      --md-sys-color-secondary-container: #E8DEF8;
+      --md-sys-color-on-secondary-container: #1D192B;
+      --md-sys-color-surface: #FEF7FF;
+      --md-sys-color-surface-variant: #E7E0EC;
+      --md-sys-color-on-surface: #1C1B1F;
+      --md-sys-color-on-surface-variant: #49454F;
+      --md-sys-color-outline: #79747E;
+      --md-sys-color-outline-variant: #CAC4D0;
+      --md-sys-color-background: #FEF7FF;
+      --md-sys-color-error: #B3261E;
+      --md-sys-color-on-error: #FFFFFF;
+      --md-sys-color-surface-container: #F3EDF7;
+      --md-sys-color-surface-container-high: #ECE6F0;
+      --md-sys-color-surface-container-highest: #E6E0E9;
+      --md-elevation-1: 0 1px 2px rgba(0,0,0,0.3), 0 1px 3px 1px rgba(0,0,0,0.15);
+      --md-elevation-2: 0 1px 2px rgba(0,0,0,0.3), 0 2px 6px 2px rgba(0,0,0,0.15);
+    }
+
+    [data-theme="dark"] {
+      /* Dark theme colors - Material 3 */
+      --md-sys-color-primary: #D0BCFF;
+      --md-sys-color-on-primary: #381E72;
+      --md-sys-color-primary-container: #4F378B;
+      --md-sys-color-on-primary-container: #EADDFF;
+      --md-sys-color-secondary: #CCC2DC;
+      --md-sys-color-on-secondary: #332D41;
+      --md-sys-color-secondary-container: #4A4458;
+      --md-sys-color-on-secondary-container: #E8DEF8;
+      --md-sys-color-surface: #1C1B1F;
+      --md-sys-color-surface-variant: #49454F;
+      --md-sys-color-on-surface: #E6E1E5;
+      --md-sys-color-on-surface-variant: #CAC4D0;
+      --md-sys-color-outline: #938F99;
+      --md-sys-color-outline-variant: #49454F;
+      --md-sys-color-background: #1C1B1F;
+      --md-sys-color-error: #F2B8B5;
+      --md-sys-color-on-error: #601410;
+      --md-sys-color-surface-container: #211F26;
+      --md-sys-color-surface-container-high: #2B2930;
+      --md-sys-color-surface-container-highest: #36343B;
+      --md-elevation-1: 0 1px 3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3);
+      --md-elevation-2: 0 2px 6px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--md-sys-color-background);
+      color: var(--md-sys-color-on-surface);
+      transition: background-color 0.3s ease, color 0.3s ease;
+      line-height: 1.5;
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    header {
+      margin-bottom: 32px;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 400;
+      color: var(--md-sys-color-on-surface);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .theme-toggle {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--md-sys-color-on-surface-variant);
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s;
+    }
+
+    .theme-toggle:hover {
+      background-color: var(--md-sys-color-surface-variant);
+    }
+
+    .meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 14px;
+    }
+
+    .meta code {
+      background-color: var(--md-sys-color-surface-container-high);
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-family: 'Roboto Mono', monospace;
+      color: var(--md-sys-color-primary);
+      font-size: 13px;
+    }
+
+    .panel {
+      background-color: var(--md-sys-color-surface-container);
+      border-radius: 28px;
+      padding: 24px;
+      box-shadow: var(--md-elevation-1);
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .small {
+      font-size: 14px;
+      color: var(--md-sys-color-on-surface-variant);
+      font-weight: 500;
+      letter-spacing: 0.1px;
+    }
+
+    #lastModified {
+      font-size: 13px;
+      color: var(--md-sys-color-on-surface-variant);
+      margin-left: auto;
+    }
+
+    #editor {
+      width: 100%;
+      min-height: 400px;
+      padding: 20px;
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: 12px;
+      background-color: var(--md-sys-color-surface-container-highest);
+      color: var(--md-sys-color-on-surface);
+      font-family: 'Roboto Mono', monospace;
+      font-size: 14px;
+      resize: vertical;
+      transition: border-color 0.2s, background-color 0.3s;
+      outline: none;
+    }
+
+    #editor:focus {
+      border-color: var(--md-sys-color-primary);
+      border-width: 2px;
+      padding: 19px;
+    }
+
+    #editor::placeholder {
+      color: var(--md-sys-color-on-surface-variant);
+      opacity: 0.6;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--md-sys-color-outline-variant);
+    }
+
+    button {
+      font-family: 'Roboto', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px 24px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: 0.1px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.4s, height 0.4s;
+    }
+
+    button:active::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    .primary {
+      background-color: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      box-shadow: var(--md-elevation-1);
+    }
+
+    .primary:hover {
+      box-shadow: var(--md-elevation-2);
+      transform: translateY(-1px);
+    }
+
+    .primary:active {
+      transform: translateY(0);
+    }
+
+    button:not(.primary) {
+      background-color: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+    }
+
+    button:not(.primary):hover {
+      background-color: var(--md-sys-color-surface-container-highest);
+      box-shadow: var(--md-elevation-1);
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 8px;
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 14px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--md-sys-color-primary);
+    }
+
+    .status {
+      margin-left: auto;
+      padding: 6px 16px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 500;
+      background-color: var(--md-sys-color-surface-container-high);
+      color: var(--md-sys-color-on-surface-variant);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status.loading {
+      background-color: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+    }
+
+    .status.success {
+      background-color: #D8F3DC;
+      color: #1B4332;
+    }
+
+    [data-theme="dark"] .status.success {
+      background-color: #063421;
+      color: #dae9dc;
+    }
+
+    .status.error {
+      background-color: var(--md-sys-color-error);
+      color: var(--md-sys-color-on-error);
+    }
+
+    .footer {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--md-sys-color-outline-variant);
+    }
+
+    #serverInfo {
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 12px;
+    }
+
+    .material-icons {
+      font-size: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .wrap {
+        padding: 16px;
+      }
+
+      h1 {
+        font-size: 24px;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .theme-toggle {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+      }
+
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      button {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .status {
+        margin-left: 0;
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .spinning {
+      animation: spin 1s linear infinite;
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>Prompts — Guardrails Editor</h1>
-      <div class="meta">Endpoint: <code>/prompts/guardrails</code></div>
+      <h1>
+        Prompts — Editor
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+          <span class="material-icons">light_mode</span>
+        </button>
+      </h1>
+      <div class="meta">Endpoint: <code>/prompts/{{endpoint}}</code></div>
     </header>
 
     <div class="panel" id="panel">
       <div class="row">
         <div>
           <div class="small">Current prompt (YAML)</div>
-          <div class="hint">This editor fetches the YAML from <code>/prompts/guardrails</code> and saves back using a <code>PUT</code> request with a plain-text body. It also attempts optional YAML validation (requires internet to load js-yaml). </div>
         </div>
-        <div style="margin-left:auto" id="lastModified">—</div>
+        <div id="lastModified">—</div>
       </div>
 
       <textarea id="editor" spellcheck="false" placeholder="# loading..."></textarea>
 
       <div class="controls">
-        <button id="saveBtn" class="primary">Save (PUT)</button>
-        <button id="backupBtn">Download Backup</button>
-        <button id="reloadBtn">Reload from Server</button>
-        <button id="rawViewBtn">View Raw Response</button>
-        <label style="display:flex;align-items:center;gap:8px;margin-left:8px"><input type="checkbox" id="validateYaml"> Validate YAML</label>
+        <button id="saveBtn" class="primary">
+          <span class="material-icons">save</span>
+          Save
+        </button>
+        <button id="backupBtn">
+          <span class="material-icons">download</span>
+          Download Backup
+        </button>
+        <button id="reloadBtn">
+          <span class="material-icons">refresh</span>
+          Reload from Server
+        </button>
+        <button id="rawViewBtn">
+          <span class="material-icons">code</span>
+          View Raw Response
+        </button>
+        <label>
+          <input type="checkbox" id="validateYaml">
+          Validate YAML
+        </label>
         <div class="status" id="status">Idle</div>
       </div>
 
       <div class="footer">
-        <div class="small">Tip: Keep this file under version control (git) for history. The editor will not create extra server-side versions.</div>
         <div class="small" id="serverInfo"></div>
       </div>
     </div>
   </div>
 
   <script>
+    // Theme Management
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = themeToggle.querySelector('.material-icons');
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    themeIcon.textContent = savedTheme === 'dark' ? 'dark_mode' : 'light_mode';
+
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      themeIcon.textContent = newTheme === 'dark' ? 'dark_mode' : 'light_mode';
+    });
+
+    // Status Helper
+    function setStatus(message, type = 'idle') {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = message;
+      statusEl.className = 'status ' + type;
+    }
+
+    // Example functionality (replace with your actual implementation)
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      setStatus('Saving...', 'loading');
+      // Your PUT request logic here
+      setTimeout(() => setStatus('Saved successfully', 'success'), 1000);
+    });
+
+    document.getElementById('reloadBtn').addEventListener('click', () => {
+      setStatus('Reloading...', 'loading');
+      // Your reload logic here
+      setTimeout(() => setStatus('Reloaded', 'success'), 1000);
+    });
+
+    document.getElementById('backupBtn').addEventListener('click', () => {
+      setStatus('Downloading...', 'loading');
+      // Your download logic here
+      setTimeout(() => setStatus('Downloaded', 'success'), 1000);
+    });
+
+    document.getElementById('rawViewBtn').addEventListener('click', () => {
+      // Your raw view logic here
+      alert('Raw view functionality');
+    });
+
+    // Initialize
+    document.getElementById('lastModified').textContent = new Date().toLocaleString();
+    document.getElementById('serverInfo').textContent = 'Server: Connected';
+  </script>
+  
+  <script>
     // Configuration
-    const endpoint = '/prompts/guardrails';
+    const path = {{ endpoint | tojson }} ;
+    const endPoint = '/prompts/'+path;
 
     // UI refs
     const editor = document.getElementById('editor');
@@ -77,13 +485,13 @@
 
     function setStatus(msg, isError=false) {
       statusEl.textContent = msg;
-      statusEl.style.color = isError ? '#ffb4b4' : '';
+      statusEl.style.color = isError ? '#ED1C24' : '';
     }
 
     async function fetchPrompt() {
       setStatus('Fetching...');
       try {
-        const res = await fetch(endpoint, { cache: 'no-store' });
+        const res = await fetch(endPoint, { cache: 'no-store' });
         lastFetchedRaw = await res.text();
         // try to show Last-Modified header if available
         const lm = res.headers.get('Last-Modified') || res.headers.get('last-modified');
@@ -116,7 +524,7 @@
       setStatus('Saving...');
       saveBtn.disabled = true;
       try {
-        const res = await fetch(endpoint, {
+        const res = await fetch(endPoint, {
           method: 'PUT',
           headers: {
             'Content-Type': 'text/plain; charset=utf-8'
@@ -135,6 +543,8 @@
           // update Last-Modified if server returned it
           const lm = res.headers.get('Last-Modified') || res.headers.get('last-modified');
           lastModifiedEl.textContent = lm ? `Last-Modified: ${lm}` : '';
+          alert("Updated Prompt Successfully");
+
         }
       } catch (err) {
         console.error(err);
@@ -151,7 +561,7 @@
       const a = document.createElement('a');
       a.href = url;
       const now = new Date().toISOString().replace(/[:.]/g,'-');
-      a.download = `guardrails-backup-${now}.yaml`;
+      a.download = `guardrails-backup-${now}.txt`;
       document.body.appendChild(a);
       a.click();
       a.remove();
