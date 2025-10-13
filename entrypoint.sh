@@ -15,6 +15,8 @@ docker run -d   --name local-redis  -p 6379:6379  redis:latest  redis-server --a
 
 docker run -d --rm --name chromadb -p 9001:9001  -v /C:/DRIVE_D/PythonProject/chatbot_Shopify/chroma_store:/data/chroma_store  chromadb/chroma:latest   run --host 0.0.0.0 --port 9001 --path /data/chroma_store
 
+# for realtime access of folder content:
+sudo chmod -R 755 /path/to/prompt_folder
 
 import chromadb
 from chromadb.config import Settings

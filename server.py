@@ -1,38 +1,58 @@
+# Fast API
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+
+
+# OpenAi
+from openai import OpenAI  # try to remove this after Setting App performance
+from openai import AsyncOpenAI
+from openai import DefaultAioHttpClient
 from openai._exceptions import OpenAIError
+from openai.types.chat import ChatCompletion
+
+
+# Data Models & App Config
+from logger import get_logger
+from PromptManager import PromptManager
+from session_manager import SessionManager
 from models import ChatRequest, ChatResponse
+from guardrails import parse_query_into_json_prompt
+from config import settings, llm_model, prompts_path
+
+# Build-in Utilities
 import asyncio
 import uvicorn
-from openai import DefaultAioHttpClient
-from openai import AsyncOpenAI
-from openai import OpenAI
-from config import settings, llm_model
-from logger import get_logger
-from guardrails import parse_query_into_json_prompt
-# from opneai_tools import tools_list
-from MCP import tools_list
-from MCP import Controller
-import redis.asyncio as redis
-from session_manager import SessionManager
-from openai.types.chat import ChatCompletion
-from threading import Thread
-from persistant_storage import store_session_in_db
-from contextlib import asynccontextmanager
 import json
+
+
+# MCP
+from MCP import Controller, tools_list
+
+# Routes
+from routes.prompt import router as prompt_router
+
+# DB Operations
+import redis.asyncio as redis
+from persistant_storage import store_session_in_db
+
+# Realtime Managment
+from file_change import handle_realtime_changes
+
 # @ App level reference for 3rd Party Services
-# redis_client = None
-session_manager: SessionManager
-mcp_controller: Controller
-background_task = None
 client: OpenAI
+redis_client: redis.Redis
+mcp_controller: Controller
+background_task: asyncio.Task
+prompt_manager: PromptManager
+session_manager: SessionManager
 
 logger = get_logger("FastAPI")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global session_manager, mcp_controller, client
+    global session_manager, mcp_controller, client, prompt_manager, background_task, redis_client
     redis_client = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
     session_manager = SessionManager(redis_client, session_ttl=3600)
     mcp_controller = Controller()
@@ -40,6 +60,8 @@ async def lifespan(app: FastAPI):
         api_key=settings.openai_api_key,
     )
     background_task = asyncio.create_task(store_session_in_db())
+    prompt_manager = await PromptManager().init()
+    asyncio.create_task(handle_realtime_changes(prompts_path, prompt_manager.reload))
     logger.info("Background task for persisting sessions started.")
     yield
     # Clean up and release the resources
@@ -52,7 +74,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-
+app.include_router(prompt_router)
 
 # CORS setup for frontend (adjust origins in production)
 app.add_middleware(
@@ -73,6 +95,7 @@ async def root():
 
 @app.post("/async-chat", response_model=ChatResponse)
 async def async_chat_endpoint(chat_request: ChatRequest):
+    chat_request.set_manager(prompt_manager)
     user_message = chat_request.message.strip()
     session_id = chat_request.session_id
     print(f"\n\nUser message: {user_message} \n  Session ID: {session_id}\n\n")
@@ -215,7 +238,7 @@ async def process_with_tools(client, chat_request, tools_list) -> ChatCompletion
         )
 
 
-async def parse_into_json_prompt(chat_request:ChatRequest):
+async def parse_into_json_prompt(chat_request: ChatRequest):
     flag_categories = [
         # "DataQuery",
         # "ProductInfo",
@@ -229,7 +252,7 @@ async def parse_into_json_prompt(chat_request:ChatRequest):
     ]
 
     response = await parse_query_into_json_prompt(chat_request.message)
-    if response.get("category") in flag_categories :
+    if response.get("category") in flag_categories:
         chat_request.metadata.setdefault("flags", []).append(response["category"])
 
         chat_request.message = json.dumps(response)

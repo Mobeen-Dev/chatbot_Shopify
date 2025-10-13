@@ -34,7 +34,7 @@ class PromptManager:
     async def init(
         self,
         system_prompts_path: str = "system.yaml",
-        user_prompts_path: str = "product.yaml"
+        user_prompts_path: str = "product.yaml",
     ):
         """Initialize the manager asynchronously (only once)."""
         if self._initialized:
@@ -55,18 +55,20 @@ class PromptManager:
             try:
                 results = await asyncio.gather(
                     read_yaml_async(str(self.system_prompts_path)),
-                    read_yaml_async(str(self.user_prompts_path))
+                    read_yaml_async(str(self.user_prompts_path)),
                 )
                 self.system_prompts, self.user_prompts = results
-                print(f"✅ Reloaded {len(self.system_prompts)} system prompts and {len(self.user_prompts)} user prompts")
+                print(
+                    f"✅ Reloaded {len(self.system_prompts)} system prompts and {len(self.user_prompts)} user prompts"
+                )
             except Exception as e:
                 print(f"❌ Failed to reload prompts: {e}")
 
     # -----------------------------------------------------
     # Accessor methods
     # -----------------------------------------------------
-    def get_system_prompt(self, key: str, default: Optional[str] = None):
+    def get_system_prompt(self, key: str, default: str = ""):
         return self.system_prompts.get(key, default)
 
-    def get_user_prompt(self, key: str, default: Optional[str] = None):
+    def get_recommend_product_prompt(self, key: str, default: Optional[str] = None):
         return self.user_prompts.get(key, default)
