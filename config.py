@@ -65,7 +65,7 @@ llm_model = "gpt-5-mini-2025-08-07"
 product_dict_file_location = "bucket/products.pkl"
 mongoDb_uri = "mongodb://root:secret@localhost:27017/?authSource=admin"
 order_prefix = '#'
-templates_path = resource_path("/Pages")
+templates_path = resource_path("./Pages")
 system_prompt = resource_path("./bucket/prompts/system.yaml")
 product_prompt = resource_path("./bucket/prompts/product.yaml")
 prompts_path = resource_path("./bucket/prompts")

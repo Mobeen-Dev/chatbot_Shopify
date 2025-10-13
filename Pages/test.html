@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Prompts Guardrails Editor</title>
+</head>
+<body>
+  <h1>Prompts Editor for "{{ endpoint }}"</h1>
+
+  <script>
+    // ✅ use `tojson` to ensure it’s valid JavaScript
+    const endpoint = {{ endpoint | tojson }};
+    console.log("Endpoint is:", endpoint);
+
+    // Example: use it dynamically
+    const fullUrl = `/prompts/${endpoint}`;
+    console.log("Fetching:", fullUrl);
+  </script>
+</body>
+</html>
