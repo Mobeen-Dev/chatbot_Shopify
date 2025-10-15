@@ -1,31 +1,19 @@
 import os
 import sys
 import json
-import numpy as np
 import faiss
-import pickle
-from openai import OpenAI
-from config import settings
-from typing import Generator, List
-from langchain.docstore.document import Document
-from langchain_community.document_loaders import CSVLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 import openai
-from config import settings, embeddind_model, vector_db_collection_name
-import chromadb
-from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
+import pickle
 import asyncio
+import numpy as np
 from openai import AsyncOpenAI
-import asyncio
-
-# Configure your OpenAI key
-openai.api_key = settings.openai_api_key
+from config import settings, embeddind_model, vector_db_collection_name
 
 
 class vectorDB:
     def __init__(
         self,
-        index_path: str = "openai_embeddings",
+        index_path: str = vector_db_collection_name,
         model: str = embeddind_model,
     ):
         self.model = model
@@ -35,6 +23,9 @@ class vectorDB:
             self.metadata = pickle.load(f)
         with open("data.pkl", "rb") as f:
             self.data_dict = pickle.load(f)
+
+        print(len(self.data_dict))
+        print(self.data_dict['8190612144406'])
 
     # async def aclose(self):
     #     await self.client.close()
@@ -65,30 +56,41 @@ class vectorDB:
         faiss.normalize_L2(query_embedding)
 
         # 2. Run Faiss (sync) in a thread so it doesn’t block event loop
-        scores, indices = await asyncio.to_thread(
+        distances, indices = await asyncio.to_thread(
             self.db_client.search,
             query_embedding,  # xq
             top_k,  # k
         )
 
-        if scores is None or indices is None or len(scores) == 0 or len(indices) == 0:
+        # print("Distances:\n", distances)
+        # print("Labels (indices of nearest neighbors):\n", indices)
+
+        if (
+            distances is None
+            or indices is None
+            or len(distances) == 0
+            or len(indices) == 0
+        ):
             return []
 
         seen_ids = set()
         result = []
 
-        for score, idx in zip(scores[0], indices[0]):
-            unique_id = self.metadata[idx]["id"]
+        for distance, idx in zip(distances[0], indices[0]):
+            print("Index", idx)
+            score = 1 / distance
+            unique_id = self.metadata[idx - 1]["id"] # MetaData is 0 Based Indexed And Faiss is 1 Based Indexed
             if unique_id not in seen_ids:
                 seen_ids.add(unique_id)
+                # if self.data_dict[unique_id][]
                 result.append(
                     {
-                        "score": float(score),
+                        "score": round(float(score), 3),
                         "content": self.data_dict[unique_id],
                         "metadata": {
-                            "Handle": self.data_dict[unique_id]["handle"],
-                            "Score": round(float(score), 3),
-                            "Query": query,
+                          "Handle": self.data_dict[unique_id]["handle"],
+                          "Score": round(float(score), 3),
+                          "Query": query,
                         },
                     }
                 )
@@ -98,9 +100,9 @@ class vectorDB:
 
 if __name__ == "__main__":
     store = vectorDB()
-    user_query = "Do you have MICRO CONTROLLER like arduino?"
-    matches = asyncio.run(store.query(query=user_query, top_k=5))
-    print(matches)
+    user_query = "nodemcu esp8266 esp32 development board 1 channel relay module 2 channel 4 channel 5V power supply breadboard jumper wires components for DIY IoT switchboard mobile control"
+    # matches = asyncio.run(store.query(query=user_query, top_k=20))
+    # print(matches)
     # for i, match in enumerate(matches):
     #     print("{")
     #     print(f"\nMatch {i + 1}:")
