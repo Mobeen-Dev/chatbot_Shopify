@@ -18,7 +18,7 @@ from PromptManager import PromptManager
 from session_manager import SessionManager
 from models import ChatRequest, ChatResponse
 from guardrails import parse_query_into_json_prompt
-from config import settings, llm_model, prompts_path
+from config import settings, llm_model, prompts_path, system_prompt, product_prompt
 
 # Build-in Utilities
 import asyncio
@@ -60,7 +60,7 @@ async def lifespan(app: FastAPI):
         api_key=settings.openai_api_key,
     )
     background_task = asyncio.create_task(store_session_in_db())
-    prompt_manager = await PromptManager().init()
+    prompt_manager = await PromptManager().init(system_prompt, product_prompt)
     asyncio.create_task(handle_realtime_changes(prompts_path, prompt_manager.reload))
     logger.info("Background task for persisting sessions started.")
     yield
