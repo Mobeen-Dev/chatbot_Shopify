@@ -1720,7 +1720,7 @@ class Shopify:
 
         if inventory == 0 and Strict and all_variant_outOfStock:
             return {
-                "Note": "This product is OUT OF STOCK or not available for sale at the moment."
+                "Note": "This product is OUT OF STOCK at the moment."
             }
         # print(f"Product Status: {status}")
         if status == "ACTIVE" or not Strict:

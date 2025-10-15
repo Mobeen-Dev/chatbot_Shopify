@@ -94,8 +94,6 @@ class ChatRequest(BaseModel):
                 list_of_dicts.append(dict_msg)
 
             elif msg["role"] == "system":
-                if msg["content"] != self.system_prompt:
-                    continue  # Skip system prompts Except initial one
                 dict_msg = {
                     "role": "system",
                     "content": msg["content"],

@@ -34,14 +34,14 @@ class PromptManager:
     async def init(
         self,
         system_prompts_path: str = "system.yaml",
-        user_prompts_path: str = "product.yaml",
+        product_prompts_path: str = "product.yaml",
     ):
         """Initialize the manager asynchronously (only once)."""
         if self._initialized:
             return self
 
         self.system_prompts_path = Path(system_prompts_path)
-        self.user_prompts_path = Path(user_prompts_path)
+        self.user_prompts_path = Path(product_prompts_path)
         self.system_prompts: Dict[str, Any] = {}
         self.user_prompts: Dict[str, Any] = {}
 
@@ -70,5 +70,5 @@ class PromptManager:
     def get_system_prompt(self, key: str, default: str = ""):
         return self.system_prompts.get(key, default)
 
-    def get_recommend_product_prompt(self, key: str, default: Optional[str] = None):
+    def get_recommend_product_prompt(self, key: str,  default: str = ""):
         return self.user_prompts.get(key, default)
