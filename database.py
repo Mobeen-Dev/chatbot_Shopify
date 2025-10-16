@@ -24,8 +24,8 @@ class vectorDB:
         with open("data.pkl", "rb") as f:
             self.data_dict = pickle.load(f)
 
-        print(len(self.data_dict))
-        print(self.data_dict['8190612144406'])
+        # print(len(self.data_dict))
+        # print(self.data_dict['8190612144406'])
 
     # async def aclose(self):
     #     await self.client.close()
@@ -100,13 +100,14 @@ class vectorDB:
 
 if __name__ == "__main__":
     store = vectorDB()
-    user_query = "nodemcu esp8266 esp32 development board 1 channel relay module 2 channel 4 channel 5V power supply breadboard jumper wires components for DIY IoT switchboard mobile control"
-    # matches = asyncio.run(store.query(query=user_query, top_k=20))
-    # print(matches)
-    # for i, match in enumerate(matches):
-    #     print("{")
-    #     print(f"\nMatch {i + 1}:")
-    #     print(f"Score: {match['score']:.4f}")
-    #     # print(f"Metadata: {match['metadata']}")
-    #     print(f"Content:\n{match['content']}")
-    #     print("}")
+    user_query = 'microcontroller development board ESP32 Arduino Raspberry Pi Pico Arduino Nano IoT development board WiFi BLE LoRa STM32 development board'
+    wow = "nodemcu esp8266 esp32 development board 1 channel relay module 2 channel 4 channel 5V power supply breadboard jumper wires components for DIY IoT switchboard mobile control"
+    matches = asyncio.run(store.query(query=user_query, top_k=20))
+    print(matches)
+    for i, match in enumerate(matches):
+        print("{")
+        print(f"\nMatch {i + 1}:")
+        print(f"Score: {match['score']:.4f}")
+        # print(f"Metadata: {match['metadata']}")
+        print(f"Content:\n{match['content']}")
+        print("}")

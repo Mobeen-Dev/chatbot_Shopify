@@ -423,9 +423,9 @@ class Shopify:
         result = await self.send_storefront_mutation(mutation, variables)
 
         cart = result.get("data", {}).get("cartLinesAdd", {}).get("cart", {})
-        print("CART \n",result,"\n\n")
+        print("CART \n", result, "\n\n")
         if cart:
-          return self.format_cart(cart, pretify_line_items=True)
+            return self.format_cart(cart, pretify_line_items=True)
         return result
 
     async def removeCartLineItems(self, cartId: str, lineItems: List[dict[str, str]]):
@@ -1614,101 +1614,137 @@ class Shopify:
     }
     """
 
+
+
     @staticmethod
     def format_order_for_llm(order_data: list) -> str:
+        """Safely format order data for LLM consumption without ever breaking."""
+
         def mask_email(email: str) -> str:
-            """Dynamically mask the local part of an email address."""
+            """Safely mask the local part of an email address."""
+            try:
+                if not isinstance(email, str) or "@" not in email:
+                    return "InvalidEmail"
+                local, domain = email.split("@", 1)
+                domain_parts = domain.split(".")
+                country_code = domain_parts[-1] if len(domain_parts) > 1 else "com"
 
-            local, domain = email.split("@", 1)
-            length = len(local)
-            country_code = domain.split(".", 1)[1]
+                local = local or "unknown"
+                masked_local = local[:4] + "*" * max(0, len(local) - 3)
+                return f"{masked_local}@{'*' * max(1, len(domain) - len(country_code))}.{country_code}"
+            except Exception:
+                return "InvalidEmail"
 
-            if length <= 3:
-                return (
-                    local
-                    + "@"
-                    + "*" * (len(domain) - len(country_code))
-                    + "."
-                    + country_code
-                )
+        def safe_get(d, path, default=None):
+            """Safely navigate nested dicts."""
+            try:
+                for key in path:
+                    if isinstance(d, dict) and key in d:
+                        d = d[key]
+                    else:
+                        return default
+                return d
+            except Exception:
+                return default
 
-            extra_characters = "*" * (length - 3)
-            return local[:4] + extra_characters + "@" + domain
+        if not isinstance(order_data, list):
+            return "⚠️ Invalid input: expected a list of orders."
 
         lines = []
-        for order in order_data:
-            customer = order.get("customer", {})
-            shipping = order.get("shippingAddress", {})
-            price_info = order.get("totalPriceSet", {}).get("presentmentMoney", {})
 
-            # Order meta
-            lines.append(f"OrderID: {order.get('name', '')}")
-            lines.append(f"FinancialStatus: {order.get('displayFinancialStatus', '')}")
-            lines.append(
-                f"FulfillmentStatus: {order.get('displayFulfillmentStatus', '')}"
+        for order in order_data or []:
+            if not isinstance(order, dict):
+                lines.append("⚠️ Skipped invalid order entry (not a dict).")
+                continue
+
+            # Extract safely
+            customer = order.get("customer", {}) or {}
+            shipping = order.get("shippingAddress", {}) or {}
+            billing = order.get("billingAddress", {}) or {}
+            price_info = safe_get(order, ["totalPriceSet", "presentmentMoney"], {}) or {}
+
+            # Basic order info
+            order_id = order.get("name", "UnknownOrder")
+            fin_status = order.get("displayFinancialStatus", "Unknown")
+            fulfill_status = order.get("displayFulfillmentStatus", "Unknown")
+            amount = price_info.get("amount", "0")
+            currency = price_info.get("currencyCode", "N/A")
+
+            lines.append(f"OrderID: {order_id}")
+            lines.append(f"FinancialStatus: {fin_status}")
+            lines.append(f"FulfillmentStatus: {fulfill_status}")
+            lines.append(f"Total: {amount} {currency}")
+
+            # Customer details
+            cust_name = customer.get("displayName", "N/A")
+            lines.append(f"CustomerName: {cust_name}")
+
+            # Phone
+            phone = (
+                shipping.get("phone")
+                or billing.get("phone")
+                or safe_get(customer, ["defaultPhoneNumber", "phoneNumber"])
             )
-            lines.append(
-                f"Total: {price_info.get('amount', '')} {price_info.get('currencyCode', '')}"
-            )
 
-            # Customer
-            lines.append(f"CustomerName: {customer.get('displayName', 'N/A')}")
-            data = None
-
-            if shipping:
-                data = shipping.get("phone", None)
-
-            if not data:
-                _data = order.get("billingAddress", {}).get("phone", None)
-                if not _data:
-                    _data = customer.get("defaultPhoneNumber", {}).get("phoneNumber")
-                data = _data
-
-            if data:
-                if len(data) > 10:
-                    phone_number = "0" + data[3:6] + "*" * 4 + data[-3:]
+            if isinstance(phone, str) and len(phone) >= 6:
+                try:
+                    phone_number = (
+                        "0"
+                        + phone[3:6]
+                        + "*" * 4
+                        + phone[-3:]
+                        if len(phone) > 10
+                        else phone
+                    )
                     lines.append(f"CustomerPhone: {phone_number}")
-            mail = customer.get("defaultEmailAddress", {}).get("emailAddress", None)
-            if mail:
-                lines.append(f"CustomerEmail: {mask_email(mail)}")
+                except Exception:
+                    lines.append("CustomerPhone: InvalidPhone")
+            else:
+                lines.append("CustomerPhone: N/A")
 
-            # Shipping
-            if shipping:
-                lines.append(f"ShippingAddress: {shipping.get('address1', 'N/A')}")
+            # Email
+            mail = safe_get(customer, ["defaultEmailAddress", "emailAddress"])
+            lines.append(f"CustomerEmail: {mask_email(mail)}" if mail else "CustomerEmail: N/A")
+
+            # Shipping address
+            if shipping and isinstance(shipping, dict):
+                addr = shipping.get("address1", "N/A")
+                lines.append(f"ShippingAddress: {addr}")
             else:
                 lines.append("ShippingAddress: SELF_PICKUP at Store")
 
             # Items
             lines.append("Items:")
-            line_items = order.get("lineItems", {}).get("edges", [])
-            for idx, item in enumerate(line_items, start=1):
-                node = item.get("node", {})
-                product = node.get("product")
-                quantity = node.get("quantity", 0)
+            line_items = safe_get(order, ["lineItems", "edges"], []) or []
 
-                if product:
+            if isinstance(line_items, list) and line_items:
+                for idx, item in enumerate(line_items, start=1):
+                    node = item.get("node", {}) if isinstance(item, dict) else {}
+                    product = node.get("product", {}) if isinstance(node, dict) else {}
+                    quantity = node.get("quantity", 0)
+
                     title = product.get("title", "Unknown Product")
-                    price = (
-                        product.get("priceRangeV2", {})
-                        .get("minVariantPrice", {})
-                        .get("amount", "0")
-                    )
+                    price = safe_get(product, ["priceRangeV2", "minVariantPrice", "amount"], "0")
+
                     lines.append(
-                        f"⇒ {title}, Qty: {quantity}, UnitPrice: {price} ^break^ "
+                        f"⇒ {title}, Qty: {quantity}, UnitPrice: {price} ^break^"
                     )
-                else:
-                    lines.append(f"  - Unknown Product, Qty: {quantity}")
+            else:
+                lines.append("  - No items found.")
 
             lines.append("")  # blank line between orders
 
-        return "\n".join(lines)
+        return "\n".join(lines).strip() or "No valid order data found."
+
+
     @staticmethod
     def all_variant_outOfStock(variants):
-      if variants:
-        for variant in variants:
-          if variant["node"]["inventoryPolicy"] == "CONTINUE":
-            return False
-      return True
+        if variants:
+            for variant in variants:
+                if variant["node"]["inventoryPolicy"] == "CONTINUE":
+                    return False
+        return True
+
     def format_product(self, product: dict, Strict=True) -> dict:
         """
         Function to format the product data into a specific structure.
@@ -1720,7 +1756,8 @@ class Shopify:
 
         if inventory == 0 and Strict and all_variant_outOfStock:
             return {
-                "Note": "This product is OUT OF STOCK at the moment."
+                "handle": product.get("handle", ""),
+                "Note": "This product is OUT OF STOCK at the moment.",
             }
         # print(f"Product Status: {status}")
         if status == "ACTIVE" or not Strict:
@@ -1729,7 +1766,7 @@ class Shopify:
             node = first_edge.get("node") or {}
             image = node.get("image") or {}
             image_url = image.get("url") or NO_IMAGE_URL
-            
+
             return {
                 "title": product.get("title", ""),
                 "handle": product.get("handle", ""),
@@ -1753,7 +1790,8 @@ class Shopify:
             }
         else:
             return {
-                "Note": "This product is not active or not available for sale at the moment."
+                "handle": product.get("handle", ""),
+                "Note": "This product is not active or not available for sale at the moment.",
             }
 
     def format_cart(
@@ -1809,28 +1847,27 @@ class Shopify:
                 ]
 
         try:
-          amount = (
-              cart.get("cost", {})
-                  .get("subtotalAmount", {"amount": "0.00", "currencyCode": "USD"})
-          )
-          line_items = cart.get("lines", {}).get("edges", [])
+            amount = cart.get("cost", {}).get(
+                "subtotalAmount", {"amount": "0.00", "currencyCode": "USD"}
+            )
+            line_items = cart.get("lines", {}).get("edges", [])
 
-          preferences = cart.get("buyerIdentity", {}).get("preferences") or {}
-          delivery_methods = (
-              preferences.get("delivery", {}).get("deliveryMethod", [])
-          )
-          delivery_method = delivery_methods[0] if delivery_methods else "Select On Checkout"
+            preferences = cart.get("buyerIdentity", {}).get("preferences") or {}
+            delivery_methods = preferences.get("delivery", {}).get("deliveryMethod", [])
+            delivery_method = (
+                delivery_methods[0] if delivery_methods else "Select On Checkout"
+            )
 
-          return {
-              "id": cart.get("id", ""),
-              "checkoutUrl": cart.get("checkoutUrl", ""),
-              "createdAt": cart.get("createdAt", ""),
-              "updatedAt": cart.get("updatedAt", ""),
-              "lineItems": return_lineItems(line_items),
-              "subtotalAmount": f"{amount['amount']} {amount['currencyCode']}",
-              "deliveryMethod": delivery_method,
-              "userErrors": cart.get("userErrors", []),
-          }
+            return {
+                "id": cart.get("id", ""),
+                "checkoutUrl": cart.get("checkoutUrl", ""),
+                "createdAt": cart.get("createdAt", ""),
+                "updatedAt": cart.get("updatedAt", ""),
+                "lineItems": return_lineItems(line_items),
+                "subtotalAmount": f"{amount['amount']} {amount['currencyCode']}",
+                "deliveryMethod": delivery_method,
+                "userErrors": cart.get("userErrors", []),
+            }
         except Exception as e:
             return {
                 "state": "Error Arrise",
@@ -1838,7 +1875,6 @@ class Shopify:
                 "error": str(e),
                 "info": "The server returned an empty response because the ID you provided is incorrect. Please check the ID",
             }
-
 
     def parse_into_query_params(self, product: dict, child_p_id: str = ""):
         # product = await fetch_product(product_gid)
