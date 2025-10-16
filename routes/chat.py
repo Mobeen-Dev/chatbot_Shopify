@@ -27,7 +27,7 @@ async def async_chat_endpoint(request: Request, chat_request: ChatRequest):
     chat_request.set_manager(request.app.state.prompt_manager)
     user_message = chat_request.message.strip()
     session_id = chat_request.session_id
-    print(f"\n\nUser message: {user_message} \n  Session ID: {session_id}\n\n")
+    request.app.state.logger.extended_logging(f" User message: {user_message}  Session ID: {session_id}")
     
     if not user_message:
         raise HTTPException(status_code=400, detail="Message cannot be empty.")
@@ -60,7 +60,7 @@ async def async_chat_endpoint(request: Request, chat_request: ChatRequest):
             chat_request.append_message(response.choices[0].message.model_dump())
             chat_request.added_total_tokens(response.usage)
 
-            request.app.state.logger.info(chat_request)
+            request.app.state.logger.extended_logging(chat_request)
 
             request.app.state.logger.info(f"\n\nOpenAI response: {response}\n\n")
             # logger.info(f"\n\n History choices: {messages}")

@@ -1614,8 +1614,6 @@ class Shopify:
     }
     """
 
-
-
     @staticmethod
     def format_order_for_llm(order_data: list) -> str:
         """Safely format order data for LLM consumption without ever breaking."""
@@ -1661,7 +1659,9 @@ class Shopify:
             customer = order.get("customer", {}) or {}
             shipping = order.get("shippingAddress", {}) or {}
             billing = order.get("billingAddress", {}) or {}
-            price_info = safe_get(order, ["totalPriceSet", "presentmentMoney"], {}) or {}
+            price_info = (
+                safe_get(order, ["totalPriceSet", "presentmentMoney"], {}) or {}
+            )
 
             # Basic order info
             order_id = order.get("name", "UnknownOrder")
@@ -1689,10 +1689,7 @@ class Shopify:
             if isinstance(phone, str) and len(phone) >= 6:
                 try:
                     phone_number = (
-                        "0"
-                        + phone[3:6]
-                        + "*" * 4
-                        + phone[-3:]
+                        "0" + phone[3:6] + "*" * 4 + phone[-3:]
                         if len(phone) > 10
                         else phone
                     )
@@ -1704,7 +1701,9 @@ class Shopify:
 
             # Email
             mail = safe_get(customer, ["defaultEmailAddress", "emailAddress"])
-            lines.append(f"CustomerEmail: {mask_email(mail)}" if mail else "CustomerEmail: N/A")
+            lines.append(
+                f"CustomerEmail: {mask_email(mail)}" if mail else "CustomerEmail: N/A"
+            )
 
             # Shipping address
             if shipping and isinstance(shipping, dict):
@@ -1724,7 +1723,9 @@ class Shopify:
                     quantity = node.get("quantity", 0)
 
                     title = product.get("title", "Unknown Product")
-                    price = safe_get(product, ["priceRangeV2", "minVariantPrice", "amount"], "0")
+                    price = safe_get(
+                        product, ["priceRangeV2", "minVariantPrice", "amount"], "0"
+                    )
 
                     lines.append(
                         f"⇒ {title}, Qty: {quantity}, UnitPrice: {price} ^break^"
@@ -1735,7 +1736,6 @@ class Shopify:
             lines.append("")  # blank line between orders
 
         return "\n".join(lines).strip() or "No valid order data found."
-
 
     @staticmethod
     def all_variant_outOfStock(variants):

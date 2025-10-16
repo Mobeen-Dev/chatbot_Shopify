@@ -297,15 +297,15 @@ class Controller:
             if not data:
                 return {
                     "success": False,
-                    "message": "Cannot get cart at this moment",
-                    "errors": ["Unknown error - empty response from store"]
+                    "message": "Cannot get cart at this moment Try Again Later",
+                    "errors": ["Unknown error - empty response from store Try Again Later"]
                 }
 
             # Handle store-level user errors
             if "userErrors" in data and data["userErrors"]:
                 return {
                     "success": False,
-                    "message": "Cannot get cart at this moment",
+                    "message": "Cannot get cart at this moment Try Again Later",
                     "errors": data["userErrors"]
                 }
 
@@ -319,7 +319,7 @@ class Controller:
             # Ensure AI always gets structured error
             return {
                 "success": False,
-                "message": "Unexpected error while querying cart",
+                "message": "Unexpected error while querying cart Try Again Later",
                 "errors": [str(e)]
             }
 
@@ -372,15 +372,15 @@ class Controller:
             if not data:
                 return {
                     "success": False,
-                    "message": "Cannot add product(s) to your cart",
-                    "errors": ["Unknown error - empty response from store"]
+                    "message": "Cannot add product(s) to your cart Try Again Later",
+                    "errors": ["Unknown error - empty response from store Try Again Later"]
                 }
 
             # Handle store-level user errors
             if "userErrors" in data and data["userErrors"]:
                 return {
                     "success": False,
-                    "message": "Cannot add product(s) to your cart",
+                    "message": "Cannot add product(s) to your cart Try Again Later",
                     "errors": data["userErrors"]
                 }
 
@@ -394,7 +394,7 @@ class Controller:
             # Ensure AI always gets structured error
             return {
                 "success": False,
-                "message": "Unexpected error while adding cart items",
+                "message": "Unexpected error while adding cart items Try Again Later",
                 "errors": [str(e)]
             }
 
@@ -448,15 +448,15 @@ class Controller:
             if not data:
                 return {
                     "success": False,
-                    "message": "Cannot update product(s) in your cart",
-                    "errors": ["Unknown error - empty response from store"]
+                    "message": "Cannot update product(s) in your cart Try Again Later",
+                    "errors": ["Unknown error - empty response from store Try Again Later"]
                 }
 
             # Handle store-level user errors
             if "userErrors" in data and data["userErrors"]:
                 return {
                     "success": False,
-                    "message": "Cannot update product(s) in your cart",
+                    "message": "Cannot update product(s) in your cart Try Again Later",
                     "errors": data["userErrors"]
                 }
 
@@ -524,7 +524,7 @@ class Controller:
             if not data:
                 return {
                     "success": False,
-                    "message": "Cannot remove product(s) from your cart",
+                    "message": "Cannot remove product(s) from your cart Try Again Later",
                     "errors": ["Unknown error - empty response from store"]
                 }
 
@@ -532,7 +532,7 @@ class Controller:
             if "userErrors" in data and data["userErrors"]:
                 return {
                     "success": False,
-                    "message": "Cannot remove product(s) from your cart",
+                    "message": "Cannot remove product(s) from your cart Try Again Later",
                     "errors": data["userErrors"]
                 }
 
@@ -547,7 +547,7 @@ class Controller:
             # Ensure AI always gets structured error
             return {
                 "success": False,
-                "message": "Unexpected error while removing cart items",
+                "message": "Unexpected error while removing cart items Try Again Later",
                 "errors": [str(e)]
             }
 
