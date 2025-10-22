@@ -1,0 +1,77 @@
+version: "3.8"
+
+networks:
+  appnet:
+    driver: bridge
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: local-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: secret
+    volumes:
+      - ./mongo_data:/data/db   # Local host directory for persistence
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: always
+    networks:
+      - appnet
+
+  redis:
+    image: redis:latest
+    container_name: local-redis
+    command: ["redis-server", "--appendonly", "yes", "--notify-keyspace-events", "Ex"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: always
+    networks:
+      - appnet
+
+  web-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: server:latest
+    container_name: fastapi_server
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      MONGO_URL: "mongodb://root:secret@mongo:27017/"
+      REDIS_URL: "redis://redis:6379/0"
+    volumes:
+      - /home/devops/bucket:/app/bucket
+      - /home/devops/creds:/app/credentials
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 25s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: on-failure
+    networks:
+      - appnet
+
+volumes:
+  redis-data:
+    driver: local
