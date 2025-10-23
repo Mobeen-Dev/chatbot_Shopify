@@ -1,7 +1,7 @@
 import re
 import json
 from dataclasses import dataclass
-from PromptManager import PromptManager
+from utils.PromptManager import PromptManager
 from pydantic import BaseModel, Field, PrivateAttr
 from typing import Optional, List, Literal, Dict, Any, cast, Mapping, Tuple
 from openai.types.chat import (

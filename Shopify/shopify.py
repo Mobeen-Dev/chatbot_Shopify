@@ -2,7 +2,7 @@ import re
 import aiohttp
 import asyncio
 from typing import List, Dict
-from logger import get_logger
+from utils.logger import get_logger
 from config import NO_IMAGE_URL, llm_model, product_dict_file_location
 from models import ProductEntry
 import asyncio
