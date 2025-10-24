@@ -66,10 +66,9 @@ def load_and_split_csv_files(
             final_chunks.extend(non_empty_chunks)
 
     return final_chunks
-  
-  
+ 
+# Example usage
 if __name__ == "__main__":
-    # Example usage
     chunks = load_and_split_csv_files()
     print(f"Total chunks created: {len(chunks)}")
     for chunk in chunks[-5]:  # Print first 5 chunks

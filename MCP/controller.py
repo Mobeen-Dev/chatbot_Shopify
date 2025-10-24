@@ -2,9 +2,8 @@ from models import ChatRequest
 import json
 from typing import List, Dict, Any, Union
 from config import settings, embeddind_model, order_prefix
-from logger import get_logger
+from utils.logger import get_logger
 from database import vectorDB
-from wrapper_chroma import ChromaRetriever
 from Shopify import Shopify
 
 
