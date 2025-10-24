@@ -9,7 +9,7 @@ from openai.types.chat import ChatCompletion
 
 # Data Models & App Config
 from models import ChatRequest, ChatResponse
-from guardrails import parse_query_into_json_prompt
+from utils.guardrails import parse_query_into_json_prompt
 from config import settings, llm_model
 
 # Build-in Utilities
