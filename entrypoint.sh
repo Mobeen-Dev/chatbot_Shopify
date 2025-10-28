@@ -1,6 +1,11 @@
 #!/bin/sh
 set -e
 
+# cd bucket
+# echo "📂 Listing files in current directory:"
+# ls -al
+# cd ..
+
 # Fix permissions
 chmod -R 755 ./bucket/prompts
 

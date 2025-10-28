@@ -1,0 +1,56 @@
+# ---------------------------------
+# 🐍 Python build/cache files
+# ---------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+
+# ---------------------------------
+# 🧠 IDE / project metadata
+# ---------------------------------
+.idea/
+.vscode/
+beta/
+test/
+
+# ---------------------------------
+# 🧰 Virtual environments
+# ---------------------------------
+venv/
+.venv/
+
+# ---------------------------------
+# 🧾 Git and system files
+# ---------------------------------
+.git/
+.gitignore
+.DS_Store
+.env
+.env.*
+
+# ---------------------------------
+# 🗃️ Node / frontend artifacts
+# ---------------------------------
+node_modules/
+dist/
+build/
+
+# ---------------------------------
+# 📦 App data / runtime artifacts
+# ---------------------------------
+data/
+uploads/
+chroma_store/
+ShopifyExtension/
+bucket/chatRecord/*
+bucket/prompts/*
+
+
+# ---------------------------------
+# 🖼️ Media files (optional)
+# ---------------------------------
+*.jpeg
+*.jpg
+*.png
+*.gif

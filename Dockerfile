@@ -9,14 +9,22 @@ ENV PYTHONUNBUFFERED=1 \
 # Put everything under /app
 WORKDIR /app
 
+# Install system dependencies (required for building Python wheels)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    g++ \
+    make \
+    && rm -rf /var/lib/apt/lists/*
+
+
 # Install dependencies first for better layer-caching
 COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Copy the rest of your source code
 COPY . .
-RUN sed -i 's/\r$//' entrypoint.sh && \
-    chmod +x entrypoint.sh
+RUN sed -i 's/\r$//' entrypoint.sh
 # make entrypoint.sh executable
 RUN chmod +x entrypoint.sh
 # Set proper permissions for storage directories
@@ -26,8 +34,8 @@ RUN chmod -R 755 /app/bucket
 EXPOSE 8000
 
 # Health check
-HEALTHCHECK --interval=20s --timeout=10s --start-period=60s --retries=3 \
-  CMD curl -f http://localhost:8000/health || exit 1
+# HEALTHCHECK --interval=20s --timeout=10s --start-period=60s --retries=3 \
+#   CMD curl -f http://localhost:8000/health || exit 1
 
 # Run FastApi server / Worker / Scheduler
 ENTRYPOINT ["./entrypoint.sh"]

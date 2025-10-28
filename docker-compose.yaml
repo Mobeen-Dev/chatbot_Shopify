@@ -14,7 +14,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: secret
     volumes:
-      - ./mongo_data:/data/db   # Local host directory for persistence
+      - ./mongo_data:/data/db # Local host directory for persistence
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
@@ -28,7 +28,8 @@ services:
   redis:
     image: redis:latest
     container_name: local-redis
-    command: ["redis-server", "--appendonly", "yes", "--notify-keyspace-events", "Ex"]
+    command:
+      ["redis-server", "--appendonly", "yes", "--notify-keyspace-events", "Ex"]
     ports:
       - "6379:6379"
     volumes:
@@ -60,8 +61,8 @@ services:
       MONGO_URL: "mongodb://root:secret@mongo:27017/"
       REDIS_URL: "redis://redis:6379/0"
     volumes:
-      - /home/devops/bucket:/app/bucket
-      - /home/devops/creds:/app/credentials
+      - bucket-data:/app/bucket
+      - creds-data:/app/creds
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 25s
@@ -75,3 +76,24 @@ services:
 volumes:
   redis-data:
     driver: local
+  
+  mongo-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: C:/DRIVE_D/PythonProject/chatbot_Shopify/bucket/chatRecord
+
+  bucket-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: C:/DRIVE_D/PythonProject/chatbot_Shopify/bucket
+
+  creds-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: C:/DRIVE_D/PythonProject/chatbot_Shopify/creds
