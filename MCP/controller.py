@@ -23,6 +23,7 @@ class Controller:
         shopify_flag = False
         cart_flag = False
         order_flag = False
+        
         for tool_call in tool_calls:
             function_name = tool_call.function.name
             arguments = json.loads(tool_call.function.arguments)
@@ -76,6 +77,8 @@ class Controller:
                 cart_flag = True
                 chat_request.append_tool_response(str(tool_output), tool_call.id)
 
+    # Agentic Abilities
+            
             elif function_name == "query_cart":
                 cart_id = arguments["cart_id"]
                 chat_request.activity_record += " -> query_cart"
@@ -115,7 +118,7 @@ class Controller:
                 raise ReferenceError
         if vector_db_flag:
             chat_request.append_vectorDb_prompt()
-            chat_request.append_stuctural_output_prompt()
+            chat_request.append_stuctural_output_prompt()  # Instruction to return product in Stucture Format
         if shopify_flag:
             chat_request.append_stuctural_output_prompt()
         if cart_flag:
