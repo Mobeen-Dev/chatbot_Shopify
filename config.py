@@ -63,7 +63,8 @@ embeddind_model: str = "text-embedding-3-small"
 vector_db_collection_name:str = "openai_embeddings"
 llm_model = "gpt-5-mini-2025-08-07"
 product_dict_file_location = "bucket/products.pkl"
-mongoDb_uri = "mongodb://root:secret@localhost:27017/?authSource=admin"
+mongoDb_uri = os.getenv("MONGO_URL", "mongodb://root:secret@localhost:27017/?authSource=admin")
+redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 order_prefix = '#'
 templates_path = resource_path("./Pages")
 system_prompt = resource_path("./bucket/prompts/system.yaml")

@@ -12,7 +12,7 @@ from openai import OpenAI  # try to remove this after Setting App performance
 from utils.logger import get_logger
 from utils.PromptManager import PromptManager
 from utils.session_manager import SessionManager
-from config import settings, prompts_path, system_prompt, product_prompt
+from config import settings, prompts_path, system_prompt, product_prompt, redis_url
 
 # Build-in Utilities
 import os
@@ -47,9 +47,7 @@ logger = get_logger("FastAPI")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global background_task
-    app.state.redis_client = redis.Redis(
-        host="localhost", port=6379, db=0, decode_responses=True
-    )
+    app.state.redis_client = redis.from_url(redis_url, decode_responses=True)
     app.state.session_manager = SessionManager(app.state.redis_client, session_ttl=3600)
     app.state.mcp_controller = Controller()
     app.state.client = OpenAI(
@@ -92,9 +90,11 @@ app.add_middleware(
 async def root():
     return {"message": "Welcome to the Chatbot API!"}
 
+
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
     return FileResponse(os.path.join("static", "favicon.ico"))
+
 
 if __name__ == "__main__":
     uvicorn.run(

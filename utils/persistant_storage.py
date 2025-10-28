@@ -1,5 +1,5 @@
 from pymongo import AsyncMongoClient
-from config import mongoDb_uri
+from config import mongoDb_uri, redis_url
 import redis.asyncio as redis
 from .logger import get_logger
 import datetime
@@ -8,7 +8,7 @@ import json
 
 
 class persistant_thread:
-  def __init__(self, redis_url="redis://localhost:6379/0") -> None:
+  def __init__(self, redis_url) -> None:
     self.redis = redis.from_url(redis_url, decode_responses=True)
     self.session_prefix = "session:"
     self.shadow_prefix  = "session:shadow:"
@@ -76,7 +76,7 @@ class persistant_thread:
 # print(asyncio.run(insert_chatRecord(data)))
 
 async def store_session_in_db():
-    manager = persistant_thread()
+    manager = persistant_thread(redis_url=redis_url)
     await manager.listen_for_expiry()
     # Create multiple demo sessions
     # for i in range(1, 5):
