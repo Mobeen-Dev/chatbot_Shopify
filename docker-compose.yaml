@@ -14,7 +14,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: secret
     volumes:
-      - ./mongo_data:/data/db # Local host directory for persistence
+      - mongo-data:/data/db # Local host directory for persistence
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
@@ -82,18 +82,18 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: C:/DRIVE_D/PythonProject/chatbot_Shopify/bucket/chatRecord
+      device: path_to_chatRecord
 
   bucket-data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: C:/DRIVE_D/PythonProject/chatbot_Shopify/bucket
+      device: path_to_bucket
 
   creds-data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: C:/DRIVE_D/PythonProject/chatbot_Shopify/creds
+      device: path_to_creds
