@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+#Testing branch push deployment code checkout digilog-deployment digilog-deployment
+>>>>>>> ec6fc96 (test-11)
 # Fast API
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException, status
