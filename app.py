@@ -1,4 +1,3 @@
-#Testing branch push deployment code checkout digilog-deployment digilog-deployment
 # Fast API
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
