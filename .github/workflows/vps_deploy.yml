@@ -2,7 +2,7 @@ name: 🚀 Deploy ChatBot
 
 on:
   push:
-    branches: [ digilog-deployment ]
+    branches: [ digilog-deployment, deploy ]
     # branches: [ main, master ]
   workflow_dispatch: # Manual trigger button in GitHub UI
 
@@ -13,6 +13,8 @@ jobs:
     steps:
     - name: 📥 Checkout Code
       uses: actions/checkout@v4
+    - name: Debug info
+      run: echo "Branch is ${{ github.ref }} / ${{ github.head_ref }}"
       
     # - name: 🛑 Stop Current Services
     #   run: |
