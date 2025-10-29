@@ -2,7 +2,8 @@ name: 🚀 Deploy ChatBot
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ digilog-deployment ]
+    # branches: [ main, master ]
   workflow_dispatch: # Manual trigger button in GitHub UI
 
 jobs:
