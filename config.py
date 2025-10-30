@@ -1,9 +1,8 @@
 # shopify_bridge/config.py
-from pydantic_settings import BaseSettings
-from pydantic import Field
 import os
-
 import sys
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 
 def resource_path(relative_path):
@@ -56,17 +55,32 @@ class Settings(BaseSettings):
 
 # instantiate once, and import `settings` everywhere
 settings = Settings()  # type: ignore
-prompts = "./bucket/prompts"
-base_url: str = "https://digilog.pk/products/"
-NO_IMAGE_URL: str = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/450px-No_image_available.svg.png"
-embeddind_model: str = "text-embedding-3-small"
-vector_db_collection_name:str = "openai_embeddings"
-llm_model = "gpt-5-mini-2025-08-07"
-product_dict_file_location = "bucket/products.pkl"
-mongoDb_uri = os.getenv("MONGO_URL", "mongodb://root:secret@localhost:27017/?authSource=admin")
-redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-order_prefix = '#'
+
+# PATHs
 templates_path = resource_path("./Pages")
-system_prompt = resource_path("./bucket/prompts/system.yaml")
+prompts_path   = resource_path("./bucket/prompts")
+system_prompt  = resource_path("./bucket/prompts/system.yaml")
 product_prompt = resource_path("./bucket/prompts/product.yaml")
-prompts_path = resource_path("./bucket/prompts")
+
+# URLs
+base_url: str = "https://digilog.pk/products/"
+query_url: str = "https://digilog.pk/search?q="
+no_image_url: str = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/450px-No_image_available.svg.png"
+
+redis_url   = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+mongoDb_uri = os.getenv("MONGO_URL", "mongodb://root:secret@localhost:27017/?authSource=admin")
+
+# Hyper-Parameters
+llm_model: str = "gpt-5-mini-2025-08-07"
+embedding_model: str = "text-embedding-3-small"
+embedding_dimentions: int = 1536  # depending on the model used
+
+vector_db_collection_name: str = "openai_embeddings"
+
+# Index Paths
+product_dict_file_location = "./bucket/index_storage/products.pkl"
+id_to_product_mapping = "./bucket/index_storage/data.pkl"
+vectorDb_index_path = "./bucket/index_storage/faiss"
+db_index_path = "./bucket/index_storage/"
+
+order_prefix = '#'
