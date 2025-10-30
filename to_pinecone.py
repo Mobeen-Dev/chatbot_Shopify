@@ -7,7 +7,7 @@ from langchain.docstore.document import Document
 from langchain_community.document_loaders import CSVLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import openai
-from config import settings, embeddind_model
+from config import settings, embedding_model
 from tqdm import tqdm
 
 # Import Pinecone (latest SDK - install with: pip install pinecone)
@@ -101,7 +101,7 @@ def create_or_get_index(
         raise
 
 # 3. OpenAI embedding function
-def get_openai_embedding(text: str, model: str = embeddind_model) -> List[float]:
+def get_openai_embedding(text: str, model: str = embedding_model) -> List[float]:
     """Get embedding from OpenAI API."""
     try:
         response = openai.embeddings.create(input=text, model=model)
@@ -110,7 +110,7 @@ def get_openai_embedding(text: str, model: str = embeddind_model) -> List[float]
         print(f"Error getting embedding: {e}")
         raise
 
-def get_openai_embeddings_batch(texts: List[str], model: str = embeddind_model) -> List[List[float]]:
+def get_openai_embeddings_batch(texts: List[str], model: str = embedding_model) -> List[List[float]]:
     """Get embeddings for multiple texts in batch."""
     try:
         response = openai.embeddings.create(input=texts, model=model)
@@ -123,7 +123,7 @@ def get_openai_embeddings_batch(texts: List[str], model: str = embeddind_model) 
 def prepare_chunks_for_pinecone(
     chunks: List[Document], 
     start_index: int,
-    model: str = embeddind_model
+    model: str = embedding_model
 ) -> List[Tuple[str, List[float], Dict[str, Any]]]:
     """Convert Document chunks to Pinecone format with OpenAI embeddings."""
     
@@ -169,7 +169,7 @@ def save_batch_to_pinecone(
     index, 
     start_index: int,
     namespace: str = "",
-    model: str = embeddind_model
+    model: str = embedding_model
 ):
     """Save a batch of chunks to Pinecone."""
     try:
@@ -194,7 +194,7 @@ def embed_and_save_to_pinecone(
     index_name: str = "shopify-products",
     namespace: str = "products",
     batch_size: int = 50,  # Smaller batch for OpenAI API limits
-    model: str = embeddind_model,
+    model: str = embedding_model,
     pinecone_api_key: str = ''
 ):
     """Embed chunks and save to Pinecone."""
@@ -249,7 +249,7 @@ def embed_and_save_to_pinecone(
 #     index_name: str = "shopify-products",
 #     namespace: str = "products",
 #     top_k: int = 5,
-#     model: str = embeddind_model,
+#     model: str = embedding_model,
 #     pinecone_api_key: str = ''
 # ):
 #     """Query Pinecone index."""
@@ -302,7 +302,7 @@ if __name__ == "__main__":
         index_name="shopify-products",
         namespace="products",
         batch_size=150,  # Adjust based on your OpenAI rate limits
-        model=embeddind_model
+        model=embedding_model
     )
     
     # Query example

@@ -1,27 +1,23 @@
-import os
-import sys
-import json
 import faiss
-import openai
 import pickle
 import asyncio
 import numpy as np
 from openai import AsyncOpenAI
-from config import settings, embeddind_model, vector_db_collection_name
+from config import settings, vectorDb_index_path, embedding_model, id_to_product_mapping
 
 
 class vectorDB:
     def __init__(
         self,
-        index_path: str = vector_db_collection_name,
-        model: str = embeddind_model,
+        index_path: str = vectorDb_index_path,
+        model: str = embedding_model,
     ):
         self.model = model
         # self.client = AsyncOpenAI(api_key=settings.openai_api_key,)  # async client
         self.db_client = faiss.read_index(index_path + ".index")
         with open(index_path + "_meta.pkl", "rb") as f:
             self.metadata = pickle.load(f)
-        with open("data.pkl", "rb") as f:
+        with open(id_to_product_mapping, "rb") as f:
             self.data_dict = pickle.load(f)
 
         # print(len(self.data_dict))
