@@ -50,7 +50,7 @@ data_dict:dict
 with open("data.pkl", 'rb') as f:
     data_dict = pickle.load(f)
 
-matches = search_faiss("Microcontroller with built-in Wi-Fi cheap", "openai_embeddingsL2", 10)
+matches = search_faiss("Microcontroller with built-in Wi-Fi cheap", "L2_test", 10)
 
 for match in matches:
     # print(match)
@@ -104,4 +104,4 @@ index.add_with_ids(embedding_matrix, all_indexes)  # type: ignore
 print(f"✅ Loaded {index.ntotal} embeddings into FAISS index.")
 
 # Optional: Save FAISS index to disk
-faiss.write_index(index, "openai_embeddingsL2.index")
+faiss.write_index(index, "L2_test.index")
