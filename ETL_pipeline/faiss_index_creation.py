@@ -1,78 +1,17 @@
 import os
 import sys
 import json
-import numpy as np
 import faiss
-import pickle
+import numpy as np
 from openai import OpenAI
-from config import settings
+from config import settings, vectorDb_index_path, embedding_dimentions
+from utils.logger import get_logger
 
-
+logger = get_logger("faiss-index-creation")
 client = OpenAI(api_key=settings.openai_api_key)
-
-
-def search_faiss(query, index_path="faiss_index", top_k=5):
-    # 1. Load FAISS index
-    index = faiss.read_index(index_path + ".index")
-
-    # 2. Load metadata
-    with open(index_path + "_meta.pkl", "rb") as f:
-        metadata = pickle.load(f)
-
-    # 3. Embed and normalize query
-    q_emb = (
-        client.embeddings.create(model="text-embedding-3-small", input=query)
-        .data[0]
-        .embedding
-    )
-    q_emb = np.array([q_emb]).astype("float32")
-    faiss.normalize_L2(q_emb)
-
-    # 4. Search
-    distances, indices = index.search(q_emb, top_k)
-
-    results = []
-    for distance, idx in zip(distances[0], indices[0]):
-        score = 1 / distance
-        print(
-            {
-                "score": float(score),  # cosine similarity score
-                "metadata": metadata[idx],  # remap via saved metadata
-                "position": idx,
-            }
-        )
-        results.append(
-            {
-                "score": float(score),  # cosine similarity score
-                "metadata": metadata[idx],  # remap via saved metadata
-            }
-        )
-
-    return results
-
-
-data_dict: dict
-with open("data.pkl", "rb") as f:
-    data_dict = pickle.load(f)
-
-matches = search_faiss(
-    "Microcontroller with built-in Wi-Fi cheap", "IP_test", 10
-)
-
-for match in matches:
-    # print(match)
-    product = data_dict[match["metadata"]["id"]]
-    print(product["title"])
-    print(" ---- \n")
-
-
-# sys.exit()
-
 
 # CONFIG
 FOLDER_PATH = "embed_job_output"  # <- change this
-EMBEDDING_DIM = 1536  # depending on the model used
-
 
 def return_index(value: str) -> int:
     return int(value.split("-")[1])
@@ -115,12 +54,13 @@ print(max(all_indexes))
 print(len(all_indexes))
 sys.exit()
 # Step 3: Create FAISS index
-base_index = faiss.IndexFlatIP(EMBEDDING_DIM)
+base_index = faiss.IndexFlatIP(embedding_dimentions)
 index = faiss.IndexIDMap(base_index)  # Wrap with IDMap
 # index.add(embedding_matrix) # type: ignore
 index.add_with_ids(embedding_matrix, all_indexes)  # type: ignore
 
-print(f"✅ Loaded {index.ntotal} embeddings into FAISS index.")
-
+logger.info(f"Created FAISS index with {index.ntotal} embeddings")
+ 
 # Optional: Save FAISS index to disk
-faiss.write_index(index, "IP_test.index")
+path = f"{vectorDb_index_path}.index"
+faiss.write_index(index, path)

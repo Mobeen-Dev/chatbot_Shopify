@@ -13,9 +13,12 @@ import numpy as np
 from typing import List
 from openai import OpenAI
 from Shopify import Shopify
-from config import settings
 from langchain.schema import Document
+from config import settings, db_index_path
+from utils.logger import get_logger
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+logger = get_logger("etl-pipeline")
 
 def chunk_product_description(product, chunk_size: int = 500, chunk_overlap: int = 70):
     """
@@ -101,8 +104,8 @@ def save_chunks_to_faiss(chunks, index_path="faiss_index"):
     with open(index_path + "_meta.pkl", "wb") as f:
         pickle.dump(metadata, f)
 
-    print(
-        f"✅ Saved {len(chunks)} chunks into FAISS (cosine similarity) at '{index_path}.index'"
+    logger.info(
+        f" Saved {len(chunks)} chunks into FAISS (cosine similarity) at '{index_path}.index'"
     )
 
 
@@ -208,8 +211,8 @@ def process_and_save_products_into_batches(
     for product in products:
         chunks.extend(chunk_product_description(product))
 
-    print(f"Total products processed: {len(products)}")
-    print(f"Total chunks created: {len(chunks)}")
+    logger.info(f"Total products processed: {len(products)}")
+    logger.info(f"Total chunks created: {len(chunks)}")
 
     # Extract metadata and page contents separately
     meta_chunks = [c.metadata for c in chunks]
@@ -235,7 +238,7 @@ def process_and_save_products_into_batches(
         create_batch_jsonl(
             batch_idx, data_folder, batch_genres, updated_idx_start=start_idx
         )
-        print(f"{start_idx = }\n{batch_num = }")
+        logger.extended_logging(f"{start_idx = }\n{batch_num = }")
 
 
 def upload_batch_files_and_get_ids(
@@ -262,14 +265,14 @@ def upload_batch_files_and_get_ids(
 
         # Skip empty files
         if os.path.getsize(file_path) == 0:
-            print(f"Skipping empty file: {filename}")
+            logger.extended_logging(f"Skipping empty file: {filename}")
             continue
 
         # Skip non-files (directories, etc.)
         if not os.path.isfile(file_path):
             continue
 
-        print(f"Uploading file: {filename}")
+        logger.extended_logging(f"Uploading file: {filename}")
 
         retries = 0
         backoff = initial_backoff
@@ -279,11 +282,11 @@ def upload_batch_files_and_get_ids(
                 with open(file_path, "rb") as f:
                     batch_input_file = client.files.create(file=f, purpose="batch")
                     uploaded_file_ids.append(batch_input_file.id)
-                    print(f"Uploaded {filename} -> ID: {batch_input_file.id}")
+                    logger.extended_logging(f"Uploaded {filename} -> ID: {batch_input_file.id}")
                     break  # Success, exit retry loop
 
             except openai.RateLimitError:
-                print(
+                logger.error(
                     f"Rate limit exceeded while uploading {filename}. Retrying in {backoff} seconds..."
                 )
             except (
@@ -291,20 +294,20 @@ def upload_batch_files_and_get_ids(
                 requests.exceptions.Timeout,
                 openai.APIConnectionError,
             ) as e:
-                print(
+                logger.error(
                     f"Network error while uploading {filename}: {e}. Retrying in {backoff} seconds..."
                 )
             except Exception as e:
-                print(f"Unexpected error while uploading {filename}: {e}")
+                logger.error(f"Unexpected error while uploading {filename}: {e}")
                 break  # Skip file on unhandled error unless you want to retry everything
 
             # Wait and retry
             time.sleep(backoff)
             retries += 1
-            backoff *= 2  # Exponential backoff
+            backoff *= 4  # Exponential backoff
 
         else:
-            print(f"Failed to upload {filename} after {max_retries} retries.")
+            logger.error(f"Failed to upload {filename} after {max_retries} retries.")
 
     return uploaded_file_ids
 
@@ -337,7 +340,7 @@ def create_batches_from_file_ids(
     batch_responses = []
 
     for file_id in file_ids:
-        print(f"Creating batch for file ID: {file_id}")
+        logger.extended_logging(f"Creating batch for file ID: {file_id}")
 
         retries = 0
         backoff = initial_backoff
@@ -354,15 +357,15 @@ def create_batches_from_file_ids(
                 break  # Success, break out of retry loop
 
             except openai.RateLimitError:
-                print(f"Rate limit exceeded. Retrying in {backoff} seconds...")
+                logger.info(f"Rate limit exceeded. Retrying in {backoff} seconds...")
             except (
                 requests.exceptions.ConnectionError,
                 requests.exceptions.Timeout,
                 openai.APIConnectionError,
             ) as e:
-                print(f"Network error: {e}. Retrying in {backoff} seconds...")
+                logger.error(f"Network error: {e}. Retrying in {backoff} seconds...")
             except Exception as e:
-                print(f"Unhandled error for file ID {file_id}: {e}")
+                logger.error(f"Unhandled error for file ID {file_id}: {e}")
                 break  # Optional: break if you don’t want to retry on unexpected errors
 
             # Wait and retry
@@ -371,7 +374,7 @@ def create_batches_from_file_ids(
             backoff *= 2  # Exponential backoff
 
         else:
-            print(
+            logger.error(
                 f"Failed to create batch for file ID {file_id} after {max_retries} retries."
             )
 
@@ -405,16 +408,16 @@ def save_batches_as_json(batch_list, output_path="batch_responses.json"):
         output_path (str): Output filename
     """
     batch_dicts = [batch_to_json(b) for b in batch_list]
-
+    output_path = db_index_path + output_path # Save in persistant Directory
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(batch_dicts, f, indent=2)
 
-    print(f"Saved {len(batch_dicts)} batches to {output_path}")
+    logger.info(f"Saved {len(batch_dicts)} batches to {output_path}")
 
 
 def return_output_file_ids(batch_file: str = "batch_responses.json") -> List:
     output_file_ids = []
-
+    batch_file_path = db_index_path + batch_file
     with open(batch_file, "r") as f:
         data = json.load(f)
         if not data:
@@ -422,7 +425,7 @@ def return_output_file_ids(batch_file: str = "batch_responses.json") -> List:
         for obj in data:
             try:
                 batch = client.batches.retrieve(obj["id"])
-                # print(batch)
+                # logger.info(batch)
                 output_file_ids.append(batch.output_file_id)
 
             except KeyError as e:
@@ -448,7 +451,7 @@ def save_embeddings_file(output_file_ids: List, folder_path):
 
     for index, output_file_id in enumerate(output_file_ids):
         # output_file = client.files.retrieve(str(output_file_id))
-        # print(output_file)
+        # logger.info(output_file)
         content = None
         try:
             content = client.files.content(str(output_file_id))
@@ -503,10 +506,9 @@ def pipeline(products, client):
         )
 
         if new_job:
-            
             file_ids = upload_batch_files_and_get_ids(data_folder, client)
             batch_responses = create_batches_from_file_ids(file_ids, client)
-            print("Batch operations created:", batch_responses)
+            logger.info("Batch operations created:", batch_responses)
             save_batches_as_json(batch_responses)
 
     if finish_open_job:
@@ -516,7 +518,6 @@ def pipeline(products, client):
 
 # Example usage
 if __name__ == "__main__":
-    
     store = Shopify(settings.store)
     products = asyncio.run(store.fetch_all_products(True))
 
