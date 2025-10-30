@@ -1,7 +1,7 @@
 from models import ChatRequest
 import json
 from typing import List, Dict, Any, Union
-from config import settings, embeddind_model, order_prefix
+from config import settings, embedding_model, order_prefix
 from utils.logger import get_logger
 from database import vectorDB
 from Shopify import Shopify

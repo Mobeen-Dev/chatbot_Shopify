@@ -6,7 +6,7 @@ from pprint import pprint
 # ################## Helper Functions Start ###########################
 # #####################################################################
 
-from config import NO_IMAGE_URL
+from config import no_image_url
 
 # @ App level create a reference for Shopify API client
 # store = await Shopify(settings.store, "ShopifyClient")

@@ -3,7 +3,7 @@ import aiohttp
 import asyncio
 from typing import List, Dict
 from utils.logger import get_logger
-from config import NO_IMAGE_URL, llm_model, product_dict_file_location
+from config import no_image_url, llm_model, product_dict_file_location
 from models import ProductEntry
 import asyncio
 import pickle
@@ -1765,7 +1765,7 @@ class Shopify:
             first_edge = edges[0] if edges else {}
             node = first_edge.get("node") or {}
             image = node.get("image") or {}
-            image_url = image.get("url") or NO_IMAGE_URL
+            image_url = image.get("url") or no_image_url
 
             return {
                 "title": product.get("title", ""),
