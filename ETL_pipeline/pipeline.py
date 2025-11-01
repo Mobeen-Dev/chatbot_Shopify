@@ -418,7 +418,7 @@ def save_batches_as_json(batch_list, output_path="batch_responses.json"):
 def return_output_file_ids(batch_file: str = "batch_responses.json") -> List:
     output_file_ids = []
     batch_file_path = db_index_path + batch_file
-    with open(batch_file, "r") as f:
+    with open(batch_file_path, "r") as f:
         data = json.load(f)
         if not data:
             return []
@@ -508,7 +508,7 @@ def pipeline(products, client):
         if new_job:
             file_ids = upload_batch_files_and_get_ids(data_folder, client)
             batch_responses = create_batches_from_file_ids(file_ids, client)
-            logger.info("Batch operations created:", batch_responses)
+            logger.extended_logging(f"Batch operations created: {batch_responses}")
             save_batches_as_json(batch_responses)
 
     if finish_open_job:
