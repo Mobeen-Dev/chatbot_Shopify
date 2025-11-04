@@ -4,8 +4,10 @@ flowchart TD
     %% Main Pipeline Start
     A[pipeline.py] -->|Mode 2: Resume Job| B[Download processed files from OpenAI server]
     A -->|Mode 1: New Job| C[Fetch all data from Shopify]
+    
 
     B --> D[Save downloaded files locally]
+
     
     %% Mode 1 flow
     C --> E[Chunk data into files]
@@ -24,4 +26,8 @@ flowchart TD
     K --> L[id_to_product_mapping.py]
     L --> M[Use metadata to create product blocks]
     M --> N[Ready-to-feed product data output]
+
+    A -->|Mode 3: Complete Job| ZA[Get all Products from Shopify]
+    ZA --> ZD[Build Id --> handle mapping]
+    ZD --> ZE[Save Mapping in Products.pkl]
 ````

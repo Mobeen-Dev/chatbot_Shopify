@@ -23,3 +23,6 @@ from chromadb.config import Settings
 
 client = chromadb.HttpClient(host="localhost", port=9001, settings=Settings())
 
+# ETL Job Execution
+# start new job
+python -m ETL_pipeline.pipeline --chunk_products --upload_chunks --start_embedding_job
