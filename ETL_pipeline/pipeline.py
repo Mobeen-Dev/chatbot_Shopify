@@ -407,6 +407,7 @@ def save_batches_as_json(batch_list, output_path="batch_responses.json"):
         batch_list (list): List of openai.types.Batch objects
         output_path (str): Output filename
     """
+    os.makedirs(os.path.dirname(db_index_path), exist_ok=True)
     batch_dicts = [batch_to_json(b) for b in batch_list]
     output_path = db_index_path + output_path # Save in persistant Directory
     with open(output_path, "w", encoding="utf-8") as f:
@@ -491,7 +492,7 @@ def pipeline(products, client):
     args = parser.parse_args()
 
     prepare_data = args.chunk_products
-    new_job = prepare_data and args.upload_chunks and args.start_embedding_job
+    new_job = args.upload_chunks and args.start_embedding_job
     finish_open_job = args.download_embeddings
 
     output_folder = "embed_job_output"
@@ -505,11 +506,11 @@ def pipeline(products, client):
             data_folder=data_folder,
         )
 
-        if new_job:
-            file_ids = upload_batch_files_and_get_ids(data_folder, client)
-            batch_responses = create_batches_from_file_ids(file_ids, client)
-            logger.extended_logging(f"Batch operations created: {batch_responses}")
-            save_batches_as_json(batch_responses)
+    if new_job:
+        file_ids = upload_batch_files_and_get_ids(data_folder, client)
+        batch_responses = create_batches_from_file_ids(file_ids, client)
+        logger.extended_logging(f"Batch operations created: {batch_responses}")
+        save_batches_as_json(batch_responses)
 
     if finish_open_job:
         output_file_ids = return_output_file_ids()
@@ -519,7 +520,7 @@ def pipeline(products, client):
 # Example usage
 if __name__ == "__main__":
     store = Shopify(settings.store)
-    products = asyncio.run(store.fetch_all_products(True))
+    products = asyncio.run(store.fetch_all_products())
 
     client = OpenAI(api_key=settings.openai_api_key)
 

@@ -3,7 +3,7 @@ import asyncio
 import os
 import pickle
 import json
-from config import settings
+from config import settings, id_to_product_mapping
 
 store = Shopify(settings.store)
 
@@ -15,7 +15,7 @@ async def test():
     for product in products:
         formatted_product[product["id"]] = store.format_product(product, True)
 
-    with open("data.pkl", "wb") as f:
+    with open(id_to_product_mapping, "wb") as f:
         pickle.dump(formatted_product, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 

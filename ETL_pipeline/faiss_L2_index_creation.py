@@ -5,7 +5,7 @@ import numpy as np
 import faiss
 import pickle
 from openai import OpenAI
-from config import settings
+from config import settings, id_to_product_mapping
 
 
 client = OpenAI(api_key=settings.openai_api_key)
@@ -47,7 +47,7 @@ def search_faiss(query, index_path="faiss_index", top_k=5):
     return results
 
 data_dict:dict
-with open("data.pkl", 'rb') as f:
+with open(id_to_product_mapping, 'rb') as f:
     data_dict = pickle.load(f)
 
 matches = search_faiss("Microcontroller with built-in Wi-Fi cheap", "L2_test", 10)
