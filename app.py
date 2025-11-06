@@ -79,7 +79,8 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # CORS setup for frontend (adjust origins in production)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.allowed_origins,
+    allow_origin_regex=settings.origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

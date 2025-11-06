@@ -41,6 +41,12 @@ class Settings(BaseSettings):
             "api_version": self.shopify_api_version,
         }
     
+    # == Access Point == 
+    origin_regex = os.getenv("ALLOWED_ORIGIN_REGEX")
+    allowed_origins = [
+        o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()
+    ]
+
 
     # === Server Settings ===
     port: int = Field(alias="PORT")
