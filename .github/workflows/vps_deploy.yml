@@ -17,20 +17,21 @@ jobs:
     - name: Debug info
       run: echo "Branch is ${{ github.ref }} / ${{ github.head_ref }}"
       
-    # - name: 🛑 Stop Current Services
-    #   run: |
-    #     echo "Stopping project-specific services..."
-    #     docker stop broker-rabbitmq fastapi_server 2>/dev/null || echo "Containers not running"
-    #     docker rm broker-rabbitmq fastapi_server 2>/dev/null || echo "Containers not found"
+    - name: 🛑 Stop Current Services
+      run: |
+        echo "Stopping project-specific services..."
+        docker stop local-mongo local-redis fastapi_server 2>/dev/null || echo "Some containers not running"
+        docker rm fastapi_server 2>/dev/null || echo "Some containers not found"
         
-    # - name: 🧹 Clean Up Old Images (Optional)
-    #   run: |
-    #     echo "Cleaning up old images..."
-    #     docker system prune -f || true
+    - name: 🧹 Clean Up Old Images (Optional)
+      run: |
+        echo "Cleaning up old images..."
+        docker system prune -f || true
         
-    # - name: 🏗️ Build and Start Services
-    #   run: |
-    #     echo "Building and starting services..."
+    - name: 🏗️ Build and Start Services
+      run: |
+        echo "Building and starting services..."
+        docker-compose --build
     #     docker-compose up -d --build
         
     # - name: ⏱️ Wait for Services to Start
