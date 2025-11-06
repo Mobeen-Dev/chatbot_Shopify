@@ -5,7 +5,7 @@ import numpy as np
 import faiss
 import pickle
 from openai import OpenAI
-from config import settings, id_to_product_mapping
+from config import settings, id_to_product_mapping, embedding_dimentions, embedding_model
 
 
 client = OpenAI(api_key=settings.openai_api_key)
@@ -20,7 +20,7 @@ def search_faiss(query, index_path="faiss_index", top_k=5):
 
     # 3. Embed and normalize query
     q_emb = (
-        client.embeddings.create(model="text-embedding-3-small", input=query)
+        client.embeddings.create(model=embedding_model, input=query)
         .data[0]
         .embedding
     )
@@ -62,7 +62,6 @@ for match in matches:
 sys.exit()
 # CONFIG
 FOLDER_PATH = 'embed_job_output'  # <- change this
-EMBEDDING_DIM = 1536  # depending on the model used
 
 all_embeddings = []
 all_indexes = []
@@ -97,7 +96,7 @@ embedding_matrix = np.array(all_embeddings).astype('float32')
 # faiss.normalize_L2(embedding_matrix)
 all_indexes = np.array(all_indexes, dtype='int64')
 # Step 3: Create FAISS index
-base_index = faiss.IndexFlatL2(EMBEDDING_DIM)
+base_index = faiss.IndexFlatL2(embedding_dimentions)
 index = faiss.IndexIDMap(base_index)  # Wrap with IDMap
 # index.add(embedding_matrix) # type: ignore
 index.add_with_ids(embedding_matrix, all_indexes)  # type: ignore

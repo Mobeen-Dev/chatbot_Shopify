@@ -14,7 +14,7 @@ from typing import List
 from openai import OpenAI
 from Shopify import Shopify
 from langchain.schema import Document
-from config import settings, db_index_path
+from config import settings, persistent_path, embedding_model
 from utils.logger import get_logger
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
@@ -85,7 +85,7 @@ def save_chunks_to_faiss(chunks, index_path="faiss_index"):
     metadata = [chunk.metadata for chunk in chunks]
 
     # 1. Get embeddings from OpenAI
-    response = client.embeddings.create(model="text-embedding-3-small", input=texts)
+    response = client.embeddings.create(model=embedding_model, input=texts)
 
     embeddings = np.array([e.embedding for e in response.data]).astype("float32")
 
@@ -119,7 +119,7 @@ def search_faiss(query, index_path="faiss_index", top_k=5):
 
     # 3. Embed and normalize query
     q_emb = (
-        client.embeddings.create(model="text-embedding-3-small", input=query)
+        client.embeddings.create(model=embedding_model, input=query)
         .data[0]
         .embedding
     )
@@ -158,7 +158,7 @@ def create_request_object(request_number, text_chunk):
         "method": "POST",
         "url": "/v1/embeddings",
         "body": {
-            "model": "text-embedding-3-small",
+            "model": embedding_model,
             "input": text_chunk,
             "encoding_format": "float",
         },
@@ -208,6 +208,8 @@ def process_and_save_products_into_batches(
     """
 
     chunks = []
+    index_path = persistent_path + index_path # save in persistent directory
+    
     for product in products:
         chunks.extend(chunk_product_description(product))
 
@@ -407,9 +409,9 @@ def save_batches_as_json(batch_list, output_path="batch_responses.json"):
         batch_list (list): List of openai.types.Batch objects
         output_path (str): Output filename
     """
-    os.makedirs(os.path.dirname(db_index_path), exist_ok=True)
+    os.makedirs(os.path.dirname(persistent_path), exist_ok=True)
     batch_dicts = [batch_to_json(b) for b in batch_list]
-    output_path = db_index_path + output_path # Save in persistant Directory
+    output_path = persistent_path + output_path # Save in persistant Directory
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(batch_dicts, f, indent=2)
 
@@ -418,7 +420,7 @@ def save_batches_as_json(batch_list, output_path="batch_responses.json"):
 
 def return_output_file_ids(batch_file: str = "batch_responses.json") -> List:
     output_file_ids = []
-    batch_file_path = db_index_path + batch_file
+    batch_file_path = persistent_path + batch_file
     with open(batch_file_path, "r") as f:
         data = json.load(f)
         if not data:
@@ -457,6 +459,8 @@ def save_embeddings_file(output_file_ids: List, folder_path):
         try:
             content = client.files.content(str(output_file_id))
         except Exception as e:
+            print(e)
+            print()
             continue
         binary_data = content.read()
 

@@ -81,6 +81,6 @@ vector_db_collection_name: str = "openai_embeddings"
 product_dict_file_location = "./bucket/index_storage/products.pkl"
 id_to_product_mapping = "./bucket/index_storage/data.pkl"
 vectorDb_index_path = "./bucket/index_storage/faiss"
-db_index_path = "./bucket/index_storage/"
+persistent_path = "./bucket/index_storage/"
 
 order_prefix = '#'
