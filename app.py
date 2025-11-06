@@ -1,4 +1,4 @@
-#Testing branch push deployment code checkout digilog-deployment digilog-deployment
+# Testing branch push deployment code checkout digilog-deployment digilog-deployment
 # Fast API
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -77,10 +77,12 @@ app.include_router(prompt_router)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+allowed_origins = [o.strip() for o in settings.origins.split(",") if o.strip()]
+
 # CORS setup for frontend (adjust origins in production)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.allowed_origins,
+    allow_origins=allowed_origins,
     allow_origin_regex=settings.origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
