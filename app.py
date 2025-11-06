@@ -1,4 +1,4 @@
-#Testing branch push deployment code checkout digilog-deployment digilog-deployment
+# Testing branch push deployment code checkout digilog-deployment digilog-deployment
 # Fast API
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException, status
@@ -114,10 +114,17 @@ async def custom_http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
+allowed_origins = [o.strip() for o in settings.origins.split(",") if o.strip()]
+
 # CORS setup for frontend (adjust origins in production)
 app.add_middleware(
     CORSMiddleware,
+<<<<<<< HEAD
     allow_origin_regex=ALLOWED_ORIGIN_REGEX,
+=======
+    allow_origins=allowed_origins,
+    allow_origin_regex=settings.origin_regex,
+>>>>>>> 1169361 (security fix #3)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
