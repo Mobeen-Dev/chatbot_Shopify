@@ -49,7 +49,8 @@ class Settings(BaseSettings):
     # === Server Settings ===
     port: int = Field(alias="PORT")
     env: str = Field(alias="ENV")
-
+     
+    
     class Config:
         # tell Pydantic to read a .env file from your project root
         env_file = "./creds/.env",
