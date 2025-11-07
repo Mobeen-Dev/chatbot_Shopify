@@ -37,8 +37,7 @@ An intelligent commerce assistant built for seamless Shopify storefront integrat
 - **Data Validation**: Pydantic
 - **Database**: MongoDB (persistence), Redis (sessions)
 - **Search**: FAISS (semantic), Elasticsearch/OpenSearch (lexical)
-- **Message Queue**: RabbitMQ
-- **API Integration**: Shopify REST/GraphQL APIs
+- **API Integration**: Shopify GraphQL APIs
 
 ### Frontend
 - **Languages**: HTML, CSS, JavaScript, Liquid
@@ -52,7 +51,7 @@ An intelligent commerce assistant built for seamless Shopify storefront integrat
 - **Monitoring**: Custom logging with OVH Cloud Monitoring
 
 ## Architecture
-![Project Logo](https://github.com/Mobeen-Dev/chatbot_Shopify/blob/960a5f3d58875772c3ff3871c6f209446838a0d7/Shopify%20ChatBotUserFlow%20(2).jpeg)
+![Project Logo](https://github.com/Mobeen-Dev/chatbot_Shopify/blob/master/content/Shopify%20ChatBotUserFlow.jpeg)
 
 ```mermaid
 graph TD
@@ -105,16 +104,23 @@ graph TD
    # Edit credentials/.env with your API keys and configuration
    ```
 
-3. **Start with Docker Compose**
+3. **Set up prerequisites**
+
    ```bash
-   docker-compose up -d
+   python -m ETL.pipeline --chunk_products --upload_chunks --start_embedding_job
+   > For more details, refer to `commands.sh` in the `content` folder and `explanation.md` in `ETL_pipeline`.
+  ```
+
+4. **Start with Docker Compose**
+   ```bash
+   docker-compose build
+   docker-compose up
    ```
 
-4. **Install Shopify theme extension**
-   ```bash
-   # Follow Shopify CLI installation guide
-   shopify app dev
-   ```
+5. **Shopify Theme Extension**
+
+   Follow the instructions in the `ui` directory README.
+```
 
 ### Configuration
 
@@ -170,6 +176,16 @@ shopify-chatbot/
 ### Core Endpoints
 
 #### Chat Interaction
+```http
+POST /api/test-chat
+Content-Type: application/json
+
+{
+  "message": "Show me blue dresses under $100",
+  "session_id": "c4212586-c01e-4fe9-b884-402747a61ff6"
+}
+```
+
 ```http
 POST /api/aync-chat
 Content-Type: application/json
