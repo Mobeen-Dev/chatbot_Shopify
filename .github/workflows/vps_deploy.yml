@@ -27,10 +27,10 @@ jobs:
         echo "Cleaning up old images..."
         docker system prune -f || true
         
-    - name: 🏗️ Build and Start Services
-      run: |
-        echo "Building and starting services..."
-        docker-compose --build
+    # - name: 🏗️ Build and Start Services
+    #   run: |
+    #     echo "Building and starting services..."
+    #     docker-compose --build
     #     docker-compose up -d --build
         
     # - name: ⏱️ Wait for Services to Start
