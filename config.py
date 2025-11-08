@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     # == Access Point == 
     origin_regex: str = Field(alias="ALLOWED_ORIGIN_REGEX")
     origins: str = Field(alias="ALLOWED_ORIGINS")
+    access_token: str = Field(alias="ACCESS_TOKEN")
     
     # === Server Settings ===
     port: int = Field(alias="PORT")

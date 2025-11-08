@@ -4,13 +4,14 @@ from fastapi import (
     Request,
     Response,
     HTTPException,
+    Depends
 )
 import os
 from fastapi.templating import Jinja2Templates
 from datetime import datetime
 from pathlib import Path
 import yaml
-
+from auth import auth_check
 import uvicorn
 import datetime
 from config import templates_path, system_prompt, product_prompt, prompts_path
@@ -19,7 +20,7 @@ product_prompt = Path(product_prompt)
 system_prompt = Path(system_prompt)
 prompts_path = Path(prompts_path)
 
-router = APIRouter(prefix="/prompts", tags=["Prompt Engineering"])
+router = APIRouter(prefix="/prompts", tags=["Prompt Engineering"], dependencies=[Depends(auth_check)])
 # router = FastAPI()
 templates = Jinja2Templates(directory=templates_path)
 
@@ -148,7 +149,6 @@ def get_editor(request: Request, prompt: str = "Untitled", mode: str = "view"):
         "editor.html", {"request": request, "endpoint": prompt}
     )
 
-
 @router.get("/system")
 def get_system_prompt(request: Request):
     return handle_get(request, system_prompt)
@@ -160,7 +160,6 @@ async def update_system_prompt(request: Request):
 @router.delete("/system")
 def delete_system_prompt():
     return handle_delete(system_prompt)
-
 
 @router.get("/product")
 def get_product_prompt(request: Request):
