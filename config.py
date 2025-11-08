@@ -3,6 +3,7 @@ import os
 import sys
 from pydantic import Field
 from pydantic_settings import BaseSettings
+from typing import List
 
 
 def resource_path(relative_path):
@@ -42,12 +43,9 @@ class Settings(BaseSettings):
         }
     
     # == Access Point == 
-    origin_regex = os.getenv("ALLOWED_ORIGIN_REGEX")
-    allowed_origins = [
-        o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()
-    ]
-
-
+    origin_regex: str = Field(alias="ALLOWED_ORIGIN_REGEX")
+    origins: str = Field(alias="ALLOWED_ORIGINS")
+    
     # === Server Settings ===
     port: int = Field(alias="PORT")
     env: str = Field(alias="ENV")

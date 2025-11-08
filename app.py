@@ -69,23 +69,29 @@ async def lifespan(app: FastAPI):
         except asyncio.CancelledError:
             logger.info("Background task cancelled on shutdown.")
 
+IS_PROD = settings.env == "DEP" # Deployed Environment 
 
-app = FastAPI(lifespan=lifespan)
-app.include_router(chat_router)
-app.include_router(prompt_router)
+app = FastAPI(
+    docs_url=None if IS_PROD else "/docs",
+    redoc_url=None if IS_PROD else "/redoc",
+    openapi_url=None if IS_PROD else "/openapi.json",
+    lifespan=lifespan
+)
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # CORS setup for frontend (adjust origins in production)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.allowed_origins,
     allow_origin_regex=settings.origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+app.include_router(chat_router)
+app.include_router(prompt_router)
 
 @app.get("/")
 async def root():
