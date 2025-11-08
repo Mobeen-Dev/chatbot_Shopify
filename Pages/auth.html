@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Access Token Authentication</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+          "Segoe UI", sans-serif;
+        background: linear-gradient(135deg, #1d1c1c, #525252);
+
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Subtle grid pattern */
+      body::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: linear-gradient(
+            rgba(255, 255, 255, 0.02) 1px,
+            transparent 1px
+          ),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        background-size: 50px 50px;
+        opacity: 0.5;
+      }
+
+      /* Subtle gradient orb */
+      body::after {
+        content: "";
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.03) 0%,
+          transparent 70%
+        );
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: pulse 8s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 0.3;
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.1);
+          opacity: 0.5;
+        }
+      }
+
+      /* Glass morphism container */
+      .auth-container {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(40px) saturate(180%);
+        -webkit-backdrop-filter: blur(40px) saturate(180%);
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05),
+          0 0 0 1px rgba(255, 255, 255, 0.02);
+        width: 100%;
+        max-width: 420px;
+        padding: 56px 48px;
+        animation: slideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        z-index: 1;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px) scale(0.96);
+          filter: blur(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+          filter: blur(0);
+        }
+      }
+
+      .logo-container {
+        text-align: center;
+        margin-bottom: 48px;
+      }
+
+      .logo {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        color: #000000;
+        font-weight: 600;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 24px rgba(255, 255, 255, 0.1),
+          0 2px 8px rgba(0, 0, 0, 0.4);
+        animation: logoFloat 4s ease-in-out infinite;
+      }
+
+      @keyframes logoFloat {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-6px);
+        }
+      }
+
+      h1 {
+        font-size: 28px;
+        color: #ffffff;
+        margin-bottom: 8px;
+        font-weight: 600;
+        letter-spacing: -0.5px;
+      }
+
+      .subtitle {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 15px;
+        line-height: 1.5;
+        font-weight: 400;
+        letter-spacing: -0.2px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 13px;
+        font-weight: 500;
+        margin-bottom: 10px;
+        letter-spacing: -0.1px;
+      }
+
+      .input-wrapper {
+        position: relative;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 14px 16px;
+        background: rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        font-size: 15px;
+        color: #ffffff;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        outline: none;
+        font-family: "SF Mono", "Monaco", "Courier New", monospace;
+        letter-spacing: 0.3px;
+      }
+
+      input[type="text"]:focus {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05),
+          0 4px 12px rgba(0, 0, 0, 0.3);
+        transform: translateY(-1px);
+      }
+
+      input[type="text"]::placeholder {
+        color: rgba(255, 255, 255, 0.25);
+      }
+
+      /* Apple-style button */
+      .btn-submit {
+        width: 100%;
+        padding: 14px;
+        background: #ffffff;
+        color: #000000;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.2px;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-top: 12px;
+        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15),
+          0 1px 2px rgba(0, 0, 0, 0.3);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn-submit::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(0, 0, 0, 0.05) 100%
+        );
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+
+      .btn-submit:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px rgba(255, 255, 255, 0.2),
+          0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .btn-submit:hover::before {
+        opacity: 1;
+      }
+
+      .btn-submit:active {
+        transform: scale(0.98);
+        box-shadow: 0 1px 4px rgba(255, 255, 255, 0.1),
+          0 1px 2px rgba(0, 0, 0, 0.3);
+      }
+
+      .help-text {
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        text-align: center;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.4);
+        letter-spacing: -0.1px;
+      }
+
+      .help-text a {
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s ease;
+      }
+
+      .help-text a:hover {
+        color: #ffffff;
+      }
+
+      /* Glass cards for messages */
+      .error-message,
+      .success-message {
+        display: none;
+        margin-top: 16px;
+        padding: 12px 16px;
+        backdrop-filter: blur(10px);
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 400;
+        letter-spacing: -0.1px;
+        animation: messageSlide 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      @keyframes messageSlide {
+        from {
+          opacity: 0;
+          transform: translateY(-8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .error-message {
+        background: rgba(255, 69, 58, 0.1);
+        border: 1px solid rgba(255, 69, 58, 0.2);
+        color: #ff453a;
+      }
+
+      .error-message.show {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .success-message {
+        background: rgba(52, 199, 89, 0.1);
+        border: 1px solid rgba(52, 199, 89, 0.2);
+        color: #32d74b;
+      }
+
+      .success-message.show {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      /* Icon indicators */
+      .message-icon {
+        font-size: 16px;
+      }
+
+      /* Loading state */
+      .btn-submit.loading {
+        pointer-events: none;
+        opacity: 0.6;
+      }
+
+      .btn-submit.loading::after {
+        content: "";
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        top: 50%;
+        left: 50%;
+        margin-left: -7px;
+        margin-top: -7px;
+        border: 2px solid rgba(0, 0, 0, 0.2);
+        border-radius: 50%;
+        border-top-color: #000000;
+        animation: spin 0.6s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        body {
+          padding: 16px;
+        }
+
+        .auth-container {
+          max-width: 100%;
+          padding: 48px 36px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: 12px;
+        }
+
+        .auth-container {
+          padding: 40px 28px;
+          border-radius: 20px;
+          max-width: 100%;
+        }
+
+        h1 {
+          font-size: 26px;
+        }
+
+        .subtitle {
+          font-size: 14px;
+        }
+
+        .logo {
+          width: 56px;
+          height: 56px;
+          font-size: 28px;
+          border-radius: 14px;
+        }
+
+        input[type="text"] {
+          padding: 13px 15px;
+          font-size: 15px;
+        }
+
+        .btn-submit {
+          padding: 13px;
+          font-size: 15px;
+        }
+      }
+
+      @media (max-width: 360px) {
+        body {
+          padding: 8px;
+        }
+
+        .auth-container {
+          padding: 36px 24px;
+        }
+
+        h1 {
+          font-size: 24px;
+        }
+
+        .subtitle {
+          font-size: 13px;
+        }
+      }
+
+      /* Reduce motion for accessibility */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="auth-container">
+      <div class="logo-container">
+        <div class="logo">S</div>
+        <h1>Welcome Back</h1>
+        <p class="subtitle">Enter your access token to continue</p>
+      </div>
+
+      <form id="authForm">
+        <div class="form-group">
+          <label for="accessToken">Access Token</label>
+          <div class="input-wrapper">
+            <input
+              type="text"
+              id="accessToken"
+              name="accessToken"
+              placeholder="sk-xxxxxxxxxxxxxxxxxxxx"
+              required
+              autocomplete="off"
+              spellcheck="false"
+            />
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          <span class="btn-text">Continue</span>
+        </button>
+
+        <div id="errorMessage" class="error-message">
+          <span class="message-icon">⚠</span>
+          <span>Invalid access token. Please try again.</span>
+        </div>
+
+        <div id="successMessage" class="success-message">
+          <span class="message-icon">✓</span>
+          <span>Authentication successful</span>
+        </div>
+      </form>
+
+      <div class="help-text">
+        Don't have a token? <a href="#contact">Contact support</a>
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById("authForm");
+      const tokenInput = document.getElementById("accessToken");
+      const errorMessage = document.getElementById("errorMessage");
+      const successMessage = document.getElementById("successMessage");
+      const submitBtn = form.querySelector(".btn-submit");
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        errorMessage.classList.remove("show");
+        successMessage.classList.remove("show");
+
+        const token = tokenInput.value.trim();
+
+        if (token.length < 10) {
+          errorMessage.querySelector("span:last-child").textContent =
+            "Access token is too short.";
+          errorMessage.classList.add("show");
+          return;
+        }
+
+        submitBtn.classList.add("loading");
+        submitBtn.querySelector(".btn-text").textContent = "";
+
+        setTimeout(() => {
+          submitBtn.classList.remove("loading");
+          submitBtn.querySelector(".btn-text").textContent = "Continue";
+
+          if (token.startsWith("sk-") || token.length >= 20) {
+            successMessage.classList.add("show");
+
+            setTimeout(() => {
+              window.location.href = "/api/";
+            }, 1200);
+          } else {
+            errorMessage.querySelector("span:last-child").textContent =
+              "Invalid token format. Please check and try again.";
+            errorMessage.classList.add("show");
+          }
+          const expires = new Date();
+          expires.setDate(expires.getDate() + 30);
+
+          document.cookie = `access-token=${token}; path=/; secure; samesite=strict; expires=${expires.toUTCString()}`;
+        }, 1000);
+      });
+
+      tokenInput.addEventListener("input", function () {
+        errorMessage.classList.remove("show");
+        successMessage.classList.remove("show");
+      });
+    </script>
+  </body>
+</html>

@@ -45,11 +45,13 @@ class Settings(BaseSettings):
     # == Access Point == 
     origin_regex: str = Field(alias="ALLOWED_ORIGIN_REGEX")
     origins: str = Field(alias="ALLOWED_ORIGINS")
+    access_token: str = Field(alias="ACCESS_TOKEN")
     
     # === Server Settings ===
     port: int = Field(alias="PORT")
     env: str = Field(alias="ENV")
-
+     
+    
     class Config:
         # tell Pydantic to read a .env file from your project root
         env_file = "./creds/.env",
