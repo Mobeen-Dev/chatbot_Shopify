@@ -119,12 +119,7 @@ allowed_origins = [o.strip() for o in settings.origins.split(",") if o.strip()]
 # CORS setup for frontend (adjust origins in production)
 app.add_middleware(
     CORSMiddleware,
-<<<<<<< HEAD
     allow_origin_regex=ALLOWED_ORIGIN_REGEX,
-=======
-    allow_origins=allowed_origins,
-    allow_origin_regex=settings.origin_regex,
->>>>>>> 1169361 (security fix #3)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -135,10 +130,6 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(chat_router)
 app.include_router(prompt_router)
-app.include_router(auth_router)
-
-app.state.templates = Jinja2Templates(directory=templates_path)
-
 
 @app.get("/")
 async def root():
