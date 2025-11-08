@@ -27,12 +27,12 @@ async def auth_check(request: Request):
 
 templates = Jinja2Templates(directory=templates_path)
 # --- Router setup ---
-router = APIRouter(
+secure_router = APIRouter(
     prefix="/auth",
 )
 
 
-@router.get("/")
+@secure_router.get("/")
 async def api_home(request: Request, prompt: str = "Untitled", mode: str = "view"):
     return templates.TemplateResponse(
         "auth.html", {"request": request, "endpoint": prompt}
