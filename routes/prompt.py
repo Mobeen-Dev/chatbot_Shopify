@@ -122,7 +122,6 @@ def handle_delete(file_path):
 
 @router.get("/")
 def get_users(request: Request, prompt: str = "Untitled", mode: str = "view"):
-    print("WOW")
     return templates.TemplateResponse("edit_prompt.html", {"request": request, "endpoint": prompt})
 
 
