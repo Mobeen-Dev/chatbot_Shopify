@@ -1,11 +1,4 @@
-from fastapi import (
-    FastAPI,
-    APIRouter,
-    Request,
-    Response,
-    HTTPException,
-    Depends
-)
+from fastapi import FastAPI, APIRouter, Request, Response, HTTPException, Depends
 import os
 from fastapi.templating import Jinja2Templates
 from datetime import datetime
@@ -20,9 +13,12 @@ product_prompt = Path(product_prompt)
 system_prompt = Path(system_prompt)
 prompts_path = Path(prompts_path)
 
-router = APIRouter(prefix="/prompts", tags=["Prompt Engineering"], dependencies=[Depends(auth_check)])
+router = APIRouter(
+    prefix="/prompts", tags=["Prompt Engineering"], dependencies=[Depends(auth_check)]
+)
 # router = FastAPI()
 templates = Jinja2Templates(directory=templates_path)
+
 
 def handle_get(request: Request, file_path):
     if not file_path.exists():
@@ -46,6 +42,7 @@ def handle_get(request: Request, file_path):
 
     # Return only the prompt string
     return Response(prompt_text, media_type="text/plain", headers=headers)
+
 
 async def handle_update(request: Request, file_path):
     if not file_path.exists():
@@ -87,6 +84,7 @@ async def handle_update(request: Request, file_path):
         "Prompt updated successfully", media_type="text/plain", headers=headers
     )
 
+
 def handle_delete(file_path):
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Prompt file not found")
@@ -123,8 +121,10 @@ def handle_delete(file_path):
 
 
 @router.get("/")
-def get_users():
-    return {"message": "List of prompts"}
+def get_users(request: Request, prompt: str = "Untitled", mode: str = "view"):
+    print("WOW")
+    return templates.TemplateResponse("edit_prompt.html", {"request": request, "endpoint": prompt})
+
 
 @router.post("/create")
 async def create_prompt(request: Request, filename: str):
@@ -142,6 +142,7 @@ async def create_prompt(request: Request, filename: str):
 
     return f"Created {filename}.yaml successfully."
 
+
 @router.get("/edit")
 def get_editor(request: Request, prompt: str = "Untitled", mode: str = "view"):
     # You can now access ?title=MyDoc&mode=edit from the URL
@@ -154,9 +155,11 @@ def get_editor(request: Request, prompt: str = "Untitled", mode: str = "view"):
 def get_system_prompt(request: Request):
     return handle_get(request, system_prompt)
 
+
 @router.put("/system")
 async def update_system_prompt(request: Request):
     return await handle_update(request, system_prompt)
+
 
 @router.delete("/system")
 def delete_system_prompt():
@@ -167,13 +170,16 @@ def delete_system_prompt():
 def get_product_prompt(request: Request):
     return handle_get(request, product_prompt)
 
+
 @router.put("/product")
 async def update_product_prompt(request: Request):
     return await handle_update(request, product_prompt)
 
+
 @router.delete("/product")
 def delete_product_prompt():
     return handle_delete(product_prompt)
+
 
 # if __name__ == "__main__":
 #     uvicorn.run("prompt:router", host="127.0.0.1", port=8000, reload=True)

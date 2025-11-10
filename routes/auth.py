@@ -1,28 +1,46 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse, Response
-from fastapi import HTTPException
+from fastapi import Request, HTTPException, status
 from fastapi.templating import Jinja2Templates
 from config import settings, templates_path
 
-
-# --- Auth check dependency ---
+from fastapi import Request, HTTPException
+from fastapi.responses import RedirectResponse
+from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_303_SEE_OTHER
 async def auth_check(request: Request):
-    token = request.cookies.get("access-token")
+    auth_header = request.headers.get("Authorization")
+    token = None
 
-    # Case 1: No cookie → redirect to /auth/
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ", 1)[1]
+
     if not token:
-        # raise instead of return
-        redirect = RedirectResponse(url="/", status_code=303)
+        token = request.cookies.get("access-token")
+
+    if not token:
+        accepts_html = "text/html" in request.headers.get("accept", "").lower()
+
+        if accepts_html:
+            # MUST raise, not return
+            raise HTTPException(
+                status_code=status.HTTP_303_SEE_OTHER,
+                detail="Redirect",
+                headers={"Location": "/auth"},
+            )
+
         raise HTTPException(
-            status_code=303, detail="Redirect", headers={"Location": "/"}
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing authentication credentials",
         )
 
-    # Case 2: Cookie exists but invalid
     if token != settings.access_token:
-        # simulate abrupt connection close
-        return Response(status_code=444)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token"
+        )
 
-    return token
+    return True
+
 
 
 templates = Jinja2Templates(directory=templates_path)
