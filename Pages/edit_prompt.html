@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Editor Hub 🎨</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Material 3 inspired colors */
+            --md-sys-color-primary: #6750A4;
+            --md-sys-color-on-primary: #FFFFFF;
+            --md-sys-color-surface: #FFFBFE;
+            --md-sys-color-on-surface: #1C1B1F;
+            --md-sys-color-secondary-container: #E8DEF8;
+            --md-sys-color-outline: #79747E;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card-container {
+            width: 90%;
+            max-width: 720px;
+            padding: 32px;
+            border-radius: 28px; /* M3 large radius */
+            background-color: #fef7ff; /* Slightly off-white surface */
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1), 0 6px 15px rgba(0, 0, 0, 0.08); /* Elevated shadow */
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--md-sys-color-primary);
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        p {
+            font-size: 1rem;
+            color: var(--md-sys-color-on-surface);
+            margin-bottom: 40px;
+            text-align: center;
+            opacity: 0.8;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .prompt-option {
+            /* M3 Card Style */
+            background-color: var(--md-sys-color-surface);
+            border: 1px solid var(--md-sys-color-outline);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+
+        .prompt-option:hover {
+            /* Elevated look on hover */
+            background-color: var(--md-sys-color-secondary-container);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+            border-color: var(--md-sys-color-primary);
+        }
+
+        .prompt-option h2 {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
+            margin: 0 0 4px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .prompt-option .icon {
+            font-size: 1.5rem;
+            margin-right: 12px;
+            color: var(--md-sys-color-primary);
+        }
+
+        .prompt-option p {
+            font-size: 0.9rem;
+            color: var(--md-sys-color-on-surface);
+            opacity: 0.7;
+            margin: 0;
+            padding-left: 36px; /* Align description under heading text */
+            text-align: left;
+        }
+        
+        /* Tablet/Desktop optimization */
+        @media (min-width: 768px) {
+            .options-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card-container">
+        <h1>Prompt Management Console</h1>
+        <p>Select a core prompt component below to modify its behavior and instructions for the AI model.</p>
+
+        <div class="options-grid">
+            
+            <div class="prompt-option" onclick="redirectToEdit('system')">
+                <h2>
+                    <span class="icon">⚙️</span> System Prompt
+                </h2>
+                <p>Define the AI's core rules, personality, constraints, and operational methods.</p>
+            </div>
+
+            <div class="prompt-option" onclick="redirectToEdit('product')">
+                <h2>
+                    <span class="icon">🛒</span> Product Prompt
+                </h2>
+                <p>Customize the guidelines for generating product recommendations and handling product inquiries.</p>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Function to redirect the user to the specific editing path.
+         * Constructs the URL as: [current_address]/edit/prompt=[type]
+         * @param {string} promptType - 'system' or 'product'
+         */
+        function redirectToEdit(promptType) {
+            // Get the current base URL (e.g., http://localhost:8080 or https://yourdomain.com)
+            const baseUrl = window.location.href.split(/[?#]/)[0]; // Remove query params/hash
+
+            // Construct the new path as requested
+            const newPath = `edit?prompt=${promptType}`;
+
+            // Combine the base URL and the new path and redirect
+            window.location.href = baseUrl + newPath;
+        }
+    </script>
+
+</body>
+</html>

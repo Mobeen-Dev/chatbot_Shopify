@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unauthorized</title>
+  <style>
+    :root {
+      --md-primary: #6750a4;      /* Material 3 Primary */
+      --md-primary-hover: #7f67be;
+      --md-surface: #fef7ff;
+      --md-surface-container: #f3edf7;
+      --md-on-surface: #1d1b20;
+      --md-outline: #79747e;
+      --md-radius: 16px;
+    }
+
+    body {
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: var(--md-surface);
+      font-family: "Roboto", sans-serif;
+      color: var(--md-on-surface);
+    }
+
+    .card {
+      background: var(--md-surface-container);
+      padding: 36px 32px;
+      border-radius: var(--md-radius);
+      box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.15),
+        0 4px 8px rgba(0, 0, 0, 0.15);
+      max-width: 420px;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 1.75rem;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0 0 24px;
+      font-size: 1rem;
+      line-height: 1.5;
+      color: #46464a;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 12px 24px;
+      border-radius: 9999px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      background: var(--md-primary);
+      color: white;
+      outline: none;
+      transition: background 0.2s, transform 0.1s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .button:hover {
+      background: var(--md-primary-hover);
+    }
+
+    .button:active {
+      transform: scale(0.97);
+    }
+
+    /* Ripple effect */
+    .button::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      width: 5px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.6);
+      opacity: 0;
+      transition: transform 0.4s, opacity 0.8s;
+      transform: scale(1);
+      pointer-events: none;
+    }
+
+    .button:active::after {
+      transform: scale(50);
+      opacity: 0;
+    }
+  </style>
+
+  <!-- Roboto font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+    rel="stylesheet"
+  />
+</head>
+<body>
+  <div class="card">
+    <h1>Unauthorized</h1>
+    <p>You do not have permission to view this page. Please authenticate to continue.</p>
+
+    <form action="/auth" method="get">
+      <button class="button" type="submit">Authenticate</button>
+    </form>
+  </div>
+</body>
+</html>

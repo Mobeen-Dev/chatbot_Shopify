@@ -444,7 +444,7 @@
               type="text"
               id="accessToken"
               name="accessToken"
-              placeholder="sk-xxxxxxxxxxxxxxxxxxxx"
+              placeholder="sk-xxxxxxxxxxxxxxxx"
               required
               autocomplete="off"
               spellcheck="false"
@@ -505,7 +505,7 @@
             successMessage.classList.add("show");
 
             setTimeout(() => {
-              window.location.href = "/api/";
+              window.location.href = "/prompts/";
             }, 1200);
           } else {
             errorMessage.querySelector("span:last-child").textContent =
