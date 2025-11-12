@@ -20,6 +20,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 logger = get_logger("etl-pipeline")
 
+
 def chunk_product_description(product, chunk_size: int = 500, chunk_overlap: int = 70):
     """
     Splits a product's description into chunks with metadata including product.id.
@@ -41,11 +42,22 @@ def chunk_product_description(product, chunk_size: int = 500, chunk_overlap: int
         return []
 
     # Initialize text splitter
-    description_splitter = RecursiveCharacterTextSplitter(
+    description_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
-        separators=["\n", ".", " ", ""],
+        separators=["\n\n", "\n", ". ", "? ", "! ", "; ", ": ", ", ", " ", ""],
     )
+
+    # "\n\n",        # paragraph break
+    # "\n",          # line break
+    # ". ",          # sentence
+    # "? ",          # question
+    # "! ",          # exclamation
+    # "; ",          # semicolon
+    # ": ",          # colon
+    # ", ",          # clause
+    # " ",           # space (word boundary)
+    # "",            # fallback: hard split
 
     # Create initial document
     base_doc = Document(page_content=description, metadata={"id": product_id})
@@ -55,27 +67,51 @@ def chunk_product_description(product, chunk_size: int = 500, chunk_overlap: int
 
     # Building Product Intro
     variants = ""
+    variants_length = 0
     for option in product["options"]:
         variants += f"{option['name']} : {option['values']}"
+        variants_length += 1
 
     category = product["category"]
+
+    price_range = product["priceRangeV2"]
+    if price_range:
+        minVariantPrice = price_range["minVariantPrice"]
+        minPrice = f"{minVariantPrice['amount']} {minVariantPrice['currencyCode']}"
+        maxVariantPrice = price_range["maxVariantPrice"]
+        maxPrice = f"{maxVariantPrice['amount']} {maxVariantPrice['currencyCode']}"
+
+        # Update price_range variable to hold final price_range
+        if minPrice == maxPrice:
+            price_range = f"{minPrice} - {maxPrice}"
+        else:
+            price_range = minPrice
+    # Base Chunk for each product ~ 200 Character | 50 Tokens
+    p_info = f" product_title : {product['title']} | product_handle {product['handle']} | price_range {price_range}"
+
+    if variants_length > 1:
+        p_info += f"| variants_options {variants} "
+
     if category:
         category = category["fullName"]
-
-    p_info = f" Product : {product['title']} at url /{product['handle']} .With variants {variants} Belongs to {category} \n "
+        p_info += f"Belongs to {category} \n "
 
     # Make sure metadata carries the product id
-    added = False
+    # added = False
     for chunk in chunks:
         chunk.metadata["id"] = product_id
-        if random.random() < 0.05:  # ~5% chance per chunk
-            added = True
-            chunk.page_content = p_info + chunk.page_content
+        chunk.page_content = p_info + chunk.page_content
 
-    # Guarantee: at least one chunk gets p_info
-    if not added and chunks:
-        chosen = random.choice(chunks)
-        chosen.page_content = p_info + chosen.page_content
+        # Depretiated Approach due to low confidence
+
+        # if random.random() < 0.05:  # ~5% chance per chunk
+        #     added = True
+        #     chunk.page_content = p_info + chunk.page_content
+
+        # Guarantee: at least one chunk gets p_info
+        # if not added and chunks:
+        #     chosen = random.choice(chunks)
+        #     chosen.page_content = p_info + chosen.page_content
 
     return chunks
 
@@ -119,9 +155,7 @@ def search_faiss(query, index_path="faiss_index", top_k=5):
 
     # 3. Embed and normalize query
     q_emb = (
-        client.embeddings.create(model=embedding_model, input=query)
-        .data[0]
-        .embedding
+        client.embeddings.create(model=embedding_model, input=query).data[0].embedding
     )
     q_emb = np.array([q_emb]).astype("float32")
     faiss.normalize_L2(q_emb)
@@ -208,8 +242,8 @@ def process_and_save_products_into_batches(
     """
 
     chunks = []
-    index_path = persistent_path + index_path # save in persistent directory
-    
+    index_path = persistent_path + index_path  # save in persistent directory
+
     for product in products:
         chunks.extend(chunk_product_description(product))
 
@@ -284,7 +318,9 @@ def upload_batch_files_and_get_ids(
                 with open(file_path, "rb") as f:
                     batch_input_file = client.files.create(file=f, purpose="batch")
                     uploaded_file_ids.append(batch_input_file.id)
-                    logger.extended_logging(f"Uploaded {filename} -> ID: {batch_input_file.id}")
+                    logger.extended_logging(
+                        f"Uploaded {filename} -> ID: {batch_input_file.id}"
+                    )
                     break  # Success, exit retry loop
 
             except openai.RateLimitError:
@@ -411,7 +447,7 @@ def save_batches_as_json(batch_list, output_path="batch_responses.json"):
     """
     os.makedirs(os.path.dirname(persistent_path), exist_ok=True)
     batch_dicts = [batch_to_json(b) for b in batch_list]
-    output_path = persistent_path + output_path # Save in persistant Directory
+    output_path = persistent_path + output_path  # Save in persistant Directory
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(batch_dicts, f, indent=2)
 
