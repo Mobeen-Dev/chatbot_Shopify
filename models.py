@@ -658,6 +658,7 @@ class ChatRequest(BaseModel):
 
             6. When search results exist, provide:
             - Exact product title (clickable link)
+            - with price range from the extracted chunk must be added
             - Short description only if present in the chunk text
 
             7. If no relevant results are found:
