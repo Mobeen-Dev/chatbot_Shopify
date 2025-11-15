@@ -38,3 +38,6 @@ bucket/app.log
 batch_responses.json
 openai_embeddings.index
 *.index
+
+/z
+z/*

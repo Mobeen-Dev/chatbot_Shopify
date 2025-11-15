@@ -42,9 +42,13 @@ async def async_chat_endpoint(request: Request, chat_request: ChatRequest):
     else:
         # Retrieve existing session data
         session_data = await request.app.state.session_manager.get_session(session_id)
-        chat_request.load_history(session_data)
-        if not True:
-            raise HTTPException(status_code=404, detail="Session not found.")
+        if session_data:
+            chat_request.load_history(session_data)
+        else:
+            # raise HTTPException(status_code=404, detail="Session not found.")
+            session_id = await request.app.state.session_manager.create_session(
+                {"data": None, "metadata": None}
+            )  # Created User Chat History Data
     try:
         # normal_query = await parse_into_json_prompt(chat_request)
         response = None
