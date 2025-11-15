@@ -13,6 +13,7 @@ jobs:
     steps:
     - name: 📥 Checkout Code
       uses: actions/checkout@v4
+
     - name: Debug info
       run: echo "Branch is ${{ github.ref }} / ${{ github.head_ref }}"
       
@@ -30,6 +31,7 @@ jobs:
     # - name: 🏗️ Build and Start Services
     #   run: |
     #     echo "Building and starting services..."
+    #     docker-compose --build
     #     docker-compose up -d --build
         
     # - name: ⏱️ Wait for Services to Start
