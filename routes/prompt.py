@@ -11,7 +11,7 @@ from fastapi.templating import Jinja2Templates
 from datetime import datetime
 from pathlib import Path
 import yaml
-
+from .auth import auth_check
 import uvicorn
 import datetime
 from config import templates_path, system_prompt, product_prompt, prompts_path
