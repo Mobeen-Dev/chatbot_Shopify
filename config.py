@@ -18,6 +18,7 @@ def resource_path(relative_path):
 class Settings(BaseSettings):
     # === OpenAi credentials ===
     openai_api_key: str = Field(alias="OPENAI_API_KEY")
+    vector_store_id: str = Field(alias="VECTOR_STORE_ID")
     
     # === Shopify Master Store credentials ===
     shopify_api_key: str = Field(alias="SHOPIFY_API_KEY")
