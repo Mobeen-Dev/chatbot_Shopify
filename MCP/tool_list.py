@@ -1,6 +1,54 @@
-from openai.types.chat import ChatCompletionToolParam
+# from openai.types.chat import ChatCompletionToolParam # Depreciated
+from openai.types.responses.tool_param import ParseableToolParam
+from openai.types.responses.file_search_tool_param import FileSearchToolParam
+from openai.types.responses.function_tool_param import FunctionToolParam
 
-tools_list: list[ChatCompletionToolParam] = [
+from openai.types.responses.tool_param import ToolParam
+from config import settings
+
+tools_list: list[ToolParam] = [
+    FileSearchToolParam(
+        type="file_search",
+        vector_store_ids=[settings.vector_store_id],
+        max_num_results=20,
+    ),
+    FunctionToolParam(
+        type="function",
+        name="get_product_via_handle",
+        description="Fetch the complete and up-to-date product details directly from Shopify using the product's handle.",
+        parameters={
+            "type": "object",
+            "properties": {
+                "handle": {
+                    "type": "string",
+                    "description": "The unique Shopify product handle (e.g., 'solar-wifi-device-solar-wifi-dongle-in-pakistan'). This is used to identify and retrieve the full product data.",
+                }
+            },
+            "required": ["handle"],
+            "additionalProperties": False,
+        },
+        strict=(True),
+    ),
+    FunctionToolParam(
+        type="function",
+        name="get_order_via_order_number",
+        description="Retrieve and format Shopify order details using an order number.",
+        parameters={
+            "type": "object",
+            "properties": {
+                "order_number": {
+                    "type": "string",
+                    "description": "The Shopify order number (with or without #, e.g., '#1234' or '1234').",
+                }
+            },
+            "required": ["order_number"],
+            "additionalProperties": False,
+        },
+        strict=True,
+    ),
+]
+
+vector_db_features = [
     {
         "type": "function",
         "function": {
@@ -22,43 +70,7 @@ tools_list: list[ChatCompletionToolParam] = [
                 "additionalProperties": False,
             },
         },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_product_via_handle",
-            "description": "Fetch the complete and up-to-date product details directly from Shopify using the product's handle.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "handle": {
-                        "type": "string",
-                        "description": "The unique Shopify product handle (e.g., 'solar-wifi-device-solar-wifi-dongle-in-pakistan'). This is used to identify and retrieve the full product data.",
-                    }
-                },
-                "required": ["handle"],
-                "additionalProperties": False,
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_order_via_order_number",
-            "description": "Retrieve and format Shopify order details using an order number.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "order_number": {
-                        "type": "string",
-                        "description": "The Shopify order number (with or without #, e.g., '#1234' or '1234').",
-                    }
-                },
-                "required": ["order_number"],
-                "additionalProperties": False,
-            },
-        },
-    },
+    }
 ]
 
 agentic_feature = [
