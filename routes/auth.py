@@ -14,7 +14,7 @@ async def auth_check(request: Request):
         # raise instead of return
         redirect = RedirectResponse(url="/", status_code=303)
         raise HTTPException(
-            status_code=303, detail="Redirect", headers={"Location": "/"}
+            status_code=303, detail="Redirect", headers={"Location": "/auth"}
         )
 
     # Case 2: Cookie exists but invalid
