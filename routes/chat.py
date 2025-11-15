@@ -5,7 +5,7 @@ from fastapi import HTTPException, status, Request, APIRouter
 from openai import AsyncOpenAI
 from openai import DefaultAioHttpClient
 from openai._exceptions import OpenAIError
-from openai.types.chat import ChatCompletion
+from openai.types.responses.response import Response
 
 # Data Models & App Config
 from models import ChatRequest, ChatResponse
@@ -25,10 +25,14 @@ router = APIRouter(prefix="")
 @router.post("/async-chat", response_model=ChatResponse)
 async def async_chat_endpoint(request: Request, chat_request: ChatRequest):
     chat_request.set_manager(request.app.state.prompt_manager)
+
     user_message = chat_request.message.strip()
     session_id = chat_request.session_id
-    request.app.state.logger.extended_logging(f" User message: {user_message}  Session ID: {session_id}")
-    
+
+    request.app.state.logger.extended_logging(
+        f" User message: {user_message}  Session ID: {session_id}"
+    )
+
     if not user_message:
         raise HTTPException(status_code=400, detail="Message cannot be empty.")
     if not session_id:
@@ -41,9 +45,8 @@ async def async_chat_endpoint(request: Request, chat_request: ChatRequest):
         chat_request.load_history(session_data)
         if not True:
             raise HTTPException(status_code=404, detail="Session not found.")
-        # print(f"\n $$$ Session data retrieved chat_request.n_history: \n{chat_request.n_history}\n\n\n\n\n\n\n")
     try:
-        normal_query = await parse_into_json_prompt(chat_request)
+        # normal_query = await parse_into_json_prompt(chat_request)
         response = None
         async with AsyncOpenAI(
             api_key=settings.openai_api_key,
@@ -53,22 +56,28 @@ async def async_chat_endpoint(request: Request, chat_request: ChatRequest):
             response = await process_with_tools(
                 client, chat_request, tools_list, request.app.state.mcp_controller
             )
+            reply = str(response.output_text.strip())
 
             chat_request.append_message(
                 {"role": "user", "content": user_message, "name": "Customer"}
             )
-            chat_request.append_message(response.choices[0].message.model_dump())
+            chat_request.append_message(
+                {
+                    "role": "assistant",
+                    "content": reply,
+                }
+            )
             chat_request.added_total_tokens(response.usage)
 
-            request.app.state.logger.extended_logging(chat_request)
+            # request.app.state.logger.extended_logging(chat_request)
 
-            request.app.state.logger.info(f"\n\nOpenAI response: {response}\n\n")
             # logger.info(f"\n\n History choices: {messages}")
 
-            reply = str(response.choices[0].message.content).strip()
+            request.app.state.logger.info(f"\n\nOpenAI response: {response}\n\n")
+
             stucture_output, reply = chat_request.extract_json_objects(reply)
 
-            messages = chat_request.n_history
+            messages = chat_request.history
 
             latest_chat = chat_request.n_Serialize_chat_history(messages)
             await request.app.state.session_manager.update_session(
@@ -102,29 +111,29 @@ async def async_chat_endpoint(request: Request, chat_request: ChatRequest):
             detail="Internal server error.",
         )
 
-
 async def process_with_tools(
     client, chat_request, tools_list, mcp_controller
-) -> ChatCompletion:
+) -> Response:
     """Handle recursive tool calls until no more tool calls are in the model's response."""
 
     while True:
-        response = await client.chat.completions.create(
+        response = await client.responses.create(
             model=llm_model,
             tools=tools_list,
-            messages=chat_request.openai_msgs(),
+            input=chat_request.openai_msgs(),
             tool_choice="auto",
         )
 
-        assistant_message = response.choices[0].message
+        assistant_message = response.output
+        tool_calls = [item for item in response.output if item.type == "tool_call"]
         message_cost = response.usage
 
-        if not assistant_message.tool_calls:
+        if not tool_calls:
             # No more tools, final AI reply
             chat_request.activity_record += " -> Output"
             return response
 
-        chat_request.append_message(assistant_message.model_dump())
+        # chat_request.append_message(assistant_message.model_dump())
         chat_request.added_total_tokens(message_cost)
 
         chat_request = await mcp_controller.function_execution(
