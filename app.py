@@ -21,6 +21,7 @@ from config import (
     product_prompt,
     redis_url,
     templates_path,
+    ALLOWED_ORIGIN_REGEX,
 )
 
 # Build-in Utilities
@@ -115,7 +116,7 @@ async def custom_http_exception_handler(request: Request, exc: HTTPException):
 # CORS setup for frontend (adjust origins in production)
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=settings.origin_regex,
+    allow_origin_regex=ALLOWED_ORIGIN_REGEX,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

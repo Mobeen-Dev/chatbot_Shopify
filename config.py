@@ -89,5 +89,6 @@ product_dict_file_location = "./bucket/index_storage/products.pkl"
 id_to_product_mapping = "./bucket/index_storage/data.pkl"
 vectorDb_index_path = "./bucket/index_storage/faiss"
 persistent_path = "./bucket/index_storage/"
-
+ALLOWED_ORIGIN_REGEX = r"https:\/\/(.*\.)?digilog\.pk$"
+# ALLOWED_ORIGIN_REGEX = r".*"
 order_prefix = '#'
