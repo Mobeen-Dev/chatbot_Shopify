@@ -21,7 +21,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 logger = get_logger("etl-pipeline")
 
 
-def chunk_product_description(product, chunk_size: int = 500, chunk_overlap: int = 70):
+def chunk_product_description(product, chunk_size: int = 360, chunk_overlap: int = 60):
     """
     Splits a product's description into chunks with metadata including product.id.
 
@@ -87,14 +87,15 @@ def chunk_product_description(product, chunk_size: int = 500, chunk_overlap: int
         else:
             price_range = minPrice
     # Base Chunk for each product ~ 200 Character | 50 Tokens
-    p_info = f" product_title : {product['title']} | product_handle {product['handle']} | price_range {price_range}"
+    p_info = f" product_title : {product['title']} | product_handle : {product['handle']} | price_range : {price_range} "
 
     if variants_length > 1:
         p_info += f"| variants_options {variants} "
 
     if category:
         category = category["fullName"]
-        p_info += f"Belongs to {category} \n "
+        if category != "Uncategorized":
+            p_info += f"Belongs to {category} \n "
 
     # Make sure metadata carries the product id
     # added = False
