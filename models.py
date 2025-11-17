@@ -46,6 +46,11 @@ class ProductEntry:
     #    "vid": "gid://shopify/ProductVariant/40516000219222",
     # },
 
+class UsageInfo:
+    def __init__(self, output_tokens, input_tokens):
+        self.output_tokens = output_tokens
+        self.input_tokens = input_tokens
+        self.total_tokens = output_tokens + input_tokens
 
 # Request schema
 class ChatRequest(BaseModel):
@@ -84,6 +89,33 @@ class ChatRequest(BaseModel):
             "prompt_tokens": new_cost_prompt,
             "total_tokens": new_cost_total,
         }
+        
+    def chat_history_to_text(self):
+        """
+        Convert List[ResponseInputItemParam] into a single plain text string
+        in a consistent prompt format.
+        """
+        parts = []
+        msgs = self.openai_msgs()
+        for msg in msgs:
+            role = getattr(msg, "role", "user")
+            content = getattr(msg, "content", "")
+
+            # content may be list or string depending on API versions
+            if isinstance(content, list):
+                text_parts = []
+                for section in content:
+                    # Extract string content from nested types
+                    if hasattr(section, "text"):
+                        text_parts.append(section.text)
+                    elif isinstance(section, str):
+                        text_parts.append(section)
+                content = "\n".join(text_parts)
+
+            parts.append(f"{role.upper()}: {content}")
+
+        return "\n".join(parts)
+
 
     def n_Serialize_chat_history(
         self, chat_history: List[ResponseInputItemParam]
@@ -602,12 +634,13 @@ class ChatRequest(BaseModel):
 
             ## CORE RULES
 
-            1. Every response must begin with a `file_search` query using the user’s request as the search term.
+            1. Response mostly with a `file_search` query using the user’s request as the search term.
             - Multiple searches allowed
-            - You must rely only on retrieved data
+            - You must rely only on retrieved data No makeup or auto completions
 
             2. Use only information explicitly found in `file_search` results.
             - No internal knowledge
+            - No Acknowledgement of any rule in response 
             - No assumptions or guesses
 
             3. Product titles must match the exact text from the search chunk.
@@ -620,18 +653,15 @@ class ChatRequest(BaseModel):
 
             5. If the request involves product sets or bundles:
             - First search for bundle products
-            - Only if none are found, list individual items
+            - Only if none are found
+            - Search for what are the requirements, list individual items after thinking what are required
 
             6. When search results exist, provide:
             - Exact product title (clickable link)
             - Short description only if present in the chunk text
 
             7. If no relevant results are found:
-            ```
-
             I could not find relevant information in the available files.
-
-            ```
 
             8. If the request is unclear:
             - Ask one clarifying question and wait for a response
@@ -660,48 +690,23 @@ class ChatRequest(BaseModel):
             - Personal or confidential data
 
             Fallback for out-of-scope requests:
-            ```
-
             I'm here to assist you with products available on Digilog.pk. Let me know what you're looking for!
 
-            ```
-
             Response to restricted or confidential data requests:
-            ```
-
-            Not eligible.
-
-            ```
-
+            Not eligible & Conversation marked as Suspicious.
+            
             ---
 
             ## TOOL USAGE
 
             Default tool: `file_search`
-            - Always used first
+            - Best to used for Information
             - Increase `k` if more results needed
 
             Special tool: `get_product_via_handle`
             - Only when the user provides a product handle or a direct product link
 
             ---
-
-            ## CONVERSATION FLOW
-
-            User request → `file_search` → Recommendations
-
-            ---
-
-            ## INITIAL MESSAGE (FIRST TURN ONLY)
-
-            ```
-
-            I will answer only using vector-store (file_search) results.
-
-            ```
-
-            ---
-
             End of System Prompt
 
             """.strip()
