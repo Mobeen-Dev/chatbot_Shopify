@@ -1,5 +1,6 @@
 # Fast API
 from fastapi import HTTPException, status, Request, APIRouter
+from fastapi.responses import StreamingResponse
 
 # OpenAi
 from openai import AsyncOpenAI
@@ -11,6 +12,7 @@ from openai.types.responses.response import Response
 from models import ChatRequest, ChatResponse
 from utils.guardrails import parse_query_into_json_prompt
 from config import settings, llm_model
+from typing import AsyncIterator
 
 # Build-in Utilities
 import asyncio
@@ -63,7 +65,7 @@ async def async_chat_endpoint(request: Request, chat_request: ChatRequest):
             reply = str(response.output_text.strip())
 
             chat_request.append_message(
-                {"role": "user", "content": user_message, "name": "Customer"}
+                {"role": "user", "content": user_message}
             )
             chat_request.append_message(
                 {
@@ -115,6 +117,7 @@ async def async_chat_endpoint(request: Request, chat_request: ChatRequest):
             detail="Internal server error.",
         )
 
+
 async def process_with_tools(
     client, chat_request, tools_list, mcp_controller
 ) -> Response:
@@ -165,6 +168,116 @@ async def parse_into_json_prompt(chat_request: ChatRequest):
         chat_request.message = json.dumps(response)
         return False
     return True
+
+
+async def stream_chat_endpoint(
+    request: Request, chat_request: ChatRequest
+) -> AsyncIterator[str]:
+    chat_request.set_manager(request.app.state.prompt_manager)
+
+    user_message = chat_request.message.strip()
+    session_id = chat_request.session_id
+
+    request.app.state.logger.extended_logging(
+        f" User message: {user_message}  Session ID: {session_id}"
+    )
+
+    if not user_message:
+        raise HTTPException(status_code=400, detail="Message cannot be empty.")
+    if not session_id:
+        session_id = await request.app.state.session_manager.create_session(
+            {"data": None, "metadata": None}
+        )  # Created User Chat History Data
+    else:
+        # Retrieve existing session data
+        session_data = await request.app.state.session_manager.get_session(session_id)
+        if session_data:
+            chat_request.load_history(session_data)
+        else:
+            # raise HTTPException(status_code=404, detail="Session not found.")
+            session_id = await request.app.state.session_manager.create_session(
+                {"data": None, "metadata": None}
+            )  # Created User Chat History Data
+    try:
+        # normal_query = await parse_into_json_prompt(chat_request)
+        response = None
+        async with AsyncOpenAI(
+            api_key=settings.openai_api_key,
+            http_client=DefaultAioHttpClient(timeout=200),
+        ) as client:
+            messages = chat_request.openai_msgs()
+            stream_response = await client.responses.create(
+                model=llm_model,
+                tools=tools_list,
+                input=chat_request.openai_msgs(),
+                tool_choice="auto",
+                stream=True,
+            )
+
+            assistant_reply = ""  # build the streaming text
+            final_usage = None
+
+            chat_request.append_message(
+                {"role": "user", "content": user_message}
+            )
+
+            async for event in stream_response:
+                ev_type = getattr(event, "type", "")
+
+                if event.type == "response.output_text.delta":
+                    delta = event.delta
+                    if delta:
+                        assistant_reply += delta
+                        yield f"data: {delta}\n\n"
+                
+                if event.type == "response.completed":
+                    if hasattr(event, "usage") and event.usage:
+                        final_usage = event.usage
+
+            chat_request.append_message(
+                {
+                    "role": "assistant",
+                    "content": assistant_reply,
+                }
+            )
+            
+            if final_usage:
+                chat_request.added_total_tokens(final_usage)
+
+            messages = chat_request.history
+
+            latest_chat = chat_request.n_Serialize_chat_history(messages)
+            await request.app.state.session_manager.update_session(
+                session_id, latest_chat
+            )
+
+            yield "data: [DONE]\n\n"
+
+    except OpenAIError as e:
+        request.app.state.logger.error(f"OpenAI API error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Failed to get response from language model.",
+        )
+    except asyncio.TimeoutError:
+        request.app.state.logger.error("OpenAI API request timed out.")
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Language model response timed out.",
+        )
+    except Exception as e:  # noqa: F841
+        request.app.state.logger.exception("Unexpected server error")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error.",
+        )
+
+
+@router.post("/stream-chat")
+async def stream(request: Request, chat_request: ChatRequest):
+    return StreamingResponse(
+        stream_chat_endpoint(request, chat_request), media_type="text/event-stream"
+    )
 
 
 @router.post("/test-chat", response_model=ChatResponse)
