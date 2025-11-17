@@ -9,10 +9,11 @@ from openai._exceptions import OpenAIError
 from openai.types.responses.response import Response
 
 # Data Models & App Config
-from models import ChatRequest, ChatResponse
+from models import ChatRequest, ChatResponse, UsageInfo
 from utils.guardrails import parse_query_into_json_prompt
 from config import settings, llm_model
 from typing import AsyncIterator
+from rs_bpe.bpe import openai as token_counter
 
 # Build-in Utilities
 import asyncio
@@ -174,7 +175,7 @@ async def stream_chat_endpoint(
     request: Request, chat_request: ChatRequest
 ) -> AsyncIterator[str]:
     chat_request.set_manager(request.app.state.prompt_manager)
-
+    token_encoder = token_counter.cl100k_base()
     user_message = chat_request.message.strip()
     session_id = chat_request.session_id
 
@@ -200,7 +201,6 @@ async def stream_chat_endpoint(
             )  # Created User Chat History Data
     try:
         # normal_query = await parse_into_json_prompt(chat_request)
-        response = None
         async with AsyncOpenAI(
             api_key=settings.openai_api_key,
             http_client=DefaultAioHttpClient(timeout=200),
@@ -222,7 +222,7 @@ async def stream_chat_endpoint(
             )
 
             async for event in stream_response:
-                ev_type = getattr(event, "type", "")
+                # ev_type = getattr(event, "type", "")
 
                 if event.type == "response.output_text.delta":
                     delta = event.delta
@@ -230,9 +230,6 @@ async def stream_chat_endpoint(
                         assistant_reply += delta
                         yield f"data: {delta}\n\n"
                 
-                if event.type == "response.completed":
-                    if hasattr(event, "usage") and event.usage:
-                        final_usage = event.usage
 
             chat_request.append_message(
                 {
@@ -240,6 +237,12 @@ async def stream_chat_endpoint(
                     "content": assistant_reply,
                 }
             )
+            user_query = chat_request.chat_history_to_text()
+            
+            output_tokens_count = len(token_encoder.encode(assistant_reply))
+            input_tokens_count = len(token_encoder.encode(user_query))
+            
+            final_usage = UsageInfo(output_tokens_count, input_tokens_count)
             
             if final_usage:
                 chat_request.added_total_tokens(final_usage)
