@@ -78,7 +78,9 @@ redis_url   = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 mongoDb_uri = os.getenv("MONGO_URL", "mongodb://root:secret@localhost:27017/?authSource=admin")
 
 # Hyper-Parameters
-llm_model: str = "gpt-5-mini-2025-08-07"
+reasoning_model: str = "gpt-5-mini-2025-08-07"
+llm_model: str = "gpt-4.1-2025-04-14"
+
 embedding_model: str = "text-embedding-3-small"
 embedding_dimentions: int = 1536  # depending on the model used
 
@@ -89,6 +91,6 @@ product_dict_file_location = "./bucket/index_storage/products.pkl"
 id_to_product_mapping = "./bucket/index_storage/data.pkl"
 vectorDb_index_path = "./bucket/index_storage/faiss"
 persistent_path = "./bucket/index_storage/"
-ALLOWED_ORIGIN_REGEX = r"https:\/\/(.*\.)?digilog\.pk$"
-# ALLOWED_ORIGIN_REGEX = r".*"
+# ALLOWED_ORIGIN_REGEX = r"https:\/\/(.*\.)?digilog\.pk$"
+ALLOWED_ORIGIN_REGEX = r".*"
 order_prefix = '#'

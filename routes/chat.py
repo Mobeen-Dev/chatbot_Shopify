@@ -199,6 +199,7 @@ async def stream_chat_endpoint(
             )  # Created User Chat History Data
     try:
         # normal_query = await parse_into_json_prompt(chat_request)
+
         async with AsyncOpenAI(
             api_key=settings.openai_api_key,
             http_client=DefaultAioHttpClient(timeout=200),
@@ -236,7 +237,7 @@ async def stream_chat_endpoint(
 
             output_tokens_count = len(token_encoder.encode(assistant_reply))
             input_tokens_count = len(token_encoder.encode(user_query))
-
+            # print("\n",assistant_reply,"\n")
             final_usage = UsageInfo(output_tokens_count, input_tokens_count)
 
             if final_usage:
@@ -278,96 +279,6 @@ async def stream(request: Request, chat_request: ChatRequest):
     return StreamingResponse(
         stream_chat_endpoint(request, chat_request), media_type="text/event-stream"
     )
-
-
-@router.post("/test-stream-chat")
-async def test_stream(request: Request, chat_request: ChatRequest):
-    return StreamingResponse(
-        test_stream_chat_endpoint(request, chat_request), media_type="text/event-stream"
-    )
-
-
-async def test_stream_chat_endpoint(
-    request: Request, chat_request: ChatRequest
-) -> AsyncIterator[str]:
-    """
-    Simulates streaming token-by-token / word-by-word from a pre-generated response.
-    """
-    response = """
-        ## The Evolving Landscape of AI: From RAG to Agentic Systems
-        The field of artificial intelligence, particularly with the rise of **Large Language Models (LLMs)**, is undergoing a rapid transformation, moving beyond simple text generation to complex, context-aware, and autonomous systems. This evolution is spearheaded by innovations like the **Retrieval-Augmented Generation (RAG) model**, advanced context protocols, and the burgeoning concept of **Agentic AI**. For educational testing purposes, we can explore these concepts, providing links for deeper understanding, such as the fundamentals of **RAG model architecture** at [example.com](example.com) 234 PKR - 156 PKR.
-        ---
-        ### Retrieval-Augmented Generation (RAG) Model 🧠
-        A core challenge with foundational **LLMs** is that their knowledge is **static** and limited to the data they were trained on. This limitation can lead to the generation of outdated or entirely fabricated information, often referred to as "hallucinations." The **Retrieval-Augmented Generation (RAG)** model was developed as a clever and cost-effective solution to this problem. RAG enhances the output of an LLM by giving it access to an external, authoritative knowledge base before it generates a response.
-        The RAG process typically involves several key stages. First, a vast corpus of external data (documents, databases, etc.) is broken down into manageable **chunks** and converted into numerical representations called **embeddings**. These embeddings are then stored in a **vector database**. When a user submits a query, it is also converted into an embedding, and a **retriever** component searches the vector database to find the most semantically relevant data chunks. These retrieved documents are then used to **augment** the original user prompt, giving the LLM up-to-date and specific **context** to generate a more accurate and grounded answer. This process makes the LLM's response traceable and reduces factual errors. You can learn more about how RAG combats LLM hallucinations and provides **factual grounding** by checking this resource at [example.com](example.com) 234 PKR - 156 PKR.
-        ---
-        ### LLM Context and Protocol 📄
-        The **context** provided to an LLM is the most critical factor influencing its output quality. In RAG, the retrieved documents form the bulk of this external context. However, for real-time and structured data, another architectural pattern is emerging: the **Model Context Protocol (MCP)**. While RAG excels at retrieving information from static, unstructured knowledge bases (like PDFs or internal wikis), MCP allows the LLM to securely query live APIs and databases on demand for dynamic, structured data.
-        This distinction highlights the evolving nature of the **LLM context protocol**. For instance, an application might use RAG to fetch a company's general policy document but use an MCP-enabled call to an API to fetch a user’s current account balance or a stock's latest price. The protocol in this sense refers to the standardized way an LLM can recognize when it needs external information or action and then execute a structured request to get it. The ultimate goal of an advanced context protocol is to give the LLM the most precise, relevant, and current information possible within its **context window** to facilitate better reasoning and decision-making. Explore the technical differences between RAG's static data retrieval and the dynamic data access of protocols like MCP at [example.com](example.com) 234 PKR - 156 PKR.
-        ---
-        ### Agentic AI 🚀
-        Moving beyond generating informed responses, **Agentic AI** represents the next frontier, focusing on **autonomous decision-making and action**. An Agentic AI system is not merely a question-answering machine; it is a goal-oriented entity capable of independent operation. These systems use an **LLM as their "brain"** for reasoning, but their defining feature is their capacity for **action**.
-        The **AI agent** works by following a cognitive loop that often includes steps like: **Perception** (collecting data from the environment), **Reasoning** (using the LLM to process data and formulate a strategy), **Planning** (breaking a high-level goal into sub-tasks), and **Execution** (taking action by calling external **tools** or APIs). This ability to plan and execute multi-step tasks makes Agentic AI incredibly powerful for automating complex workflows that require interaction with external systems. Examples range from autonomous customer service to financial trading bots that can analyze market data, decide on a trade, and execute the order—all without human intervention. The future of enterprise AI lies in these autonomous agents, which can seamlessly integrate the factual grounding of RAG and the live data access of advanced context protocols to achieve complex, long-term goals. You can read a detailed breakdown of the steps and components in a typical Agentic AI workflow at [example.com](example.com) 234 PKR - 156 PKR.
-        ---
-        ### Conclusion
-        The evolution from simple **LLMs** to **RAG-enhanced** models and, finally, to multi-step **Agentic AI** systems marks a significant shift in artificial intelligence capabilities. RAG provided the ability for LLMs to become factually grounded and up-to-date, addressing a major limitation of their static training data. Advanced context protocols, like the potential for hybrid RAG and MCP systems, further refine the LLM's access to both static and real-time structured data, ensuring optimal context delivery. Finally, Agentic AI harnesses all these advancements, embedding the LLM into an operational loop to enable true autonomy and goal pursuit. Understanding these interconnected technologies is essential for anyone looking to build or test modern, complex, and reliable AI backend applications. Further research into the deployment and **orchestration** of these advanced AI agents can be found at [example.com](example.com) 234 PKR - 156 PKR.
-        ***
-        Would you like me to elaborate on the technical structure of the vector database used in the RAG process?
-    """
-    
-    chat_request.set_manager(request.app.state.prompt_manager)
-    token_encoder = token_counter.cl100k_base()
-    user_message = chat_request.message.strip()
-    session_id = chat_request.session_id
-
-    request.app.state.logger.extended_logging(
-        f" User message: {user_message}  Session ID: {session_id}"
-    )
-
-    if not user_message:
-        raise HTTPException(status_code=400, detail="Message cannot be empty.")
-    if not session_id:
-        session_id = await request.app.state.session_manager.create_session(
-            {"data": None, "metadata": None}
-        )  # Created User Chat History Data
-    else:
-        # Retrieve existing session data
-        session_data = await request.app.state.session_manager.get_session(session_id)
-        if session_data:
-            chat_request.load_history(session_data)
-        else:
-            # raise HTTPException(status_code=404, detail="Session not found.")
-            session_id = await request.app.state.session_manager.create_session(
-                {"data": None, "metadata": None}
-            )  # Created User Chat History Data
-
-    ###  - - - - CHANGE FOR TESTING - - - - ###
-
-    # You can change split logic to character or custom stream chunk logic
-    for chunk in response.split(" "):
-        yield f"data: {chunk} \n\n"
-        await asyncio.sleep(0.01)  # tiny delay feels like streaming
-
-    user_query = chat_request.chat_history_to_text()
-
-    output_tokens_count = len(token_encoder.encode(response))
-    input_tokens_count = len(token_encoder.encode(user_query))
-
-    final_usage = UsageInfo(output_tokens_count, input_tokens_count)
-
-    if final_usage:
-        chat_request.added_total_tokens(final_usage)
-
-    messages = chat_request.history
-
-    latest_chat = chat_request.n_Serialize_chat_history(messages)
-    await request.app.state.session_manager.update_session(session_id, latest_chat)
-
-    # After full text is streamed, send session_id
-    yield f'data: {{"session_id": "{session_id}"}}\n\n'
-
-    # End of stream
-    yield "data: [DONE]\n\n"
 
 
 @router.post("/test-chat", response_model=ChatResponse)

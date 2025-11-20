@@ -96,8 +96,7 @@ class ChatRequest(BaseModel):
         in a consistent prompt format.
         """
         parts = []
-        msgs = self.openai_msgs()
-        for msg in msgs:
+        for msg in self.history:
             role = getattr(msg, "role", "user")
             content = getattr(msg, "content", "")
 
