@@ -11,7 +11,7 @@ from openai.types.responses.response import Response
 # Data Models & App Config
 from models import ChatRequest, ChatResponse, UsageInfo
 from utils.guardrails import parse_query_into_json_prompt
-from config import settings, llm_model
+from config import settings, llm_model, reasoning_model
 from typing import AsyncIterator
 from rs_bpe.bpe import openai as token_counter
 
@@ -199,14 +199,16 @@ async def stream_chat_endpoint(
             )  # Created User Chat History Data
     try:
         # normal_query = await parse_into_json_prompt(chat_request)
-
+        model = llm_model
+        if chat_request.is_deepThink:
+            model = reasoning_model
         async with AsyncOpenAI(
             api_key=settings.openai_api_key,
             http_client=DefaultAioHttpClient(timeout=200),
         ) as client:
             messages = chat_request.openai_msgs()
             stream_response = await client.responses.create(
-                model=llm_model,
+                model=model,
                 tools=tools_list,
                 input=messages,
                 tool_choice="auto",
@@ -225,7 +227,7 @@ async def stream_chat_endpoint(
                     delta = event.delta
                     if delta:
                         assistant_reply += delta
-                        yield f"data: {delta}\n\n"
+                        yield f"data: {json.dumps({'type': 'chunk', 'chunk': delta})}\n\n"
 
             chat_request.append_message(
                 {
@@ -237,7 +239,9 @@ async def stream_chat_endpoint(
 
             output_tokens_count = len(token_encoder.encode(assistant_reply))
             input_tokens_count = len(token_encoder.encode(user_query))
-            # print("\n",assistant_reply,"\n")
+            # print("\n")
+            # print(rf"{assistant_reply}")
+            # print("\n")
             final_usage = UsageInfo(output_tokens_count, input_tokens_count)
 
             if final_usage:
@@ -250,10 +254,17 @@ async def stream_chat_endpoint(
                 session_id, latest_chat
             )
 
-            yield f'data: {{"session_id": "{session_id}"}}\n\n'
+        yield f"data: {json.dumps({'type': 'id', 'conversation_id': session_id})}\n\n"
 
-            yield "data: [DONE]\n\n"
+        # Signal message complete
+        yield f"data: {json.dumps({'type': 'message_complete'})}\n\n"
+    # TODO:
+    # # If there are products to show
+    # if products:
+    #     yield f"data: {json.dumps({'type': 'product_results', 'products': products})}\n\n"
 
+    # # End turn
+    # yield f"data: {json.dumps({'type': 'end_turn'})}\n\n"
     except OpenAIError as e:
         request.app.state.logger.error(f"OpenAI API error: {e}")
         raise HTTPException(
