@@ -56,6 +56,7 @@ class UsageInfo:
 class ChatRequest(BaseModel):
     session_id: Optional[str] = None  # Session ID for tracking conversation
     ip_address: Optional[str] = None  # Session ID for tracking conversation
+    is_deepThink: Optional[bool] = False
     message: str  # Client Asked Question
     metadata: dict = Field(
         default_factory=dict
