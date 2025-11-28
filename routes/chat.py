@@ -267,22 +267,18 @@ async def stream_chat_endpoint(
     # yield f"data: {json.dumps({'type': 'end_turn'})}\n\n"
     except OpenAIError as e:
         request.app.state.logger.error(f"OpenAI API error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Failed to get response from language model.",
-        )
+        yield ('data: {"error": "OpenAI API failed. Please try again."}\n\n')
+        return  # gracefully end stream
+
     except asyncio.TimeoutError:
         request.app.state.logger.error("OpenAI API request timed out.")
-        raise HTTPException(
-            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-            detail="Language model response timed out.",
-        )
-    except Exception as e:  # noqa: F841
-        request.app.state.logger.exception("Unexpected server error")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error.",
-        )
+        yield ('data: {"error": "The request timed out. Please try again."}\n\n')
+        return
+
+    except Exception as e:
+        request.app.state.logger.exception("Unexpected server error.")
+        yield ('data: {"error": "An unexpected server error occurred."}\n\n')
+        return
 
 
 @router.post("/stream-chat")
