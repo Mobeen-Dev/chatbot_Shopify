@@ -1,8 +1,11 @@
 import re
+import os
 import json
+from uuid import uuid4
+from datetime import datetime
 from dataclasses import dataclass
 from utils.PromptManager import PromptManager
-from pydantic import BaseModel, Field, PrivateAttr
+from pydantic import BaseModel, Field, PrivateAttr, field_validator
 from typing import Optional, List, Literal, Dict, Any, cast, Mapping, Tuple
 from openai.types.chat import (
     ChatCompletionMessageToolCall,
@@ -29,6 +32,63 @@ class ChatMessage(BaseModel):
     tool_calls: Optional[List[ChatCompletionMessageToolCall]] = None
 
 
+# ----------------------------------------------------
+# Pydantic Models - Knowledge Base
+# ----------------------------------------------------
+
+
+class MetadataModel(BaseModel):
+    tags: list[str] = Field(default_factory=list)
+    language: str = "en"
+    audience: str = "customer"
+    last_updated: datetime | None = None
+    created_at: datetime | None = None
+    version: str = "1.0.0"
+    author: str | None = None
+    visible: bool = True
+    priority: int = 0
+    related_faqs: list[str] = Field(default_factory=list)
+    source: str | None = None
+
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def set_created_at_default(cls, v: datetime | None) -> datetime:
+        return v or datetime.utcnow()
+
+    @field_validator("last_updated", mode="before")
+    @classmethod
+    def set_last_updated_default(cls, v: datetime | None) -> datetime:
+        return v or datetime.utcnow()
+
+
+class FAQCreateModel(BaseModel):
+    id: Optional[str] = None
+    title: str
+    category: str
+    data: str
+    metadata: MetadataModel = Field(default_factory=MetadataModel)
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def auto_uuid(cls, v):
+        return v or str(uuid4())
+
+
+class FAQUpdateModel(BaseModel):
+    title: Optional[str]
+    category: Optional[str]
+    data: Optional[str]
+    metadata: Optional[MetadataModel]
+
+
+class FAQOutModel(BaseModel):
+    id: str
+    title: str
+    category: str
+    data: str
+    metadata: MetadataModel
+
+
 # Response schema
 class ChatResponse(BaseModel):
     reply: str | List[Dict[str, Any]]
@@ -46,11 +106,13 @@ class ProductEntry:
     #    "vid": "gid://shopify/ProductVariant/40516000219222",
     # },
 
+
 class UsageInfo:
     def __init__(self, output_tokens, input_tokens):
         self.output_tokens = output_tokens
         self.input_tokens = input_tokens
         self.total_tokens = output_tokens + input_tokens
+
 
 # Request schema
 class ChatRequest(BaseModel):
@@ -90,7 +152,7 @@ class ChatRequest(BaseModel):
             "prompt_tokens": new_cost_prompt,
             "total_tokens": new_cost_total,
         }
-        
+
     def chat_history_to_text(self):
         """
         Convert List[ResponseInputItemParam] into a single plain text string
@@ -115,7 +177,6 @@ class ChatRequest(BaseModel):
             parts.append(f"{role.upper()}: {content}")
 
         return "\n".join(parts)
-
 
     def n_Serialize_chat_history(
         self, chat_history: List[ResponseInputItemParam]
