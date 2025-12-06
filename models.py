@@ -4,6 +4,8 @@ import json
 from uuid import uuid4
 from datetime import datetime
 from dataclasses import dataclass
+from pydantic import BaseModel, EmailStr
+
 from utils.PromptManager import PromptManager
 from pydantic import BaseModel, Field, PrivateAttr, field_validator
 from typing import Optional, List, Literal, Dict, Any, cast, Mapping, Tuple
@@ -19,17 +21,6 @@ from openai.types.responses.response_custom_tool_call_param import (
 )
 from openai.types.responses.response_input_param import ResponseInputParam
 from openai.types.responses.easy_input_message_param import EasyInputMessageParam
-
-Role = Literal["system", "user", "assistant", "tool", "function", "developer"]
-
-
-class ChatMessage(BaseModel):
-    # role: Role
-    role: str
-    content: Optional[str] = None
-    name: Optional[str] = None
-    tool_call_id: Optional[str] = None
-    tool_calls: Optional[List[ChatCompletionMessageToolCall]] = None
 
 
 # ----------------------------------------------------
@@ -89,7 +80,63 @@ class FAQOutModel(BaseModel):
     metadata: MetadataModel
 
 
-# Response schema
+# ----------------------------------------------------
+# Pydantic Models - Auth
+# ----------------------------------------------------
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserResponse(BaseModel):
+    id: int
+    email: str
+    name: str
+
+    class Config:
+        from_attributes = True
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class TokenData(BaseModel):
+    email: Optional[str] = None
+
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
+
+
+
+
+
+# ----------------------------------------------------
+# Pydantic Models - ChatBot Communication schema
+# ----------------------------------------------------
+Role = Literal["system", "user", "assistant", "tool", "function", "developer"]
+
+
+class ChatMessage(BaseModel):
+    # role: Role
+    role: str
+    content: Optional[str] = None
+    name: Optional[str] = None
+    tool_call_id: Optional[str] = None
+    tool_calls: Optional[List[ChatCompletionMessageToolCall]] = None
+
+
 class ChatResponse(BaseModel):
     reply: str | List[Dict[str, Any]]
     history: list = Field(default_factory=list)
