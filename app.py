@@ -36,6 +36,7 @@ from MCP import Controller
 from routes.prompt import router as prompt_router
 from routes.chat import router as chat_router
 from routes.auth import router as auth_router
+from routes.knowledge_base import router as knowledge_base_router
 
 # DB Operations
 import redis.asyncio as redis
@@ -128,6 +129,8 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(chat_router)
 app.include_router(prompt_router)
 app.include_router(auth_router)
+app.include_router(knowledge_base_router)
+
 
 app.state.templates = Jinja2Templates(directory=templates_path)
 

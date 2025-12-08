@@ -5,7 +5,8 @@ from typing import Optional, List, Dict, Any
 from pymongo import ASCENDING, DESCENDING
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, FastAPI, HTTPException, status, Query, Depends
-
+import asyncio
+from uuid import uuid4
 from models import FAQCreateModel, FAQUpdateModel, FAQOutModel
 from config import mongoDb_uri
 
@@ -56,6 +57,14 @@ router = APIRouter(prefix="/faqs", tags=["faqs"])
 @router.post("/", response_model=FAQOutModel, status_code=201)
 async def create_faq(FAQ: FAQCreateModel, COL=Depends(get_db)):
     FAQ_DICT = FAQ.model_dump()
+    
+    FAQ_DICT["id"] = str(uuid4())
+
+    # Optionally set metadata defaults
+    FAQ_DICT.setdefault("metadata", {})
+    FAQ_DICT["metadata"]["created_at"] = datetime.now()
+    FAQ_DICT["metadata"]["last_updated"] = datetime.now()
+
     await COL.insert_one(FAQ_DICT)
     return FAQ_DICT
 
@@ -92,6 +101,7 @@ async def list_faqs(
     CURSOR = COL.find(FILTER).sort(sort_by, sort_order).skip(SKIP).limit(page_size)
 
     RESULTS = [doc async for doc in CURSOR]
+    # await asyncio.sleep(10) # Testing Delays in UI
     return RESULTS
 
 
@@ -107,9 +117,9 @@ async def get_faq(FAQ_ID: str, COL=Depends(get_db)):
 # -------------------- UPDATE (PUT) -------------------
 @router.put("/{FAQ_ID}", response_model=FAQOutModel)
 async def replace_faq(FAQ_ID: str, FAQ: FAQCreateModel, COL=Depends(get_db)):
-    FAQ_DICT = FAQ.dict()
+    FAQ_DICT = FAQ.model_dump()
     FAQ_DICT["id"] = FAQ_ID
-    FAQ_DICT["metadata"].last_updated = datetime.utcnow()
+    FAQ_DICT["metadata"]["last_updated"] = datetime.now()
 
     await COL.replace_one({"id": FAQ_ID}, FAQ_DICT, upsert=True)
     return await COL.find_one({"id": FAQ_ID})
