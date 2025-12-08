@@ -29,6 +29,8 @@ class Settings(BaseSettings):
 
     # === Pinecone credentials ===
     pinecone_api_key: str = Field(alias="PINECONE_API_KEY")
+    auth_algo: str = Field(alias="AUTH_ALGO")
+
 
     # ── helper properties ────────────────────────────
 
@@ -78,7 +80,7 @@ mongoDb_uri = os.getenv(
     "MONGO_URL", "mongodb://root:secret@localhost:27017/?authSource=admin"
 )
 sql_uri = os.getenv("AUTH_URL", "sqlite+aiosqlite:///./bucket/auth.db")
-auth_algo = os.getenv("AUTH_ALGO", "RS256")
+
 # Hyper-Parameters
 reasoning_model: str = "gpt-5-mini-2025-08-07"
 llm_model: str = "gpt-4.1-2025-04-14"

@@ -19,7 +19,7 @@ from passlib.context import CryptContext
 import asyncio
 from datetime import datetime, timedelta
 
-from config import sql_uri, auth_algo, settings, templates_path
+from config import sql_uri, settings, templates_path
 from models import UserCreate, UserLogin, UserResponse, Token, LoginResponse
 
 
@@ -75,8 +75,7 @@ Base = declarative_base()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # OAuth2 scheme
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
-
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 
 # ==================== DATABASE MODELS ====================
 class User(Base):
@@ -115,20 +114,20 @@ def create_access_token(data: dict) -> str:
     to_encode = data.copy()
     expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire, "type": "access"})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=auth_algo)
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=settings.auth_algo)
 
 
 def create_refresh_token(data: dict) -> str:
     to_encode = data.copy()
     expire = datetime.now() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     to_encode.update({"exp": expire, "type": "refresh"})
-    return jwt.encode(to_encode, REFRESH_SECRET_KEY, algorithm=auth_algo)
+    return jwt.encode(to_encode, REFRESH_SECRET_KEY, algorithm=settings.auth_algo)
 
 
 def verify_token(token: str, token_type: str = "access") -> Optional[str]:
     try:
         secret = REFRESH_SECRET_KEY if token_type == "refresh" else SECRET_KEY
-        payload = jwt.decode(token, secret, algorithms=[auth_algo])
+        payload = jwt.decode(token, secret, algorithms=[settings.auth_algo])
 
         if payload.get("type") != token_type:
             return None
@@ -239,6 +238,9 @@ async def login(
     )
     return {"access_token": access_token, "token_type": "bearer", "user": user}
 
+@router.options("/login")
+async def login_options():
+    return Response(status_code=200)
 
 @router.post("/refresh", response_model=Token)
 async def refresh_token(
