@@ -11,8 +11,9 @@ from models import FAQCreateModel, FAQUpdateModel, FAQOutModel
 from config import mongoDb_uri
 
 # ----------------------------------------------------
-# CONSTANTS (as requested: ALL CAPS)
+# CONSTANTS
 # ----------------------------------------------------
+
 DB_NAME: str = "knowledge_base"
 COLLECTION_NAME: str = "faqs"
 PAGE_DEFAULT: int = 25

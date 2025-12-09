@@ -22,6 +22,8 @@ from datetime import datetime, timedelta
 from config import sql_uri, settings, templates_path
 from models import UserCreate, UserLogin, UserResponse, Token, LoginResponse
 
+IS_PROD = settings.env == "DEP"  # Deployed Environment
+
 
 async def auth_check(request: Request):
     auth_header = request.headers.get("Authorization")
@@ -76,6 +78,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
+
 
 # ==================== DATABASE MODELS ====================
 class User(Base):
@@ -204,10 +207,10 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
         name=user_data.name,
         hashed_password=hashed_password,
     )
-
-    db.add(db_user)
-    await db.commit()
-    await db.refresh(db_user)
+    if not IS_PROD:
+        db.add(db_user)
+        await db.commit()
+        await db.refresh(db_user)
 
     return db_user
 
@@ -238,9 +241,11 @@ async def login(
     )
     return {"access_token": access_token, "token_type": "bearer", "user": user}
 
+
 @router.options("/login")
 async def login_options():
     return Response(status_code=200)
+
 
 @router.post("/refresh", response_model=Token)
 async def refresh_token(
