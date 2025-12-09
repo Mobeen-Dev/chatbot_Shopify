@@ -36,7 +36,7 @@ from MCP import Controller
 from routes.prompt import router as prompt_router
 from routes.chat import router as chat_router
 from routes.auth import router as auth_router
-from routes.knowledge_base import router as knowledge_base_router
+from knowledge_base.faqs import router as knowledge_base_router
 
 # DB Operations
 import redis.asyncio as redis
