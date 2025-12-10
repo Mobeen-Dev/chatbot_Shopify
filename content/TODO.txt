@@ -102,7 +102,7 @@ Front-End:
 
 
  ----------------------------------------------------------------------------------------------------
-
+Need to add single jobs file so that all operation can be done through that
 Admin Panel Features:
     - Enable/Disable Remember Mode ✅
     - Switch Languages
