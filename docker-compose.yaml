@@ -80,18 +80,18 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: path_to_chatRecord
+      device: /home/github/chat_record
 
   bucket-data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: path_to_bucket
+      device: /home/github/bucket
 
   creds-data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: path_to_creds
+      device: /home/github/credentials
