@@ -1,5 +1,5 @@
 # Fast API
-from fastapi import HTTPException, status, Request, APIRouter
+from fastapi import HTTPException, status, Request, Response, APIRouter
 from fastapi.responses import StreamingResponse
 
 # OpenAi
@@ -280,6 +280,9 @@ async def stream_chat_endpoint(
         yield ('data: {"error": "An unexpected server error occurred."}\n\n')
         return
 
+@router.options("/stream-chat")
+async def login_options():
+    return Response(status_code=200) # pyright: ignore[reportCallIssue]
 
 @router.post("/stream-chat")
 async def stream(request: Request, chat_request: ChatRequest):

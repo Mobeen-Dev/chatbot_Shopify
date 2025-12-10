@@ -74,7 +74,7 @@ SessionLocal = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSe
 Base = declarative_base()
 
 # Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
@@ -94,9 +94,6 @@ class User(Base):
 async def init_models(async_engine: AsyncEngine):
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-
-
-asyncio.run(init_models(engine))
 
 
 # ==================== UTILITY FUNCTIONS ====================
