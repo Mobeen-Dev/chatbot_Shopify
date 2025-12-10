@@ -36,6 +36,7 @@ from MCP import Controller
 from routes.prompt import router as prompt_router
 from routes.chat import router as chat_router
 from routes.auth import router as auth_router
+from routes.auth import engine, init_models
 from knowledge_base.faqs import router as knowledge_base_router
 
 # DB Operations
@@ -62,6 +63,7 @@ async def lifespan(app: FastAPI):
     global background_task
     app.state.redis_client = redis.from_url(redis_url, decode_responses=True)
     app.state.session_manager = SessionManager(app.state.redis_client, session_ttl=3600)
+    await init_models(engine)  # Setup Auth Table
     app.state.mcp_controller = Controller()
     app.state.client = OpenAI(
         api_key=settings.openai_api_key,
