@@ -67,6 +67,9 @@ SECRET_KEY = secrets.token_urlsafe(32)  # Generate secure key
 REFRESH_SECRET_KEY = secrets.token_urlsafe(32)
 ACCESS_TOKEN_EXPIRE_MINUTES = 5  # Short-lived
 REFRESH_TOKEN_EXPIRE_DAYS = 30  # Long-lived
+MAX_ATTEMPTS = 9
+FAILED_LOGINS = {}
+BLOCK_TIME = timedelta(minutes=12)
 
 # Database
 engine = create_async_engine(sql_uri, echo=True)
@@ -100,6 +103,34 @@ async def init_models(async_engine: AsyncEngine):
 async def get_db():
     async with SessionLocal() as session:
         yield session
+
+
+def is_blocked(key: str):
+    entry = FAILED_LOGINS.get(key)
+    if not entry:
+        return False
+
+    if entry["blocked_until"] and datetime.now() < entry["blocked_until"]:
+        return True
+
+    return False
+
+
+def register_failed_attempt(key: str):
+    entry = FAILED_LOGINS.get(key)
+
+    if not entry:
+        FAILED_LOGINS[key] = {"count": 1, "blocked_until": None}
+        return
+
+    entry["count"] += 1
+
+    if entry["count"] >= MAX_ATTEMPTS:
+        entry["blocked_until"] = datetime.now() + BLOCK_TIME
+
+
+def reset_attempts(key: str):
+    FAILED_LOGINS.pop(key, None)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -216,6 +247,13 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
 async def login(
     response: Response, user_data: UserLogin, db: AsyncSession = Depends(get_db)
 ):
+    key = user_data.email  # or request.client.host
+
+    if is_blocked(key):
+        raise HTTPException(
+            status_code=429, detail="Too many attempts. Try again later."
+        )
+
     user = await authenticate_user(db, user_data.email, user_data.password)
 
     if not user:
@@ -224,6 +262,9 @@ async def login(
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # SUCCESS → reset failures
+    reset_attempts(key)
 
     access_token = create_access_token(data={"sub": user.email})
     refresh_token = create_refresh_token(data={"sub": user.email})

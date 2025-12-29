@@ -4,7 +4,7 @@ networks:
 
 services:
   mongo:
-    image: mongo:7.0
+    image: mongo:8.2.3-noble
     container_name: local-mongo
     ports:
       - "27017:27017"
@@ -12,9 +12,10 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: secret
     volumes:
-      - mongo-data:/data/db # Local host directory for persistence
+      - chat_Record_latest:/data/db # Assuming this is present volume on machine
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 })"]
+      test:
+        ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 })"]
 
       interval: 10s
       timeout: 5s
@@ -25,7 +26,7 @@ services:
       - appnet
 
   redis:
-    image: redis:7.2
+    image: redis:8.4.0
     container_name: local-redis
     command:
       ["redis-server", "--appendonly", "yes", "--notify-keyspace-events", "Ex"]
@@ -75,12 +76,6 @@ services:
 volumes:
   redis-data:
     driver: local
-  
-  mongo-data:
-    driver_opts:
-      type: none
-      o: bind
-      device: /home/github/chat_record
 
   bucket-data:
     driver: local

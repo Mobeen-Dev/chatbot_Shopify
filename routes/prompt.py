@@ -76,7 +76,7 @@ async def handle_update(request: Request, file_path):
 
     # Return success
     headers = {
-        "Last-Modified": datetime.datetime.utcnow().strftime(
+        "Last-Modified": datetime.datetime.now().strftime(
             "%a, %d %b %Y %H:%M:%S GMT"
         )
     }
@@ -109,7 +109,7 @@ def handle_delete(file_path):
         raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
 
     headers = {
-        "Last-Modified": datetime.datetime.utcnow().strftime(
+        "Last-Modified": datetime.datetime.now().strftime(
             "%a, %d %b %Y %H:%M:%S GMT"
         )
     }

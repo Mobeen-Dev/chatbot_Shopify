@@ -34,3 +34,6 @@ python -m ETL_pipeline.pipeline --chunk_products --upload_chunks --start_embeddi
 python -m ETL_pipeline.handle_server_batches
 # finishes the job
 python -m ETL_pipeline.pipeline --download_embeddings
+
+
+docker run -d   --name local-mongo   -p 27017:27017   -e MONGO_INITDB_ROOT_USERNAME=root   -e MONGO_INITDB_ROOT_PASSWORD=secret   -v c21cc27e3b48cbe3efa7aae54773f8b47481a4747d68ef89887b40de3a2b0afe:/data/db   mongo:8.2.3-noble
