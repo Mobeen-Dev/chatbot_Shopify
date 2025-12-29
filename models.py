@@ -44,12 +44,12 @@ class MetadataModel(BaseModel):
     @field_validator("created_at", mode="before")
     @classmethod
     def set_created_at_default(cls, v: datetime | None) -> datetime:
-        return v or datetime.utcnow()
+        return v or datetime.now()
 
     @field_validator("last_updated", mode="before")
     @classmethod
     def set_last_updated_default(cls, v: datetime | None) -> datetime:
-        return v or datetime.utcnow()
+        return v or datetime.now()
 
 
 class FAQCreateModel(BaseModel):
