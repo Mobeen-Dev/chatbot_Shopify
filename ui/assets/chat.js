@@ -7,6 +7,32 @@
 (function () {
   "use strict";
 
+  function extractTextWithLinks(container) {
+    let output = "";
+
+    container.querySelectorAll("*").forEach((el) => {
+      // Product link
+      if (el.tagName === "A") {
+        const text = el.innerText.trim();
+        const href = el.href;
+
+        if (text && href) {
+          output += `${text}\nLink : ${href}\n\n`;
+        }
+      }
+
+      // Normal text blocks (but skip parents of <a>)
+      else if (["P", "LI"].includes(el.tagName) && !el.querySelector("a")) {
+        const text = el.innerText.trim();
+        if (text) {
+          output += `${text}\n\n`;
+        }
+      }
+    });
+
+    return output.replace(/\n{3,}/g, "\n\n").trim();
+  }
+
   /**
    * Application namespace to prevent global scope pollution
    */
@@ -167,8 +193,9 @@
           );
 
           if (this.isMobile) {
-            const isChatOpen = this.elements.chatWindow.classList.contains("active");
-            
+            const isChatOpen =
+              this.elements.chatWindow.classList.contains("active");
+
             if (isChatOpen) {
               this.elements.chatBubble.classList.add("hidden");
             } else {
@@ -185,7 +212,7 @@
        */
       toggleChatWindow: function () {
         const { chatWindow, chatInput } = this.elements;
-        console.log("Mobile View", this.isMobile)
+        console.log("Mobile View", this.isMobile);
         chatWindow.classList.toggle("active");
 
         if (chatWindow.classList.contains("active")) {
@@ -425,6 +452,7 @@
        * @param {HTMLElement} messagesContainer - The messages container
        * @returns {HTMLElement} The created message element
        */
+
       add: function (
         text,
         sender,
@@ -435,31 +463,99 @@
         const messageElement = document.createElement("div");
         messageElement.classList.add("shop-ai-message", sender);
 
+        // 1. Create the Button & Initial Icon
+        const copyBtn = document.createElement("button");
+        copyBtn.className = "shop-ai-copy-btn";
+
+        const iconImg = document.createElement("img");
+        iconImg.src = window.shopChatIcons.copy;
+        iconImg.width = 18;
+        iconImg.height = 18;
+        copyBtn.appendChild(iconImg);
+
         if (sender === "assistant") {
           if (html !== null) {
-            // HTML was explicitly passed → use it directly
             messageElement.innerHTML = html;
-            messageElement.dataset.rawText = text; // keep raw version
+            messageElement.dataset.rawText = text;
           } else {
-            // Normal path (raw text → markdown → formatted HTML)
             messageElement.dataset.rawText = text;
             ShopAIChat.Formatting.formatMessageContent(messageElement);
-            html = messageElement.innerHTML; // generated HTML
+            html = messageElement.innerHTML;
           }
-          if (!recovery) {
-            // Store assistant message with both versions
-            ShopAIChat.ChatStorage.addMessage(sender, text, html);
-          }
+          if (!recovery) ShopAIChat.ChatStorage.addMessage(sender, text, html);
         } else {
-          // USER MESSAGE
           messageElement.textContent = text;
-
-          if (!recovery) {
-            // Store user → html stays null
-            ShopAIChat.ChatStorage.addMessage(sender, text, null);
-          }
+          if (!recovery) ShopAIChat.ChatStorage.addMessage(sender, text, null);
         }
 
+        // 2. Click Logic: Copy & Swap Icon
+        // copyBtn.onclick = (e) => {
+        //   e.stopPropagation();
+
+        //   // Get the source text (raw markdown for assistant, textContent for user)
+        //   let rawContent;
+
+        //   if (sender === "assistant") {
+        //     rawContent = messageElement.dataset.rawText?.trim()
+        //       ? messageElement.dataset.rawText
+        //       : extractTextWithLinks(messageElement);
+        //   } else {
+        //     rawContent = messageElement.innerText;
+        //   }
+
+        //   // FORMAT FOR CLIPBOARD: Use our new cleaner function
+        //   const formattedContent =
+        //     ShopAIChat.Formatting.cleanTextForCopy(rawContent);
+
+        //   console.log("Content");
+        //   console.log(rawContent);
+
+        //   console.log("Formatted Content");
+        //   console.log(formattedContent);
+
+        //   navigator.clipboard.writeText(formattedContent).then(() => {
+        //     // Switch to Tick Icon
+        //     iconImg.src = window.shopChatIcons.check;
+        //     copyBtn.classList.add("active");
+
+        //     setTimeout(() => {
+        //       iconImg.src = window.shopChatIcons.copy;
+        //       copyBtn.classList.remove("active");
+        //     }, 1200);
+        //   });
+        // };
+        copyBtn.onclick = (e) => {
+          e.stopPropagation();
+
+          let rawContent;
+
+          if (sender === "assistant") {
+            rawContent = messageElement.dataset.rawText?.trim()
+              ? messageElement.dataset.rawText
+              : extractTextWithLinks(messageElement); // 👈 DOM-aware
+          } else {
+            rawContent = messageElement.innerText;
+          }
+
+          console.log("Content", rawContent);
+
+          const formattedContent =
+            ShopAIChat.Formatting.cleanTextForCopy(rawContent);
+
+          console.log("Formatted Content", formattedContent);
+
+          navigator.clipboard.writeText(formattedContent).then(() => {
+            iconImg.src = window.shopChatIcons.check;
+            copyBtn.classList.add("active");
+
+            setTimeout(() => {
+              iconImg.src = window.shopChatIcons.copy;
+              copyBtn.classList.remove("active");
+            }, 2000);
+          });
+        };
+
+        messageElement.appendChild(copyBtn);
         messagesContainer.appendChild(messageElement);
         ShopAIChat.UI.scrollToBottom();
         return messageElement;
@@ -594,6 +690,24 @@
 
         // Apply the formatted HTML
         element.innerHTML = processedText;
+      },
+
+      /**
+       * Cleans raw markdown text for the clipboard
+       * Converts [Product](URL) to "Product - URL"
+       */
+      cleanTextForCopy: function (text) {
+        if (!text) return "";
+
+        return (
+          text
+            // 1. Convert Markdown links [Text](URL) to "Text - URL"
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1 - $2")
+            // 2. Remove bold stars **Text** -> Text
+            .replace(/(\*\*|__)/g, "")
+            // 3. Optional: Clean up extra whitespace if needed
+            .trim()
+        );
       },
 
       /**

@@ -2,7 +2,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <div class="shop-ai-chat-container">
+  <div class="shop-ai-chat-tooltip" id="shopAiTooltip">
+    <p>Got any questions? Chat with helpline</p>
+    <span class="tooltip-close-x">×</span>
+  </div>
+
   <div class="shop-ai-chat-bubble" style="background-color: {{ block.settings.chat_bubble_color }}">
+    <span class="chat-notification-badge">1</span>
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
@@ -38,7 +44,7 @@
 
         <!-- Clear Session button -->
         <button class="shop-ai-chat-btn shop-ai-chat-clear" title="Clear Session">
-                    <img
+          <img
             id="wobbleImage"
             src="{{ 'ClearSession.svg' | asset_url }}"
             alt="Button Icon"
@@ -62,31 +68,55 @@
     <div class="shop-ai-chat-input">
       <input type="text" placeholder="{{ 'chat.inputPlaceholder' | t }}">
       <button class="shop-ai-chat-send">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+        <img
+          id="Image"
+          src="{{ 'send.png' | asset_url }}"
+          alt="Button Icon"
+          class="whatsapp-button__image Animate"
+          width="26"
+          height="26"
+          loading="lazy"
         >
-          <line x1="22" y1="2" x2="11" y2="13"></line>
-          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-        </svg>
       </button>
     </div>
   </div>
 </div>
 <script>
-  window.shopChatConfig = {
-    promptType: {{ block.settings.system_prompt | json }},
-    welcomeMessage: {{ block.settings.welcome_message | json }},
-    url: "{{ block.settings.server_url }}"
+    window.shopChatIcons = {
+    copy: "{{ 'icon-copy.svg' | asset_url }}",
+    check: "{{ 'icon-check.svg' | asset_url }}"
   };
-  window.shopId = {{ shop.id }};
+    window.shopChatConfig = {
+      promptType: {{ block.settings.system_prompt | json }},
+      welcomeMessage: {{ block.settings.welcome_message | json }},
+      url: "{{ block.settings.server_url }}"
+    };
+    window.shopId = {{ shop.id }};
+</script>
+<script>
+  // Inside your bubble click listener
+  document.querySelector('.chat-notification-badge').style.display = 'none';
+  document.addEventListener('DOMContentLoaded', function () {
+    const tooltip = document.getElementById('shopAiTooltip');
+    const chatBubble = document.querySelector('.shop-ai-chat-bubble');
+    const tooltipClose = document.querySelector('.tooltip-close-x');
+
+    // Hide tooltip when clicking the chat bubble
+    chatBubble.addEventListener('click', function () {
+      tooltip.classList.add('hidden');
+    });
+
+    // Hide tooltip when clicking the 'X' on the tooltip
+    tooltipClose.addEventListener('click', function (e) {
+      e.stopPropagation(); // Prevents triggering the bubble click
+      tooltip.classList.add('hidden');
+    });
+
+    // Optional: Auto-hide after 15 seconds if ignored
+    setTimeout(() => {
+      tooltip.classList.add('hidden');
+    }, 15000);
+  });
 </script>
 <script src="{{ 'chat.js' | asset_url }}" defer></script>
 
@@ -99,7 +129,7 @@
       "type": "color",
       "id": "chat_bubble_color",
       "label": "Chat Bubble Color",
-      "default": "#5046e4"
+      "default": "#02B052"
     },
     {
       "type": "text",
