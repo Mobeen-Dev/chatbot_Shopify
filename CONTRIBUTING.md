@@ -8,7 +8,7 @@ This document provides a structured overview of the UI assets and documentation 
 *Primary reference files for the project.*
 
 1. **Primary Overview**
-   * **File:** ![Thumbnail.jpg](content/ui/Thumbnail.jpg)
+    ![Thumbnail.jpg](content/ui/Thumbnail.png)
 
 ---
 
